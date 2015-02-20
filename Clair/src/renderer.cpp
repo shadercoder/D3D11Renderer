@@ -1,0 +1,441 @@
+#include <Windows.h>
+#include "clair/renderer.h"
+#include <stdio.h>
+#include <d3d11.h>
+#include <DirectXMath.h>
+#include "clair/scene.h"
+#include "clair/object.h"
+#include <vector>
+#include <fstream>
+#include <DirectXMath.h>
+#include "clair/matrix.h"
+
+using namespace DirectX;
+
+#pragma comment(lib, "d3d11.lib")
+
+static std::vector<char> readBytes(const std::string& filename) {
+    std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
+    const auto pos = file.tellg();
+    std::vector<char> vec(static_cast<unsigned>(pos));
+    file.seekg(0, std::ios::beg);
+    file.read(&vec[0], pos);
+    return vec;
+}
+
+ID3D11Device* d3dDevice = nullptr;
+ID3D11DeviceContext* d3dDeviceContext = nullptr;
+IDXGISwapChain* swapChain = nullptr;
+ID3D11RenderTargetView* renderTargetView = nullptr;
+ID3D11DepthStencilView* depthStencilView = nullptr;
+ID3D11Texture2D* backBuffer = nullptr;
+ID3D11Texture2D* depthStencilBuffer = nullptr;
+ID3D11DepthStencilState* depthStencilState = nullptr;
+ID3D11RasterizerState* rasterizerState = nullptr;
+std::string dataPath;
+std::vector<Clair::Scene*> scenes;
+
+
+ID3D11Buffer* vertexBuffer = nullptr;
+ID3D11Buffer* indexBuffer = nullptr;
+ID3D11InputLayout* inputLayout = nullptr;
+ID3D11VertexShader* vertexShader = nullptr;
+ID3D11PixelShader* pixelShader = nullptr;
+ID3D11Buffer* constantBuffer = nullptr;
+ID3D11SamplerState* samplerState = nullptr;
+ID3D11Texture2D* texture = nullptr;
+ID3D11ShaderResourceView* shaderResView = nullptr;
+Clair::Scene* activeScene = nullptr;
+
+struct Vertex {
+	XMFLOAT3 position;
+	XMFLOAT2 uvs;
+};
+
+struct ConstantBuffer {
+	Clair::Matrix world;
+	XMMATRIX view;
+	XMMATRIX projection;
+};
+
+template<typename T>
+inline static void releaseComObject(T& comObject) {
+    if (comObject != NULL) {
+        comObject->Release();
+        comObject = NULL;
+    }
+}
+
+bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
+	UINT createDeviceFlags = 0;
+
+#ifndef NDEBUG
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+	D3D_FEATURE_LEVEL featureLevels[] = {
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
+	UINT numFeatureLevels = ARRAYSIZE(featureLevels);
+
+	RECT clientRect;
+	GetClientRect(hwnd, &clientRect);
+	const UINT clientWidth = clientRect.right - clientRect.left;
+	const UINT clientHeight = clientRect.bottom - clientRect.top;
+
+	DXGI_SWAP_CHAIN_DESC swapDesc;
+	ZeroMemory(&swapDesc, sizeof(swapDesc));
+	swapDesc.BufferDesc.Width = clientWidth;
+	swapDesc.BufferDesc.Height = clientHeight;
+	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
+	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapDesc.SampleDesc.Count = 1;
+	swapDesc.SampleDesc.Quality = 0;
+	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapDesc.BufferCount = 1;
+	swapDesc.OutputWindow = hwnd;
+	swapDesc.Windowed = TRUE;
+	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+	HRESULT result;
+	D3D_FEATURE_LEVEL featureLevel;
+	result = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels,
+				numFeatureLevels, D3D11_SDK_VERSION, &swapDesc, &swapChain, &d3dDevice, &featureLevel, &d3dDeviceContext);
+
+	if (FAILED(result)) return false;
+
+	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&backBuffer));
+	if (FAILED(result)) return false;
+
+	result = d3dDevice->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
+	backBuffer->Release();
+
+	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
+	ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	depthStencilBufferDesc.Width = clientWidth;
+	depthStencilBufferDesc.Height = clientHeight;
+	depthStencilBufferDesc.MipLevels = 1;
+	depthStencilBufferDesc.ArraySize = 1;
+	depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilBufferDesc.SampleDesc.Count = 1;
+	depthStencilBufferDesc.SampleDesc.Quality = 0;
+	depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilBufferDesc.CPUAccessFlags = 0;
+	depthStencilBufferDesc.MiscFlags = 0;
+
+	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &depthStencilBuffer);
+	if (FAILED(result)) return false;
+
+	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+	if (FAILED(result)) return false;
+
+	D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc;
+	ZeroMemory(&depthStencilStateDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	depthStencilStateDesc.DepthEnable = TRUE;
+	depthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthStencilStateDesc.StencilEnable = FALSE;
+	result = d3dDevice->CreateDepthStencilState(&depthStencilStateDesc, &depthStencilState);
+
+	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+
+	D3D11_RASTERIZER_DESC rasterizerDesc;
+	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	rasterizerDesc.FrontCounterClockwise = FALSE;
+	rasterizerDesc.DepthBias = 0;
+	rasterizerDesc.DepthBiasClamp = 0.0f;
+	rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+	rasterizerDesc.DepthClipEnable = TRUE;
+	rasterizerDesc.ScissorEnable = FALSE;
+	rasterizerDesc.MultisampleEnable = FALSE;
+	rasterizerDesc.AntialiasedLineEnable = FALSE;
+
+	result = d3dDevice->CreateRasterizerState(&rasterizerDesc, &rasterizerState);
+	if (FAILED(result)) return false;
+
+	d3dDeviceContext->RSSetState(rasterizerState);
+
+	D3D11_VIEWPORT viewport = {0};
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	viewport.Width = static_cast<float>(clientWidth);
+	viewport.Height = static_cast<float>(clientHeight);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	d3dDeviceContext->RSSetViewports(1, &viewport);
+
+	// initialize data path
+	dataPath = clairDataPath;
+	const auto p = clairDataPath.find_last_not_of("/");
+	if (p != std::string::npos)
+	dataPath.erase(p + 1);
+	dataPath.append("/");
+	printf((dataPath + "\nClair initialized.\n").c_str());
+
+	// load content
+
+	// shaders
+	const auto vsByteCode = readBytes(dataPath + "shaders/VertexShader.cso");
+	result = d3dDevice->CreateVertexShader(vsByteCode.data(), vsByteCode.size(), nullptr, &vertexShader);
+	if (FAILED(result)) return false;
+
+	const auto psByteCode = readBytes(dataPath + "shaders/PixelShader.cso");
+	result = d3dDevice->CreatePixelShader(psByteCode.data(), psByteCode.size(), nullptr, &pixelShader);
+	if (FAILED(result)) return false;
+
+	// input layout
+	const D3D11_INPUT_ELEMENT_DESC layoutDesc[] {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+	const UINT numElements = ARRAYSIZE(layoutDesc);
+
+	result = d3dDevice->CreateInputLayout(layoutDesc, numElements, vsByteCode.data(), vsByteCode.size(), &inputLayout);
+	if (FAILED(result)) return false;
+
+	d3dDeviceContext->IASetInputLayout(inputLayout);
+
+	// vertices
+    const Vertex vertices[] = {
+        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+
+        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+
+        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+
+        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+
+        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+
+        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
+        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
+        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
+	};
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 24;
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA subResData;
+	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
+	subResData.pSysMem = vertices;
+
+	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData, &vertexBuffer);
+	if (FAILED(result)) return false;
+
+	UINT indices[] = {
+        3,1,0, 2,1,3,
+        6,4,5, 7,4,6,
+        11,9,8, 10,9,11,
+        14,12,13, 15,12,14,
+        19,17,16, 18,17,19, 
+        22,20,21, 23,20,22
+    };
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	indexBufferDesc.ByteWidth = sizeof(UINT) * 36;
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA indexInitData;
+	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
+	indexInitData.pSysMem = indices;
+
+	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData, &indexBuffer);
+	if (FAILED(result)) return false;
+	
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	d3dDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	d3dDeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	d3dDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	D3D11_BUFFER_DESC constBufferDesc;
+	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	constBufferDesc.ByteWidth = sizeof(ConstantBuffer);
+	constBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constBufferDesc.CPUAccessFlags = 0;
+	constBufferDesc.MiscFlags = 0;
+	constBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA constInitData;
+	ZeroMemory(&constInitData, sizeof(D3D11_SUBRESOURCE_DATA));
+	constInitData.pSysMem = indices;
+
+	result = d3dDevice->CreateBuffer(&constBufferDesc, &constInitData, &constantBuffer);
+	if (FAILED(result)) return false;
+
+	// create texture
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	result = d3dDevice->CreateSamplerState(&samplerDesc, &samplerState);
+	if (FAILED(result)) return false;
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	texDesc.Width = 256;
+	texDesc.Height = 256;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+	float* texData = new float[256 * 256 * 4]();
+	for (unsigned y = 0; y < 256; ++y) {
+		for (unsigned x = 0; x < 256; ++x) {
+			texData[(x + y * 256) * 4 + 0] = static_cast<float>(x) / 255.0f;
+			texData[(x + y * 256) * 4 + 1] = static_cast<float>(y) / 255.0f;
+			texData[(x + y * 256) * 4 + 2] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			texData[(x + y * 256) * 4 + 3] = 1.0f;
+		}
+	}
+
+	D3D11_SUBRESOURCE_DATA texInitData;
+    ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
+    texInitData.pSysMem = texData;
+	texInitData.SysMemPitch = sizeof(float) * 256 * 4;
+
+	result = d3dDevice->CreateTexture2D(&texDesc, &texInitData , &texture);
+	if (FAILED(result)) {
+		delete[] texData;
+		return false;
+	}
+	result = d3dDevice->CreateShaderResourceView(texture, nullptr, &shaderResView);
+	if (FAILED(result)) {
+		delete[] texData;
+		return false;
+	}
+	delete[] texData;
+
+	return true;
+}
+
+void Clair::Renderer::terminate() {
+	for (const auto& it : scenes) {
+		delete it;
+	}
+	releaseComObject(shaderResView);
+	releaseComObject(texture);
+	releaseComObject(samplerState);
+	releaseComObject(constantBuffer);
+	releaseComObject(vertexBuffer);
+	releaseComObject(indexBuffer);
+	releaseComObject(inputLayout);
+	releaseComObject(vertexShader);
+	releaseComObject(pixelShader);
+	releaseComObject(rasterizerState);
+	releaseComObject(depthStencilState);
+	releaseComObject(depthStencilBuffer);
+	releaseComObject(backBuffer);
+	releaseComObject(depthStencilView);
+	releaseComObject(renderTargetView);
+	releaseComObject(swapChain);
+	releaseComObject(d3dDeviceContext);
+	releaseComObject(d3dDevice);
+	printf("Clair terminated.\n");
+}
+float col[] = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+void Clair::Renderer::setViewport(const float x, const float y, const float width, const float height) {
+	D3D11_VIEWPORT viewport = {0};
+	viewport.TopLeftX = x;
+	viewport.TopLeftY = y;
+	viewport.Width = width;
+	viewport.Height = height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	d3dDeviceContext->RSSetViewports(1, &viewport);
+	col[0] = 1.0f;
+}
+
+void Clair::Renderer::render() {
+	static float rot = 0.0f;
+	rot += 0.0001f;
+	d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+	d3dDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	const XMMATRIX world = XMMatrixRotationY(rot);// XMMatrixTranslation(0, 0, 0);
+	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0.0f, 2.0f, -5.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 640.0f / 480.0f, 0.1f, 100.0f);
+
+	d3dDeviceContext->VSSetShader(vertexShader, nullptr, 0);
+	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+	d3dDeviceContext->PSSetShader(pixelShader, nullptr, 0);
+	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
+	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
+	ConstantBuffer cb;
+	//cb.world = world;
+	//float m[4][4] = {	1.0f, 0.0f, 0.0f, 0.0f,
+	//					0.0f, 1.0f, 0.0f, 0.0f,
+	//					0.0f, 0.0f, 1.0f, 0.0f,
+	//					1.0f, 0.0f, 1.0f, 1.0f };
+	//cb.world = Matrix(&m[0][0]);
+	cb.view = view;
+	cb.projection = projection;
+	//d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
+	//d3dDeviceContext->DrawIndexed(36, 0, 0);
+	//cb.world = XMMatrixTranslation(0, 0, 5) * XMMatrixRotationY(rot);
+	//d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
+	//d3dDeviceContext->DrawIndexed(36, 0, 0);
+
+	for (const auto& it : activeScene->mObjects) {
+		cb.world = it->getMatrix();
+		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
+		d3dDeviceContext->DrawIndexed(36, 0, 0);
+	}
+
+	swapChain->Present(0, 0);
+}
+
+Clair::Scene* Clair::Renderer::createScene() {
+	Clair::Scene* const newScene = new Scene();
+	scenes.push_back(newScene);
+	activeScene = newScene;
+	return newScene;
+}
