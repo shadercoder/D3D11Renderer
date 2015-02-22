@@ -3,6 +3,7 @@
 
 namespace Clair {
 	class Scene;
+	class Matrix;
 
 	class Renderer {
 	public:
@@ -10,8 +11,12 @@ namespace Clair {
 		static void terminate();
 
 		static void setViewport(float x, float y, float width, float height);
-		static void render();
+		static void clear();
+		static void finalizeFrame();
+		static void render(Scene* scene);
 
 		static Scene* createScene();
+
+		static void setCameraMatrix(const Clair::Matrix& m);
 	};
 };

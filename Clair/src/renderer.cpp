@@ -30,7 +30,6 @@ ID3D11RenderTargetView* renderTargetView = nullptr;
 ID3D11DepthStencilView* depthStencilView = nullptr;
 ID3D11Texture2D* backBuffer = nullptr;
 ID3D11Texture2D* depthStencilBuffer = nullptr;
-ID3D11DepthStencilState* depthStencilState = nullptr;
 ID3D11RasterizerState* rasterizerState = nullptr;
 std::string dataPath;
 std::vector<Clair::Scene*> scenes;
@@ -45,7 +44,6 @@ ID3D11Buffer* constantBuffer = nullptr;
 ID3D11SamplerState* samplerState = nullptr;
 ID3D11Texture2D* texture = nullptr;
 ID3D11ShaderResourceView* shaderResView = nullptr;
-Clair::Scene* activeScene = nullptr;
 
 struct Vertex {
 	XMFLOAT3 position;
@@ -91,8 +89,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapDesc.SampleDesc.Count = 1;
-	swapDesc.SampleDesc.Quality = 0;
+	swapDesc.SampleDesc.Count = 8;
+	swapDesc.SampleDesc.Quality = 8;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapDesc.BufferCount = 1;
 	swapDesc.OutputWindow = hwnd;
@@ -111,7 +109,7 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	if (FAILED(result)) return false;
 
 	result = d3dDevice->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
-	backBuffer->Release();
+	releaseComObject(backBuffer);
 
 	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
 	ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -120,8 +118,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	depthStencilBufferDesc.MipLevels = 1;
 	depthStencilBufferDesc.ArraySize = 1;
 	depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilBufferDesc.SampleDesc.Count = 1;
-	depthStencilBufferDesc.SampleDesc.Quality = 0;
+	depthStencilBufferDesc.SampleDesc.Count = 8;
+	depthStencilBufferDesc.SampleDesc.Quality = 8;
 	depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilBufferDesc.CPUAccessFlags = 0;
@@ -132,14 +130,6 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 
 	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
 	if (FAILED(result)) return false;
-
-	D3D11_DEPTH_STENCIL_DESC depthStencilStateDesc;
-	ZeroMemory(&depthStencilStateDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-	depthStencilStateDesc.DepthEnable = TRUE;
-	depthStencilStateDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depthStencilStateDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	depthStencilStateDesc.StencilEnable = FALSE;
-	result = d3dDevice->CreateDepthStencilState(&depthStencilStateDesc, &depthStencilState);
 
 	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
 
@@ -174,12 +164,11 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	dataPath = clairDataPath;
 	const auto p = clairDataPath.find_last_not_of("/");
 	if (p != std::string::npos)
-	dataPath.erase(p + 1);
+		dataPath.erase(p + 1);
 	dataPath.append("/");
-	printf((dataPath + "\nClair initialized.\n").c_str());
+	printf(("Clair initialized.\n\t> Data path: " + dataPath + '\n').c_str());
 
 	// load content
-
 	// shaders
 	const auto vsByteCode = readBytes(dataPath + "shaders/VertexShader.cso");
 	result = d3dDevice->CreateVertexShader(vsByteCode.data(), vsByteCode.size(), nullptr, &vertexShader);
@@ -360,6 +349,7 @@ void Clair::Renderer::terminate() {
 	for (const auto& it : scenes) {
 		delete it;
 	}
+	swapChain->SetFullscreenState(FALSE, NULL);
 	releaseComObject(shaderResView);
 	releaseComObject(texture);
 	releaseComObject(samplerState);
@@ -370,9 +360,8 @@ void Clair::Renderer::terminate() {
 	releaseComObject(vertexShader);
 	releaseComObject(pixelShader);
 	releaseComObject(rasterizerState);
-	releaseComObject(depthStencilState);
 	releaseComObject(depthStencilBuffer);
-	releaseComObject(backBuffer);
+	//releaseComObject(backBuffer);
 	releaseComObject(depthStencilView);
 	releaseComObject(renderTargetView);
 	releaseComObject(swapChain);
@@ -381,8 +370,58 @@ void Clair::Renderer::terminate() {
 	printf("Clair terminated.\n");
 }
 float col[] = { 0.1f, 0.2f, 0.3f, 1.0f };
+float viewWidth = 640.0f;
+float viewHeight = 480.0f;
+
+void Clair::Renderer::clear() {
+	d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+	d3dDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+void Clair::Renderer::finalizeFrame() {
+	swapChain->Present(0, 0);
+}
 
 void Clair::Renderer::setViewport(const float x, const float y, const float width, const float height) {
+	d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
+
+	// new render target view
+	releaseComObject(renderTargetView);
+	HRESULT result = 0;
+	result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+	if (FAILED(result)) return;
+	ID3D11Texture2D* buffer = nullptr;
+	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&buffer));
+	if (FAILED(result)) return;
+	result = d3dDevice->CreateRenderTargetView(buffer, nullptr, &renderTargetView);
+	releaseComObject(buffer);
+
+	// new depth/stencil buffer
+	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
+	ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+	depthStencilBufferDesc.Width = static_cast<UINT>(width);
+	depthStencilBufferDesc.Height = static_cast<UINT>(height);
+	depthStencilBufferDesc.MipLevels = 1;
+	depthStencilBufferDesc.ArraySize = 1;
+	depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilBufferDesc.SampleDesc.Count = 8;
+	depthStencilBufferDesc.SampleDesc.Quality = 8;
+	depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilBufferDesc.CPUAccessFlags = 0;
+	depthStencilBufferDesc.MiscFlags = 0;
+
+	releaseComObject(depthStencilBuffer);
+	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &depthStencilBuffer);
+	if (FAILED(result)) return;
+
+	releaseComObject(depthStencilView);
+	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+	if (FAILED(result)) return;
+
+	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+
+	// new viewport
 	D3D11_VIEWPORT viewport = {0};
 	viewport.TopLeftX = x;
 	viewport.TopLeftY = y;
@@ -391,18 +430,18 @@ void Clair::Renderer::setViewport(const float x, const float y, const float widt
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	d3dDeviceContext->RSSetViewports(1, &viewport);
-	col[0] = 1.0f;
+	viewWidth = width;
+	viewHeight = height;
 }
 
-void Clair::Renderer::render() {
+void Clair::Renderer::render(Scene* const scene) {
+	if (!scene) return;
 	static float rot = 0.0f;
 	rot += 0.0001f;
-	d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
-	d3dDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	const XMMATRIX world = XMMatrixRotationY(rot);// XMMatrixTranslation(0, 0, 0);
-	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(0.0f, 2.0f, -5.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 640.0f / 480.0f, 0.1f, 100.0f);
+	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 10.0f, 2.0f, sin(rot) * 10.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, viewWidth / viewHeight, 0.1f, 100.0f);
 
 	d3dDeviceContext->VSSetShader(vertexShader, nullptr, 0);
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
@@ -410,32 +449,24 @@ void Clair::Renderer::render() {
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 	ConstantBuffer cb;
-	//cb.world = world;
-	//float m[4][4] = {	1.0f, 0.0f, 0.0f, 0.0f,
-	//					0.0f, 1.0f, 0.0f, 0.0f,
-	//					0.0f, 0.0f, 1.0f, 0.0f,
-	//					1.0f, 0.0f, 1.0f, 1.0f };
-	//cb.world = Matrix(&m[0][0]);
 	cb.view = view;
 	cb.projection = projection;
-	//d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
-	//d3dDeviceContext->DrawIndexed(36, 0, 0);
-	//cb.world = XMMatrixTranslation(0, 0, 5) * XMMatrixRotationY(rot);
-	//d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
-	//d3dDeviceContext->DrawIndexed(36, 0, 0);
 
-	for (const auto& it : activeScene->mObjects) {
+	for (const auto& it : scene->mObjects) {
 		cb.world = it->getMatrix();
 		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
 		d3dDeviceContext->DrawIndexed(36, 0, 0);
 	}
 
-	swapChain->Present(0, 0);
 }
 
 Clair::Scene* Clair::Renderer::createScene() {
 	Clair::Scene* const newScene = new Scene();
 	scenes.push_back(newScene);
-	activeScene = newScene;
 	return newScene;
+}
+Clair::Matrix bla;
+void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {
+	bla = m;
+	return;
 }

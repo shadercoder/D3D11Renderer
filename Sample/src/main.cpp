@@ -12,22 +12,33 @@
 #endif
 
 HWND hwnd;
+float windowWidth = 0.0f;
+float windowHeight = 0.0f;
+bool resizeWin = false;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	PAINTSTRUCT paintStruct;
-	HDC hDC;
 	switch(message) {
 	case WM_CHAR:
 		if (wParam == VK_ESCAPE)
 			PostQuitMessage(0);
 		break;
-	case WM_PAINT:
-		hDC = BeginPaint(hwnd, &paintStruct);
-		EndPaint(hwnd, &paintStruct);
-		break;
+	//case WM_PAINT:
+	//	PAINTSTRUCT paintStruct;
+	//	HDC hDC;
+	//	hDC = BeginPaint(hwnd, &paintStruct);
+	//	EndPaint(hwnd, &paintStruct);
+	//	break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+	case WM_SIZE: {
+		RECT clientRect;
+		GetClientRect(hwnd, &clientRect);
+		windowWidth = static_cast<float>(clientRect.right - clientRect.left);
+		windowHeight = static_cast<float>(clientRect.bottom - clientRect.top);
+		resizeWin = true;
+		break;
+	}
 	default:
 		return DefWindowProc(hwnd, message, wParam, lParam);
 		break;
@@ -76,24 +87,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int cmdShow) {
 
 	Clair::Renderer::setViewport(0, 0, 640, 480);
 
-	float m[16] = {	1.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 2.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f, 0.0f,
-					0.0f, -1.0f, 0.0f, 1.0f };
-	Clair::Scene* scene = Clair::Renderer::createScene();
-	Clair::Object* cube0 = scene->createObject();
-	cube0->setMatrix(Clair::Matrix(m));
-	Clair::Object* cube1 = scene->createObject();
-	m[12] += 4.0f;
-	cube1->setMatrix(Clair::Matrix(m));
-	Clair::Object* cube2 = scene->createObject();
-	m[14] += 4.0f;
-	cube2->setMatrix(Clair::Matrix(m));
-	Clair::Object* cube3 = scene->createObject();
-	m[12] -= 4.0f;
-	cube3->setMatrix(Clair::Matrix(m));
-	Clair::Camera* camera = scene->createCamera();
-	camera->setMatrix(Clair::Matrix());
+	float m[16] = {	0.4f, 0.0f, 0.0f, 0.0f,
+					0.0f, 0.4f, 0.0f, 0.0f,
+					0.0f, 0.0f, 0.4f, 0.0f,
+					0.0f, -0.4f, 0.0f, 1.0f };
+	float mplane[16] = {	50.0f, 0.0f, 0.0f, 0.0f,
+							0.0f, 0.1f, 0.0f, 0.0f,
+							0.0f, 0.0f, 50.0f, 0.0f,
+							0.0f, -1.0f, 0.0f, 1.0f };
+
+	Clair::Scene* scene0 = Clair::Renderer::createScene();
+	Clair::Scene* scene1 = Clair::Renderer::createScene();
+
+	Clair::Object* plane = scene0->createObject();
+	plane->setMatrix(Clair::Matrix(mplane));
+
+	const int size = 3;
+	for (int x = -size; x < size; ++x) {
+		m[12] = static_cast<float>(x) * 3.0f;
+		for (int y = -size; y < size; ++y) {
+			Clair::Object* cube = scene1->createObject();
+			m[14] = static_cast<float>(y) * 3.0f;
+			cube->setMatrix(Clair::Matrix(m));
+		}
+	}
+	Clair::Renderer::setCameraMatrix(Clair::Matrix());
 
 	MSG msg = { 0 };
 	while(msg.message != WM_QUIT) {
@@ -102,7 +120,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int cmdShow) {
 			DispatchMessage(&msg);
 		}
 		else {
-			Clair::Renderer::render();
+			if (resizeWin) {
+				Clair::Renderer::setViewport(0, 0, windowWidth, windowHeight);
+				resizeWin = false;
+			}
+			Clair::Renderer::clear();
+			Clair::Renderer::render(scene0);
+			Clair::Renderer::render(scene1);
+			Clair::Renderer::finalizeFrame();
 		}
 	}
 
