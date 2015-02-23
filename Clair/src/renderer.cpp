@@ -349,7 +349,7 @@ void Clair::Renderer::terminate() {
 	for (const auto& it : scenes) {
 		delete it;
 	}
-	swapChain->SetFullscreenState(FALSE, NULL);
+	if (swapChain) swapChain->SetFullscreenState(FALSE, NULL);
 	releaseComObject(shaderResView);
 	releaseComObject(texture);
 	releaseComObject(samplerState);
