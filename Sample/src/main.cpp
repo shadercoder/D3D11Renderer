@@ -72,14 +72,14 @@ bool initializeWindow(HINSTANCE hInstance, const int cmdShow) {
 	return true;
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int cmdShow) {
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) {
 	if (!initializeWindow(hInstance, cmdShow)) {
 		MessageBox(nullptr, "Couldn't open a window.", "Fatal error", MB_OK|MB_ICONERROR);
 		return -1;
 	}
 
 	;
-	if (!Clair::Renderer::initialize(hwnd, "../data/ClairData")) {
+	if (!Clair::Renderer::initialize(hwnd, "../../data/ClairData")) {
 		MessageBox(nullptr, "Couldn't initialize the rendering engine.", "Fatal error", MB_OK|MB_ICONERROR);
 		Clair::Renderer::terminate();
 		return -1;
