@@ -1,8 +1,6 @@
 #include <Windows.h>
+#include "sample.h"
 #include "clair/renderer.h"
-#include "clair/scene.h"
-#include "clair/object.h"
-#include "clair/camera.h"
 //#include "vld.h"
 
 #ifdef NDEBUG
@@ -22,12 +20,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		if (wParam == VK_ESCAPE)
 			PostQuitMessage(0);
 		break;
-	//case WM_PAINT:
-	//	PAINTSTRUCT paintStruct;
-	//	HDC hDC;
-	//	hDC = BeginPaint(hwnd, &paintStruct);
-	//	EndPaint(hwnd, &paintStruct);
-	//	break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
@@ -72,7 +64,7 @@ bool initializeWindow(HINSTANCE hInstance, const int cmdShow) {
 	return true;
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) {
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) { // UNREFERENCED PARAMETER
 	if (!initializeWindow(hInstance, cmdShow)) {
 		MessageBox(nullptr, "Couldn't open a window.", "Fatal error", MB_OK|MB_ICONERROR);
 		return -1;
@@ -85,33 +77,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) {
 		return -1;
 	}
 
-	Clair::Renderer::setViewport(0, 0, 640, 480);
-
-	float m[16] = {	0.4f, 0.0f, 0.0f, 0.0f,
-					0.0f, 0.4f, 0.0f, 0.0f,
-					0.0f, 0.0f, 0.4f, 0.0f,
-					0.0f, -0.4f, 0.0f, 1.0f };
-	float mplane[16] = {	50.0f, 0.0f, 0.0f, 0.0f,
-							0.0f, 0.1f, 0.0f, 0.0f,
-							0.0f, 0.0f, 50.0f, 0.0f,
-							0.0f, -1.0f, 0.0f, 1.0f };
-
-	Clair::Scene* scene0 = Clair::Renderer::createScene();
-	Clair::Scene* scene1 = Clair::Renderer::createScene();
-
-	Clair::Object* plane = scene0->createObject();
-	plane->setMatrix(Clair::Matrix(mplane));
-
-	const int size = 3;
-	for (int x = -size; x < size; ++x) {
-		m[12] = static_cast<float>(x) * 3.0f;
-		for (int y = -size; y < size; ++y) {
-			Clair::Object* cube = scene1->createObject();
-			m[14] = static_cast<float>(y) * 3.0f;
-			cube->setMatrix(Clair::Matrix(m));
-		}
-	}
-	Clair::Renderer::setCameraMatrix(Clair::Matrix());
+	Sample sample;	
+	sample.initialize();
 
 	MSG msg = { 0 };
 	while(msg.message != WM_QUIT) {
@@ -121,16 +88,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) {
 		}
 		else {
 			if (resizeWin) {
-				Clair::Renderer::setViewport(0, 0, windowWidth, windowHeight);
+				sample.onResize(windowWidth, windowHeight);
 				resizeWin = false;
 			}
-			Clair::Renderer::clear();
-			Clair::Renderer::render(scene0);
-			Clair::Renderer::render(scene1);
+			sample.update();
+			sample.render();
 			Clair::Renderer::finalizeFrame();
 		}
 	}
 
+	sample.terminate();
 	Clair::Renderer::terminate();
 
 	return static_cast<int>(msg.wParam);

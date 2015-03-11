@@ -6,22 +6,15 @@
 #include "clair/scene.h"
 #include "clair/object.h"
 #include <vector>
-#include <fstream>
 #include <DirectXMath.h>
 #include "clair/matrix.h"
+#include "clair/vertexBuffer.h"
 
 using namespace DirectX;
+using namespace Clair;
 
 #pragma comment(lib, "d3d11.lib")
 
-static std::vector<char> readBytes(const std::string& filename) {
-    std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
-    const auto pos = file.tellg();
-    std::vector<char> vec(static_cast<unsigned>(pos));
-    file.seekg(0, std::ios::beg);
-    file.read(&vec[0], pos);
-    return vec;
-}
 
 ID3D11Device* d3dDevice = nullptr;
 ID3D11DeviceContext* d3dDeviceContext = nullptr;
@@ -34,16 +27,39 @@ ID3D11RasterizerState* rasterizerState = nullptr;
 std::string dataPath;
 std::vector<Clair::Scene*> scenes;
 
-
-ID3D11Buffer* vertexBuffer = nullptr;
-ID3D11Buffer* indexBuffer = nullptr;
 ID3D11InputLayout* inputLayout = nullptr;
-ID3D11VertexShader* vertexShader = nullptr;
-ID3D11PixelShader* pixelShader = nullptr;
 ID3D11Buffer* constantBuffer = nullptr;
 ID3D11SamplerState* samplerState = nullptr;
 ID3D11Texture2D* texture = nullptr;
 ID3D11ShaderResourceView* shaderResView = nullptr;
+
+namespace Clair {
+	class InputLayout {
+	public:
+		ID3D11InputLayout* inputLayout = nullptr;
+	};
+	class Mesh {
+	public:
+		InputLayout* inputLayout = nullptr;
+		ID3D11Buffer* vertexBuffer = nullptr;
+		ID3D11Buffer* indexBuffer = nullptr;
+		unsigned indexBufferSize = 0;
+	};
+	class VertexShader {
+	public:
+		std::vector<char> byteCode;
+		ID3D11VertexShader* shader;
+	};
+	class PixelShader {
+	public:
+		std::vector<char> byteCode;
+		ID3D11PixelShader* shader;
+	};
+}
+std::vector<VertexShader*> vertexShaders;
+std::vector<PixelShader*> pixelShaders;
+std::vector<InputLayout*> inputLayouts;
+std::vector<Mesh*> meshes;
 
 struct Vertex {
 	XMFLOAT3 position;
@@ -168,106 +184,6 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	dataPath.append("/");
 	printf(("Clair initialized.\n\t> Data path: " + dataPath + '\n').c_str());
 
-	// load content
-	// shaders
-	const auto vsByteCode = readBytes(dataPath + "shaders/VertexShader.cso");
-	result = d3dDevice->CreateVertexShader(vsByteCode.data(), vsByteCode.size(), nullptr, &vertexShader);
-	if (FAILED(result)) return false;
-
-	const auto psByteCode = readBytes(dataPath + "shaders/PixelShader.cso");
-	result = d3dDevice->CreatePixelShader(psByteCode.data(), psByteCode.size(), nullptr, &pixelShader);
-	if (FAILED(result)) return false;
-
-	// input layout
-	const D3D11_INPUT_ELEMENT_DESC layoutDesc[] {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-	const UINT numElements = ARRAYSIZE(layoutDesc);
-
-	result = d3dDevice->CreateInputLayout(layoutDesc, numElements, vsByteCode.data(), vsByteCode.size(), &inputLayout);
-	if (FAILED(result)) return false;
-
-	d3dDeviceContext->IASetInputLayout(inputLayout);
-
-	// vertices
-    const Vertex vertices[] = {
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-
-        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-
-        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-
-        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-	};
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 24;
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA subResData;
-	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
-	subResData.pSysMem = vertices;
-
-	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData, &vertexBuffer);
-	if (FAILED(result)) return false;
-
-	UINT indices[] = {
-        3,1,0, 2,1,3,
-        6,4,5, 7,4,6,
-        11,9,8, 10,9,11,
-        14,12,13, 15,12,14,
-        19,17,16, 18,17,19, 
-        22,20,21, 23,20,22
-    };
-
-	D3D11_BUFFER_DESC indexBufferDesc;
-	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	indexBufferDesc.ByteWidth = sizeof(UINT) * 36;
-	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA indexInitData;
-	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	indexInitData.pSysMem = indices;
-
-	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData, &indexBuffer);
-	if (FAILED(result)) return false;
-	
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	d3dDeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	d3dDeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
 	d3dDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	D3D11_BUFFER_DESC constBufferDesc;
@@ -281,7 +197,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 
 	D3D11_SUBRESOURCE_DATA constInitData;
 	ZeroMemory(&constInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	constInitData.pSysMem = indices;
+	unsigned testInitData[] = { 0, 1, 2, 3, 4 };
+	constInitData.pSysMem = testInitData;
 
 	result = d3dDevice->CreateBuffer(&constBufferDesc, &constInitData, &constantBuffer);
 	if (FAILED(result)) return false;
@@ -354,14 +271,26 @@ void Clair::Renderer::terminate() {
 	releaseComObject(texture);
 	releaseComObject(samplerState);
 	releaseComObject(constantBuffer);
-	releaseComObject(vertexBuffer);
-	releaseComObject(indexBuffer);
 	releaseComObject(inputLayout);
-	releaseComObject(vertexShader);
-	releaseComObject(pixelShader);
+	for (const auto& it : vertexShaders) {
+		releaseComObject(it->shader);
+		delete it;
+	}
+	for (const auto& it : pixelShaders) {
+		releaseComObject(it->shader);
+		delete it;
+	}
+	for (const auto& it : meshes) {
+		releaseComObject(it->vertexBuffer);
+		releaseComObject(it->indexBuffer);
+		delete it;
+	}
+	for (const auto& it : inputLayouts) {
+		releaseComObject(it->inputLayout);
+		delete it;
+	}
 	releaseComObject(rasterizerState);
 	releaseComObject(depthStencilBuffer);
-	//releaseComObject(backBuffer);
 	releaseComObject(depthStencilView);
 	releaseComObject(renderTargetView);
 	releaseComObject(swapChain);
@@ -439,13 +368,13 @@ void Clair::Renderer::render(Scene* const scene) {
 	static float rot = 0.0f;
 	rot += 0.0001f;
 
-	const XMMATRIX world = XMMatrixRotationY(rot);// XMMatrixTranslation(0, 0, 0);
+	const XMMATRIX world = XMMatrixRotationY(rot);
 	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 10.0f, 2.0f, sin(rot) * 10.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, viewWidth / viewHeight, 0.1f, 100.0f);
 
-	d3dDeviceContext->VSSetShader(vertexShader, nullptr, 0);
+	d3dDeviceContext->VSSetShader(vertexShaders[0]->shader, nullptr, 0);
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
-	d3dDeviceContext->PSSetShader(pixelShader, nullptr, 0);
+	d3dDeviceContext->PSSetShader(pixelShaders[0]->shader, nullptr, 0);
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 	ConstantBuffer cb;
@@ -453,9 +382,16 @@ void Clair::Renderer::render(Scene* const scene) {
 	cb.projection = projection;
 
 	for (const auto& it : scene->mObjects) {
+		const Mesh* const mesh = it->getMesh();
+		if (!mesh) continue;
 		cb.world = it->getMatrix();
 		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
-		d3dDeviceContext->DrawIndexed(36, 0, 0);
+		const UINT stride = sizeof(Vertex);
+		const UINT offset = 0;
+		d3dDeviceContext->IASetInputLayout(mesh->inputLayout->inputLayout);
+		d3dDeviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
+		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
 	}
 
 }
@@ -465,6 +401,92 @@ Clair::Scene* Clair::Renderer::createScene() {
 	scenes.push_back(newScene);
 	return newScene;
 }
+
+Clair::InputLayout* Clair::Renderer::createInputLayout(InputLayoutDesc& desc, VertexShader* const vs) {
+	InputLayout* newInputLayout = new InputLayout;
+	inputLayouts.push_back(newInputLayout);
+	HRESULT result;
+	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc;
+	for (const auto& it : desc.mElements) {
+		auto format = DXGI_FORMAT_R32_FLOAT;
+		switch (it.format) {
+		case InputLayoutDesc::Element::Format::FLOAT2: format = DXGI_FORMAT_R32G32_FLOAT; break;
+		case InputLayoutDesc::Element::Format::FLOAT3: format = DXGI_FORMAT_R32G32B32_FLOAT; break;
+		case InputLayoutDesc::Element::Format::FLOAT4: format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
+		}
+		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset, D3D11_INPUT_PER_VERTEX_DATA, 0});
+	}
+	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(), vs->byteCode.data(), vs->byteCode.size(), &newInputLayout->inputLayout);
+	if (FAILED(result)) return nullptr;
+	
+	return newInputLayout;
+}
+
+Mesh* Renderer::createMesh(MeshDesc& desc) {
+	Mesh* newMesh = new Mesh;
+	meshes.push_back(newMesh);
+	newMesh->inputLayout = desc.inputLayout;
+	newMesh->indexBufferSize = desc.numIndices;
+	HRESULT result;
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	vertexBufferDesc.ByteWidth = desc.vertexDataSize;
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA subResData;
+	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
+	subResData.pSysMem = desc.vertexData;
+
+	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData, &newMesh->vertexBuffer);
+	if (FAILED(result)) return nullptr;
+
+	D3D11_BUFFER_DESC indexBufferDesc;
+	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	indexBufferDesc.ByteWidth = desc.numIndices * sizeof(unsigned);
+	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA indexInitData;
+	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
+	indexInitData.pSysMem = desc.indexData;
+
+	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData, &newMesh->indexBuffer);
+	if (FAILED(result)) return nullptr;
+	return newMesh;
+}
+
+
+Clair::VertexShader* Clair::Renderer::createVertexShader(std::vector<char>& byteCode) {
+	HRESULT result;
+	ID3D11VertexShader* vertexShader = nullptr;
+	result = d3dDevice->CreateVertexShader(byteCode.data(), byteCode.size(), nullptr, &vertexShader);
+	if (FAILED(result)) {
+		return nullptr;
+	}
+	VertexShader* newShader = new VertexShader{byteCode, vertexShader};
+	vertexShaders.push_back(newShader);
+	return newShader;
+}
+
+Clair::PixelShader* Clair::Renderer::createPixelShader(std::vector<char>& byteCode) {
+	HRESULT result;
+	ID3D11PixelShader* pixelShader = nullptr;
+	result = d3dDevice->CreatePixelShader(byteCode.data(), byteCode.size(), nullptr, &pixelShader);
+	if (FAILED(result)) {
+		return nullptr;
+	}
+	PixelShader* newShader = new PixelShader{byteCode, pixelShader};
+	pixelShaders.push_back(newShader);
+	return newShader;
+}
+
 Clair::Matrix bla;
 void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {
 	bla = m;

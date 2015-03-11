@@ -1,5 +1,6 @@
 #pragma once
 #include "clair/matrix.h"
+#include "clair/vertexBuffer.h"
 
 namespace Clair {
 	class Node {
@@ -21,9 +22,14 @@ namespace Clair {
 		mMatrix = m;
 	}
 
+	class Mesh;
 	class Object : public Node {
 	public:	
-
+		void setMesh(Mesh* mesh) { mMesh = mesh; }
+		const Mesh* getMesh() const { return mMesh; }
+		
+	private:
+		Mesh* mMesh = nullptr;
 	};
 }
 

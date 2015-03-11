@@ -39,13 +39,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\bin\$(ProjectName)\</OutDir>
-    <IntDir>..\build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>bin\</OutDir>
+    <IntDir>build\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\bin\$(ProjectName)\</OutDir>
-    <IntDir>..\build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>bin\</OutDir>
+    <IntDir>build\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,13 +81,16 @@
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\scene.cpp" />
+    <ClCompile Include="src\vertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\clair\camera.h" />
+    <ClInclude Include="include\clair\material.h" />
     <ClInclude Include="include\clair\matrix.h" />
     <ClInclude Include="include\clair\object.h" />
     <ClInclude Include="include\clair\renderer.h" />
     <ClInclude Include="include\clair\scene.h" />
+    <ClInclude Include="include\clair\vertexBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
