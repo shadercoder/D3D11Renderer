@@ -6,7 +6,7 @@ namespace Clair {
 	class Scene;
 	class Matrix;
 	class InputLayout;
-	struct InputLayoutDesc;
+	class VertexLayout;
 	class VertexBuffer;
 	struct VertexBufferDesc;
 	class VertexShader;
@@ -25,7 +25,7 @@ namespace Clair {
 		static void render(Scene* scene);
 
 		static Scene* createScene();
-		static InputLayout* createInputLayout(InputLayoutDesc& desc, VertexShader* vs);
+		static InputLayout* createInputLayout(VertexLayout& desc, VertexShader* vs);
 		//static VertexBuffer* createVertexBuffer(VertexBufferDesc& desc);
 		static VertexShader* createVertexShader(std::vector<char>& byteCode);
 		static PixelShader* createPixelShader(std::vector<char>& byteCode);

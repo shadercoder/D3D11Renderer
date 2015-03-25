@@ -1,13 +1,21 @@
 #pragma once
-#include <string>
 #include <vector>
 
+/*
+struct VertexAttribute {
+};
+class VertexLayout {
+	std::vector<VertexAttribute> mAttributes;
+};
+*/
+
 namespace Clair {
-	struct InputLayoutDesc {
+	class VertexLayout {
+	public:
 		class Element {
 		public:
 			enum class Format {
-				float1, FLOAT2, FLOAT3, FLOAT4
+				FLOAT1, FLOAT2, FLOAT3, FLOAT4
 			};
 			std::string name;
 			Format format;
@@ -20,13 +28,6 @@ namespace Clair {
 		friend class Renderer;
 		std::vector<Element> mElements;
 	};
-
-	//struct VertexBufferDesc {
-	//	void* vertexData;
-	//	size_t vertexDataSize;
-	//	unsigned* indexData;
-	//	size_t indexDataSize;
-	//};
 
 	class InputLayout;
 	struct MeshDesc {

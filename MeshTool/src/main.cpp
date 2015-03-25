@@ -12,13 +12,13 @@ int main(int argc, char* argv[]) {
 	for (int i = 1; i < argc; ++i) {
 		convertMesh(argv[i], "test.txt");
 	}
-	convertMesh("sphere.obj", "test.txt");
+	//convertMesh("cube.obj", "test.txt");
     return 0;
 }
 
 void convertMesh(const std::string& inFile, const std::string& outFile) {
 	Importer importer;
-	const aiScene* const scene = importer.ReadFile(inFile, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+	const aiScene* const scene = importer.ReadFile(inFile, aiProcess_Triangulate);// | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
 	if (!scene) {
 		std::cout << "Couldn't load " << inFile << std::endl;
 		getchar();

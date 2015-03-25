@@ -89,8 +89,12 @@
     <ClInclude Include="include\clair\matrix.h" />
     <ClInclude Include="include\clair\object.h" />
     <ClInclude Include="include\clair\renderer.h" />
+    <ClInclude Include="include\clair\renderPass.h" />
     <ClInclude Include="include\clair\scene.h" />
+    <ClInclude Include="include\clair\vertexAttribute.h" />
     <ClInclude Include="include\clair\vertexBuffer.h" />
+    <ClInclude Include="include\clair\vertexLayout.h" />
+    <ClInclude Include="src\emptyVertexShader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

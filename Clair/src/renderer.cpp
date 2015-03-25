@@ -9,12 +9,12 @@
 #include <DirectXMath.h>
 #include "clair/matrix.h"
 #include "clair/vertexBuffer.h"
+#include "emptyVertexShader.h"
 
 using namespace DirectX;
 using namespace Clair;
 
 #pragma comment(lib, "d3d11.lib")
-
 
 ID3D11Device* d3dDevice = nullptr;
 ID3D11DeviceContext* d3dDeviceContext = nullptr;
@@ -37,6 +37,7 @@ namespace Clair {
 	class InputLayout {
 	public:
 		ID3D11InputLayout* inputLayout = nullptr;
+		unsigned stride = 0;
 	};
 	class Mesh {
 	public:
@@ -60,11 +61,6 @@ std::vector<VertexShader*> vertexShaders;
 std::vector<PixelShader*> pixelShaders;
 std::vector<InputLayout*> inputLayouts;
 std::vector<Mesh*> meshes;
-
-struct Vertex {
-	XMFLOAT3 position;
-	XMFLOAT2 uvs;
-};
 
 struct ConstantBuffer {
 	Clair::Matrix world;
@@ -365,11 +361,11 @@ void Clair::Renderer::setViewport(const float x, const float y, const float widt
 
 void Clair::Renderer::render(Scene* const scene) {
 	if (!scene) return;
-	static float rot = 0.0f;
+	static float rot = 0.8f;
 	rot += 0.0001f;
 
 	const XMMATRIX world = XMMatrixRotationY(rot);
-	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 10.0f, 2.0f, sin(rot) * 10.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 2.0f, 1.0f, sin(rot) * 2.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, viewWidth / viewHeight, 0.1f, 100.0f);
 
 	d3dDeviceContext->VSSetShader(vertexShaders[0]->shader, nullptr, 0);
@@ -386,14 +382,13 @@ void Clair::Renderer::render(Scene* const scene) {
 		if (!mesh) continue;
 		cb.world = it->getMatrix();
 		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
-		const UINT stride = sizeof(Vertex);
+		const UINT stride = mesh->inputLayout->stride;
 		const UINT offset = 0;
 		d3dDeviceContext->IASetInputLayout(mesh->inputLayout->inputLayout);
 		d3dDeviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
 		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
 	}
-
 }
 
 Clair::Scene* Clair::Renderer::createScene() {
@@ -402,22 +397,25 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
-Clair::InputLayout* Clair::Renderer::createInputLayout(InputLayoutDesc& desc, VertexShader* const vs) {
+Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc, VertexShader* const vs) {
 	InputLayout* newInputLayout = new InputLayout;
 	inputLayouts.push_back(newInputLayout);
 	HRESULT result;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc;
+	unsigned stride = 0;
 	for (const auto& it : desc.mElements) {
 		auto format = DXGI_FORMAT_R32_FLOAT;
 		switch (it.format) {
-		case InputLayoutDesc::Element::Format::FLOAT2: format = DXGI_FORMAT_R32G32_FLOAT; break;
-		case InputLayoutDesc::Element::Format::FLOAT3: format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-		case InputLayoutDesc::Element::Format::FLOAT4: format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT2: stride += sizeof(float) * 2; format = DXGI_FORMAT_R32G32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT3: stride += sizeof(float) * 3; format = DXGI_FORMAT_R32G32B32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT4: stride += sizeof(float) * 4; format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
 		}
 		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset, D3D11_INPUT_PER_VERTEX_DATA, 0});
 	}
 	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(), vs->byteCode.data(), vs->byteCode.size(), &newInputLayout->inputLayout);
+	//result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(), gEmptyVertexShader, sizeof(gEmptyVertexShader), &newInputLayout->inputLayout);
 	if (FAILED(result)) return nullptr;
+	newInputLayout->stride = stride;
 	
 	return newInputLayout;
 }

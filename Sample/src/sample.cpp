@@ -7,55 +7,9 @@
 #include "clair/vertexBuffer.h"
 #include <fstream>
 //#include <d3d11.h>
-#include <DirectXMath.h>
+//#include <DirectXMath.h>
 
-using namespace DirectX;
-
-struct Vertex {
-	XMFLOAT3 position;
-	XMFLOAT2 uvs;
-};
-
-Vertex vertices[] = {
-	{ XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-	{ XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-
-	{ XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-	{ XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-	{ XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-	{ XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-
-	{ XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-	{ XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-	{ XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-	{ XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-
-	{ XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-
-	{ XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-	{ XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-
-	{ XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT2( 1.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT2( 0.0f, 1.0f ) },
-	{ XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT2( 0.0f, 0.0f ) },
-	{ XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT2( 1.0f, 0.0f ) },
-};
-
-UINT indices[] = {
-	3,1,0, 2,1,3,
-	6,4,5, 7,4,6,
-	11,9,8, 10,9,11,
-	14,12,13, 15,12,14,
-	19,17,16, 18,17,19, 
-	22,20,21, 23,20,22
-};
+//using namespace DirectX;
 
 static std::vector<char> readBytes(const std::string& filename) {
     std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
@@ -70,13 +24,45 @@ static std::vector<char> readBytes(const std::string& filename) {
     return vec;
 }
 
+static Clair::Mesh* loadMesh(const std::string& filename, Clair::VertexShader* vs) {
+	if (!vs) return nullptr;
+	FILE* file;
+	fopen_s(&file, filename.c_str(), "rb");
+	if (!file) return nullptr;
+	unsigned numVertices = 0;
+	fread(&numVertices, sizeof(unsigned), 1, file);
+	void* vertData = new float[numVertices * 3 * 2];
+	fread(vertData, sizeof(float), numVertices * 3 * 2, file);
+	unsigned numIndices = 0;
+	fread(&numIndices, sizeof(unsigned), 1, file);
+	unsigned* indData = new unsigned[numIndices];
+	fread(indData, sizeof(unsigned), numIndices, file);
+
+	Clair::VertexLayout vertexLayout;
+	vertexLayout.addElement({"POSITION", Clair::VertexLayout::Element::Format::FLOAT3, 0});
+	vertexLayout.addElement({"NORMAL", Clair::VertexLayout::Element::Format::FLOAT3, 12});
+	Clair::InputLayout* const inputLayout = Clair::Renderer::createInputLayout(vertexLayout, vs);
+
+	Clair::MeshDesc meshDesc;
+	meshDesc.inputLayout = inputLayout;
+	meshDesc.vertexData = vertData;
+	meshDesc.vertexDataSize = sizeof(float) * numVertices * 3 * 2;
+	meshDesc.indexData = indData;
+	meshDesc.numIndices = numIndices;
+
+	Clair::Mesh* const newMesh = Clair::Renderer::createMesh(meshDesc);
+	delete[] meshDesc.vertexData;
+	delete[] meshDesc.indexData;
+	return newMesh;
+}
+
 Clair::Scene* scene0 = nullptr;
 Clair::Scene* scene1 = nullptr;
 
 void Sample::initialize() {
-	float m[16] = {	0.4f, 0.0f, 0.0f, 0.0f,
-					0.0f, 0.4f, 0.0f, 0.0f,
-					0.0f, 0.0f, 0.4f, 0.0f,
+	float m[16] = {	1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f,
 					0.0f, -0.4f, 0.0f, 1.0f };
 	float mplane[16] = {	50.0f, 0.0f, 0.0f, 0.0f,
 							0.0f, 0.1f, 0.0f, 0.0f,
@@ -89,22 +75,13 @@ void Sample::initialize() {
 	// shaders
 	auto vsCode = readBytes("../data/shaders/VertexShader.cso");
 	auto psCode = readBytes("../data/shaders/PixelShader.cso");
+	auto emptyVsCode = readBytes("../data/shaders/empty.cso");
 	Clair::VertexShader* vs = Clair::Renderer::createVertexShader(vsCode);
+	//Clair::VertexShader* emptyVs = Clair::Renderer::createVertexShader(emptyVsCode);
 	Clair::Renderer::createPixelShader(psCode);
 
-	Clair::InputLayoutDesc inputLayoutDesc;
-	inputLayoutDesc.addElement({"POSITION", Clair::InputLayoutDesc::Element::Format::FLOAT3, 0});
-	inputLayoutDesc.addElement({"TEXCOORD", Clair::InputLayoutDesc::Element::Format::FLOAT2, 12});
-	Clair::InputLayout* const inputLayout = Clair::Renderer::createInputLayout(inputLayoutDesc, vs);
-
 	// meshes
-	Clair::MeshDesc meshDesc;
-	meshDesc.inputLayout = inputLayout;
-	meshDesc.vertexData = vertices;
-	meshDesc.vertexDataSize = sizeof(Vertex) * 24;
-	meshDesc.indexData = indices;
-	meshDesc.numIndices = 36;
-	Clair::Mesh* mesh = Clair::Renderer::createMesh(meshDesc);
+	Clair::Mesh* mesh = loadMesh("../data/test.txt", vs);
 
 	// ground plane
 	Clair::Object* plane = scene0->createObject();
@@ -112,7 +89,7 @@ void Sample::initialize() {
 	plane->setMesh(mesh);
 
 	// cubes
-	const int size = 3;
+	const int size = 1;
 	for (int x = -size; x < size; ++x) {
 		m[12] = static_cast<float>(x) * 3.0f;
 		for (int y = -size; y < size; ++y) {
@@ -133,7 +110,7 @@ void Sample::update() {
 void Sample::render() {
 	Clair::Renderer::clear();
 	Clair::Renderer::setCameraMatrix(Clair::Matrix());
-	Clair::Renderer::render(scene0);
+	//Clair::Renderer::render(scene0);
 	Clair::Renderer::render(scene1);
 }
 
