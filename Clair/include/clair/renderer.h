@@ -25,11 +25,15 @@ namespace Clair {
 		static void render(Scene* scene);
 
 		static Scene* createScene();
-		static InputLayout* createInputLayout(VertexLayout& desc, VertexShader* vs);
-		//static VertexBuffer* createVertexBuffer(VertexBufferDesc& desc);
-		static VertexShader* createVertexShader(std::vector<char>& byteCode);
-		static PixelShader* createPixelShader(std::vector<char>& byteCode);
+		static VertexShader* createVertexShader(char* byteCode, size_t size);
+		static PixelShader* createPixelShader(char* byteCode, size_t size);
+
+		static InputLayout* createInputLayout(VertexLayout& desc,
+											  VertexShader* vs);
+
 		static Mesh* createMesh(MeshDesc& desc);
+		static void createMaterial(char* data, VertexShader*& outVs,
+								   PixelShader*& outPs);
 
 		static void setCameraMatrix(const Clair::Matrix& m);
 	};

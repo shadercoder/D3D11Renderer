@@ -53,8 +53,9 @@ bool initializeWindow(HINSTANCE hInstance, const int cmdShow) {
 
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 	hwnd = CreateWindowA(	"TheWindowClass", "Clair renderer sample",
-							WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left,
-							rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
+							WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+							rc.right - rc.left, rc.bottom - rc.top,
+							NULL, NULL, hInstance, NULL);
 
 	if(!hwnd) {
 		return false;
@@ -66,13 +67,15 @@ bool initializeWindow(HINSTANCE hInstance, const int cmdShow) {
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, const int cmdShow) { // UNREFERENCED PARAMETER
 	if (!initializeWindow(hInstance, cmdShow)) {
-		MessageBox(nullptr, "Couldn't open a window.", "Fatal error", MB_OK|MB_ICONERROR);
+		MessageBox(nullptr, "Couldn't open a window.", "Fatal error",
+				   MB_OK | MB_ICONERROR);
 		return -1;
 	}
 
 	;
 	if (!Clair::Renderer::initialize(hwnd, "../../data/ClairData")) {
-		MessageBox(nullptr, "Couldn't initialize the rendering engine.", "Fatal error", MB_OK|MB_ICONERROR);
+		MessageBox(nullptr, "Couldn't initialize the rendering engine.",
+				   "Fatal error", MB_OK | MB_ICONERROR);
 		Clair::Renderer::terminate();
 		return -1;
 	}

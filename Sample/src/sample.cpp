@@ -3,28 +3,24 @@
 #include "clair/renderer.h"
 #include "clair/scene.h"
 #include "clair/object.h"
-#include "clair/camera.h"
 #include "clair/vertexBuffer.h"
 #include <fstream>
-//#include <d3d11.h>
-//#include <DirectXMath.h>
-
-//using namespace DirectX;
 
 static std::vector<char> readBytes(const std::string& filename) {
-    std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
+	std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		printf("Couldn't open file\n");
 		return std::vector<char>();
 	}
-    const auto pos = file.tellg();
-    std::vector<char> vec(static_cast<unsigned>(pos));
-    file.seekg(0, std::ios::beg);
-    file.read(&vec[0], pos);
-    return vec;
+	const auto pos = file.tellg();
+	std::vector<char> vec(static_cast<unsigned>(pos));
+	file.seekg(0, std::ios::beg);
+	file.read(&vec[0], pos);
+	return vec;
 }
 
-static Clair::Mesh* loadMesh(const std::string& filename, Clair::VertexShader* vs) {
+static Clair::Mesh* loadMesh(const std::string& filename,
+							 Clair::VertexShader* vs) {
 	if (!vs) return nullptr;
 	FILE* file;
 	fopen_s(&file, filename.c_str(), "rb");
@@ -37,11 +33,15 @@ static Clair::Mesh* loadMesh(const std::string& filename, Clair::VertexShader* v
 	fread(&numIndices, sizeof(unsigned), 1, file);
 	unsigned* indData = new unsigned[numIndices];
 	fread(indData, sizeof(unsigned), numIndices, file);
+	fclose(file);
 
 	Clair::VertexLayout vertexLayout;
-	vertexLayout.addElement({"POSITION", Clair::VertexLayout::Element::Format::FLOAT3, 0});
-	vertexLayout.addElement({"NORMAL", Clair::VertexLayout::Element::Format::FLOAT3, 12});
-	Clair::InputLayout* const inputLayout = Clair::Renderer::createInputLayout(vertexLayout, vs);
+	vertexLayout.addElement({"POSITION",
+							 Clair::VertexLayout::Element::Format::FLOAT3, 0});
+	vertexLayout.addElement({"NORMAL",
+							 Clair::VertexLayout::Element::Format::FLOAT3, 12});
+	auto const inputLayout = Clair::Renderer::createInputLayout(vertexLayout,
+																vs);
 
 	Clair::MeshDesc meshDesc;
 	meshDesc.inputLayout = inputLayout;
@@ -56,32 +56,40 @@ static Clair::Mesh* loadMesh(const std::string& filename, Clair::VertexShader* v
 	return newMesh;
 }
 
+void loadMaterial(const std::string& filename, Clair::VertexShader*& vs,
+				  Clair::PixelShader*& ps) {
+	auto byteCode = readBytes(filename);
+	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
+}
+
 Clair::Scene* scene0 = nullptr;
 Clair::Scene* scene1 = nullptr;
 
 void Sample::initialize() {
-	float m[16] = {	1.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 1.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f, 0.0f,
-					0.0f, -0.4f, 0.0f, 1.0f };
-	float mplane[16] = {	50.0f, 0.0f, 0.0f, 0.0f,
-							0.0f, 0.1f, 0.0f, 0.0f,
-							0.0f, 0.0f, 50.0f, 0.0f,
-							0.0f, -1.0f, 0.0f, 1.0f };
+	float m[16] = {	1.0f, 0.0f,  0.0f,  0.0f,
+					0.0f, 1.0f,  0.0f,  0.0f,
+					0.0f, 0.0f,  1.0f,  0.0f,
+					0.0f, -0.4f, 0.0f,  1.0f };
+	float mplane[16] = { 50.0f, 0.0f, 0.0f,  0.0f,
+						 0.0f,  0.1f, 0.0f,  0.0f,
+						 0.0f,  0.0f, 50.0f, 0.0f,
+						 0.0f, -1.0f, 0.0f,  1.0f };
 
 	scene0 = Clair::Renderer::createScene();
 	scene1 = Clair::Renderer::createScene();
 
 	// shaders
+	Clair::VertexShader* vs = nullptr;
+	Clair::PixelShader* ps = nullptr;
+	loadMaterial("../data/test.csm", vs, ps);
+
 	auto vsCode = readBytes("../data/shaders/VertexShader.cso");
-	auto psCode = readBytes("../data/shaders/PixelShader.cso");
-	auto emptyVsCode = readBytes("../data/shaders/empty.cso");
-	Clair::VertexShader* vs = Clair::Renderer::createVertexShader(vsCode);
-	//Clair::VertexShader* emptyVs = Clair::Renderer::createVertexShader(emptyVsCode);
-	Clair::Renderer::createPixelShader(psCode);
+	auto vs2 = Clair::Renderer::createVertexShader(vsCode.data(),
+												   vsCode.size());
+	(void)vs2;
 
 	// meshes
-	Clair::Mesh* mesh = loadMesh("../data/test.txt", vs);
+	Clair::Mesh* mesh = loadMesh("../data/test.txt", vs2);
 
 	// ground plane
 	Clair::Object* plane = scene0->createObject();

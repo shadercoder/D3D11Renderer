@@ -9,7 +9,6 @@
 #include <DirectXMath.h>
 #include "clair/matrix.h"
 #include "clair/vertexBuffer.h"
-#include "emptyVertexShader.h"
 
 using namespace DirectX;
 using namespace Clair;
@@ -48,12 +47,14 @@ namespace Clair {
 	};
 	class VertexShader {
 	public:
-		std::vector<char> byteCode;
+		char* byteCode;
+		size_t byteCodeSize;
 		ID3D11VertexShader* shader;
 	};
 	class PixelShader {
 	public:
-		std::vector<char> byteCode;
+		char* byteCode;
+		size_t byteCodeSize;
 		ID3D11PixelShader* shader;
 	};
 }
@@ -70,10 +71,10 @@ struct ConstantBuffer {
 
 template<typename T>
 inline static void releaseComObject(T& comObject) {
-    if (comObject != NULL) {
-        comObject->Release();
-        comObject = NULL;
-    }
+	if (comObject != NULL) {
+		comObject->Release();
+		comObject = NULL;
+	}
 }
 
 bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
@@ -112,15 +113,21 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 
 	HRESULT result;
 	D3D_FEATURE_LEVEL featureLevel;
-	result = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels,
-				numFeatureLevels, D3D11_SDK_VERSION, &swapDesc, &swapChain, &d3dDevice, &featureLevel, &d3dDeviceContext);
+	result = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE,
+										   nullptr, createDeviceFlags,
+										   featureLevels, numFeatureLevels,
+										   D3D11_SDK_VERSION, &swapDesc,
+										   &swapChain, &d3dDevice,
+										   &featureLevel, &d3dDeviceContext);
 
 	if (FAILED(result)) return false;
 
-	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&backBuffer));
+	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+								  reinterpret_cast<LPVOID*>(&backBuffer));
 	if (FAILED(result)) return false;
 
-	result = d3dDevice->CreateRenderTargetView(backBuffer, nullptr, &renderTargetView);
+	result = d3dDevice->CreateRenderTargetView(backBuffer, nullptr,
+											   &renderTargetView);
 	releaseComObject(backBuffer);
 
 	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
@@ -137,13 +144,16 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	depthStencilBufferDesc.CPUAccessFlags = 0;
 	depthStencilBufferDesc.MiscFlags = 0;
 
-	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &depthStencilBuffer);
+	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
+							   &depthStencilBuffer);
 	if (FAILED(result)) return false;
 
-	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
+											   &depthStencilView);
 	if (FAILED(result)) return false;
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
+										 depthStencilView);
 
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -158,7 +168,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	rasterizerDesc.MultisampleEnable = FALSE;
 	rasterizerDesc.AntialiasedLineEnable = FALSE;
 
-	result = d3dDevice->CreateRasterizerState(&rasterizerDesc, &rasterizerState);
+	result = d3dDevice->CreateRasterizerState(&rasterizerDesc,
+											  &rasterizerState);
 	if (FAILED(result)) return false;
 
 	d3dDeviceContext->RSSetState(rasterizerState);
@@ -180,7 +191,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	dataPath.append("/");
 	printf(("Clair initialized.\n\t> Data path: " + dataPath + '\n').c_str());
 
-	d3dDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	d3dDeviceContext->IASetPrimitiveTopology(
+							D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	D3D11_BUFFER_DESC constBufferDesc;
 	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -196,7 +208,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	unsigned testInitData[] = { 0, 1, 2, 3, 4 };
 	constInitData.pSysMem = testInitData;
 
-	result = d3dDevice->CreateBuffer(&constBufferDesc, &constInitData, &constantBuffer);
+	result = d3dDevice->CreateBuffer(&constBufferDesc, &constInitData,
+									 &constantBuffer);
 	if (FAILED(result)) return false;
 
 	// create texture
@@ -233,14 +246,15 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 		for (unsigned x = 0; x < 256; ++x) {
 			texData[(x + y * 256) * 4 + 0] = static_cast<float>(x) / 255.0f;
 			texData[(x + y * 256) * 4 + 1] = static_cast<float>(y) / 255.0f;
-			texData[(x + y * 256) * 4 + 2] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			texData[(x + y * 256) * 4 + 2] = static_cast<float>(rand()) /
+											 static_cast<float>(RAND_MAX);
 			texData[(x + y * 256) * 4 + 3] = 1.0f;
 		}
 	}
 
 	D3D11_SUBRESOURCE_DATA texInitData;
-    ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-    texInitData.pSysMem = texData;
+	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
+	texInitData.pSysMem = texData;
 	texInitData.SysMemPitch = sizeof(float) * 256 * 4;
 
 	result = d3dDevice->CreateTexture2D(&texDesc, &texInitData , &texture);
@@ -248,7 +262,8 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 		delete[] texData;
 		return false;
 	}
-	result = d3dDevice->CreateShaderResourceView(texture, nullptr, &shaderResView);
+	result = d3dDevice->CreateShaderResourceView(texture, nullptr,
+												 &shaderResView);
 	if (FAILED(result)) {
 		delete[] texData;
 		return false;
@@ -300,14 +315,17 @@ float viewHeight = 480.0f;
 
 void Clair::Renderer::clear() {
 	d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
-	d3dDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+	d3dDeviceContext->ClearDepthStencilView(depthStencilView,
+										D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL,
+										1.0f, 0);
 }
 
 void Clair::Renderer::finalizeFrame() {
 	swapChain->Present(0, 0);
 }
 
-void Clair::Renderer::setViewport(const float x, const float y, const float width, const float height) {
+void Clair::Renderer::setViewport(const float x, const float y,
+								  const float width, const float height) {
 	d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
 
 	// new render target view
@@ -316,9 +334,11 @@ void Clair::Renderer::setViewport(const float x, const float y, const float widt
 	result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
 	if (FAILED(result)) return;
 	ID3D11Texture2D* buffer = nullptr;
-	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&buffer));
+	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+								  reinterpret_cast<LPVOID*>(&buffer));
 	if (FAILED(result)) return;
-	result = d3dDevice->CreateRenderTargetView(buffer, nullptr, &renderTargetView);
+	result = d3dDevice->CreateRenderTargetView(buffer, nullptr,
+											   &renderTargetView);
 	releaseComObject(buffer);
 
 	// new depth/stencil buffer
@@ -337,14 +357,17 @@ void Clair::Renderer::setViewport(const float x, const float y, const float widt
 	depthStencilBufferDesc.MiscFlags = 0;
 
 	releaseComObject(depthStencilBuffer);
-	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr, &depthStencilBuffer);
+	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
+							   &depthStencilBuffer);
 	if (FAILED(result)) return;
 
 	releaseComObject(depthStencilView);
-	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
+											   &depthStencilView);
 	if (FAILED(result)) return;
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
+										 depthStencilView);
 
 	// new viewport
 	D3D11_VIEWPORT viewport = {0};
@@ -365,8 +388,13 @@ void Clair::Renderer::render(Scene* const scene) {
 	rot += 0.0001f;
 
 	const XMMATRIX world = XMMatrixRotationY(rot);
-	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 2.0f, 1.0f, sin(rot) * 2.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, viewWidth / viewHeight, 0.1f, 100.0f);
+	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 2.0f, 1.0f,
+										   sin(rot) * 2.0f, 0.0f),
+										   XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
+										   XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,
+														 viewWidth / viewHeight,
+														 0.1f, 100.0f);
 
 	d3dDeviceContext->VSSetShader(vertexShaders[0]->shader, nullptr, 0);
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
@@ -381,12 +409,15 @@ void Clair::Renderer::render(Scene* const scene) {
 		const Mesh* const mesh = it->getMesh();
 		if (!mesh) continue;
 		cb.world = it->getMatrix();
-		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb, 0, 0);
+		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb,
+											0, 0);
 		const UINT stride = mesh->inputLayout->stride;
 		const UINT offset = 0;
 		d3dDeviceContext->IASetInputLayout(mesh->inputLayout->inputLayout);
-		d3dDeviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer, &stride, &offset);
-		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		d3dDeviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer,
+											 &stride, &offset);
+		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer,
+										   DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
 	}
 }
@@ -397,7 +428,8 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
-Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc, VertexShader* const vs) {
+Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc,
+													   VertexShader* const vs) {
 	InputLayout* newInputLayout = new InputLayout;
 	inputLayouts.push_back(newInputLayout);
 	HRESULT result;
@@ -406,14 +438,19 @@ Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc, Verte
 	for (const auto& it : desc.mElements) {
 		auto format = DXGI_FORMAT_R32_FLOAT;
 		switch (it.format) {
-		case VertexLayout::Element::Format::FLOAT2: stride += sizeof(float) * 2; format = DXGI_FORMAT_R32G32_FLOAT; break;
-		case VertexLayout::Element::Format::FLOAT3: stride += sizeof(float) * 3; format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-		case VertexLayout::Element::Format::FLOAT4: stride += sizeof(float) * 4; format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT2: stride += sizeof(float) * 2;
+			format = DXGI_FORMAT_R32G32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT3: stride += sizeof(float) * 3;
+			format = DXGI_FORMAT_R32G32B32_FLOAT; break;
+		case VertexLayout::Element::Format::FLOAT4: stride += sizeof(float) * 4;
+			format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
 		}
-		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset, D3D11_INPUT_PER_VERTEX_DATA, 0});
+		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset,
+							  D3D11_INPUT_PER_VERTEX_DATA, 0});
 	}
-	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(), vs->byteCode.data(), vs->byteCode.size(), &newInputLayout->inputLayout);
-	//result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(), gEmptyVertexShader, sizeof(gEmptyVertexShader), &newInputLayout->inputLayout);
+	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
+										  vs->byteCode, vs->byteCodeSize,
+										  &newInputLayout->inputLayout);
 	if (FAILED(result)) return nullptr;
 	newInputLayout->stride = stride;
 	
@@ -439,7 +476,8 @@ Mesh* Renderer::createMesh(MeshDesc& desc) {
 	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
 	subResData.pSysMem = desc.vertexData;
 
-	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData, &newMesh->vertexBuffer);
+	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData,
+									 &newMesh->vertexBuffer);
 	if (FAILED(result)) return nullptr;
 
 	D3D11_BUFFER_DESC indexBufferDesc;
@@ -455,32 +493,47 @@ Mesh* Renderer::createMesh(MeshDesc& desc) {
 	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	indexInitData.pSysMem = desc.indexData;
 
-	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData, &newMesh->indexBuffer);
+	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData,
+									 &newMesh->indexBuffer);
 	if (FAILED(result)) return nullptr;
 	return newMesh;
 }
 
+void Clair::Renderer::createMaterial(char* data, VertexShader*& vs,
+									 PixelShader*& ps) {
+	const size_t vsSize = *reinterpret_cast<size_t*>(data);
+	data += sizeof(size_t);
+	vs = createVertexShader(data, vsSize);
+	data += vsSize;
+	const size_t psSize = *reinterpret_cast<size_t*>(data);
+	data += sizeof(size_t);
+	ps = createPixelShader(data, psSize);
+}
 
-Clair::VertexShader* Clair::Renderer::createVertexShader(std::vector<char>& byteCode) {
+Clair::VertexShader* Clair::Renderer::createVertexShader(char* byteCode,
+														 size_t size) {
 	HRESULT result;
 	ID3D11VertexShader* vertexShader = nullptr;
-	result = d3dDevice->CreateVertexShader(byteCode.data(), byteCode.size(), nullptr, &vertexShader);
+	result = d3dDevice->CreateVertexShader(byteCode, size, nullptr,
+										   &vertexShader);
 	if (FAILED(result)) {
 		return nullptr;
 	}
-	VertexShader* newShader = new VertexShader{byteCode, vertexShader};
+	VertexShader* newShader = new VertexShader{byteCode, size, vertexShader};
 	vertexShaders.push_back(newShader);
 	return newShader;
 }
 
-Clair::PixelShader* Clair::Renderer::createPixelShader(std::vector<char>& byteCode) {
+Clair::PixelShader* Clair::Renderer::createPixelShader(char* byteCode,
+													   size_t size) {
 	HRESULT result;
 	ID3D11PixelShader* pixelShader = nullptr;
-	result = d3dDevice->CreatePixelShader(byteCode.data(), byteCode.size(), nullptr, &pixelShader);
+	result = d3dDevice->CreatePixelShader(byteCode, size, nullptr,
+										  &pixelShader);
 	if (FAILED(result)) {
 		return nullptr;
 	}
-	PixelShader* newShader = new PixelShader{byteCode, pixelShader};
+	PixelShader* newShader = new PixelShader{byteCode, size, pixelShader};
 	pixelShaders.push_back(newShader);
 	return newShader;
 }
