@@ -14,7 +14,8 @@ float windowWidth = 0.0f;
 float windowHeight = 0.0f;
 bool resizeWin = false;
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
+						 WPARAM wParam, LPARAM lParam) {
 	switch(message) {
 	case WM_CHAR:
 		if (wParam == VK_ESCAPE)

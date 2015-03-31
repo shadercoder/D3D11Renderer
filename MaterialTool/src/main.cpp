@@ -43,11 +43,12 @@ int main(int argc, char* argv[]) {
 	FILE* outputFile;
 	fopen_s(&outputFile, "test.csm", "wb");
 	const SIZE_T vsSize = vs->GetBufferSize();
-	fwrite(&vsSize, sizeof(SIZE_T), 1, outputFile);
+	//fwrite(&vsSize, sizeof(SIZE_T), 1, outputFile);
 	fwrite(vs->GetBufferPointer(), sizeof(char), vsSize, outputFile);
-	const SIZE_T psSize = ps->GetBufferSize();
-	fwrite(&psSize, sizeof(SIZE_T), 1, outputFile);
-	fwrite(ps->GetBufferPointer(), sizeof(char), psSize, outputFile);
+	//const SIZE_T psSize = ps->GetBufferSize();
+	//fwrite(&psSize, sizeof(SIZE_T), 1, outputFile);
+	//fwrite(ps->GetBufferPointer(), sizeof(char), psSize, outputFile);
+	fclose(outputFile);
 
 	// Clean up
 	vs->Release();
@@ -64,13 +65,13 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 
 	ID3DBlob* shaderBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
-	//hr = D3DCompile(sourceCode.c_str(), sourceCode.length(), nullptr, nullptr,
-	//				nullptr, entryPoint.c_str(), target.c_str(), 0, 0,
-	//				&shaderBlob, &errorBlob);
-	hr = D3DCompileFromFile(L"default.hlsl", NULL,
-							D3D_COMPILE_STANDARD_FILE_INCLUDE,
-							entryPoint.c_str(), target.c_str(), flags,
-							0, &shaderBlob, &errorBlob );
+	hr = D3DCompile(sourceCode.c_str(), sourceCode.length(), nullptr, nullptr,
+					nullptr, entryPoint.c_str(), target.c_str(), 0, 0,
+					&shaderBlob, &errorBlob);
+	//hr = D3DCompileFromFile(L"default.hlsl", NULL,
+	//						D3D_COMPILE_STANDARD_FILE_INCLUDE,
+	//						entryPoint.c_str(), target.c_str(), flags,
+	//						0, &shaderBlob, &errorBlob );
 	if (FAILED(hr)) {
 		if (errorBlob) {
 			OutputDebugStringA( (char*)errorBlob->GetBufferPointer() );

@@ -5,6 +5,7 @@
 #include "clair/object.h"
 #include "clair/vertexBuffer.h"
 #include <fstream>
+#include <sstream>
 
 static std::vector<char> readBytes(const std::string& filename) {
 	std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
@@ -56,10 +57,13 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 	return newMesh;
 }
 
+Clair::Mesh* mesh = nullptr;//loadMesh("../data/test.txt", vs);
+
 void loadMaterial(const std::string& filename, Clair::VertexShader*& vs,
 				  Clair::PixelShader*& ps) {
 	auto byteCode = readBytes(filename);
 	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
+	mesh = loadMesh("../data/test.txt", vs);
 }
 
 Clair::Scene* scene0 = nullptr;
@@ -82,14 +86,6 @@ void Sample::initialize() {
 	Clair::VertexShader* vs = nullptr;
 	Clair::PixelShader* ps = nullptr;
 	loadMaterial("../data/test.csm", vs, ps);
-
-	auto vsCode = readBytes("../data/shaders/VertexShader.cso");
-	auto vs2 = Clair::Renderer::createVertexShader(vsCode.data(),
-												   vsCode.size());
-	(void)vs2;
-
-	// meshes
-	Clair::Mesh* mesh = loadMesh("../data/test.txt", vs2);
 
 	// ground plane
 	Clair::Object* plane = scene0->createObject();
