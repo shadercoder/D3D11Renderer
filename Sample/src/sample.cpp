@@ -6,6 +6,14 @@
 #include "clair/vertexBuffer.h"
 #include <fstream>
 #include <sstream>
+#pragma warning(push, 3)
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
+#pragma warning(pop)
+
+using namespace glm;
 
 static std::vector<char> readBytes(const std::string& filename) {
 	std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
@@ -62,15 +70,16 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 Clair::Scene* scene0 = nullptr;
 Clair::Scene* scene1 = nullptr;
 
-void Sample::initialize() {
-	float m[16] = {	1.0f, 0.0f,  0.0f,  0.0f,
-					0.0f, 1.0f,  0.0f,  0.0f,
-					0.0f, 0.0f,  1.0f,  0.0f,
-					0.0f, -0.4f, 0.0f,  1.0f };
-	float mplane[16] = { 50.0f, 0.0f, 0.0f,  0.0f,
-						 0.0f,  0.1f, 0.0f,  0.0f,
-						 0.0f,  0.0f, 50.0f, 0.0f,
-						 0.0f, -1.0f, 0.0f,  1.0f };
+bool Sample::initialize(HWND hwnd) {
+	if (!Clair::Renderer::initialize(hwnd)) return false;
+
+	float m[16] = { 0.0f };
+	float mplane[16] = { 0.0f };
+	memcpy(&m, value_ptr(translate(vec3(0.0f, -0.4f, 0.0f))),
+		   sizeof(float) * 16);
+	memcpy(&mplane, value_ptr(translate(vec3(0.0f, -0.4f, 0.0f)) *
+		   scale(vec3(50.0f, 0.1f, 50.0f))),
+		   sizeof(float) * 16);
 
 	scene0 = Clair::Renderer::createScene();
 	scene1 = Clair::Renderer::createScene();
@@ -98,9 +107,7 @@ void Sample::initialize() {
 			cube->setMesh(mesh);
 		}
 	}
-}
-
-void Sample::terminate() {
+	return true;
 }
 
 void Sample::update() {
@@ -111,6 +118,11 @@ void Sample::render() {
 	Clair::Renderer::setCameraMatrix(Clair::Matrix());
 	Clair::Renderer::render(scene0);
 	Clair::Renderer::render(scene1);
+	Clair::Renderer::finalizeFrame();
+}
+
+void Sample::terminate() {
+	Clair::Renderer::terminate();
 }
 
 void Sample::onResize(const float width, const float height) {

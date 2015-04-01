@@ -2,10 +2,10 @@
 
 class Sample {
 public:
-	void initialize();
-	void terminate();
-
+	bool initialize(HWND hwnd);
 	void update();
 	void render();
+	void terminate();
+
 	void onResize(float width, float height);
 };

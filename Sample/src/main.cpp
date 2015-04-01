@@ -3,7 +3,7 @@
 #include "clair/renderer.h"
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_syswm.h"
-#include "vld.h"
+//#include "vld.h"
 
 #ifdef NDEBUG
 	#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
@@ -38,25 +38,21 @@ int main(int, char*[]) {
 	SDL_VERSION(&info.version);
 	SDL_GetWindowWMInfo(SDL_window, &info);
 
-	if (!Clair::Renderer::initialize(info.info.win.window)) {
+	if (!sample.initialize(info.info.win.window)) {
 		MessageBox(nullptr, "Couldn't initialize Clair.",
 				   "Fatal error", MB_OK | MB_ICONERROR);
-		Clair::Renderer::terminate();
+		sample.terminate();
 		SDL_Quit();
 		return -1;
 	}
-
-	sample.initialize();
 
 	while (isRunning) {
 		handleEvents();
 		sample.update();
 		sample.render();
-		Clair::Renderer::finalizeFrame();
 	}
 
 	sample.terminate();
-	Clair::Renderer::terminate();
 
 	SDL_Quit();
 	return 0;
