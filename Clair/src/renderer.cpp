@@ -77,7 +77,7 @@ inline static void releaseComObject(T& comObject) {
 	}
 }
 
-bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
+bool Clair::Renderer::initialize(HWND hwnd) {
 	UINT createDeviceFlags = 0;
 
 #ifndef NDEBUG
@@ -183,13 +183,7 @@ bool Clair::Renderer::initialize(HWND hwnd, const std::string& clairDataPath) {
 	viewport.MaxDepth = 1.0f;
 	d3dDeviceContext->RSSetViewports(1, &viewport);
 
-	// initialize data path
-	dataPath = clairDataPath;
-	const auto p = clairDataPath.find_last_not_of("/");
-	if (p != std::string::npos)
-		dataPath.erase(p + 1);
-	dataPath.append("/");
-	printf(("Clair initialized.\n\t> Data path: " + dataPath + '\n').c_str());
+	printf("Clair initialized.\n");
 
 	d3dDeviceContext->IASetPrimitiveTopology(
 							D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

@@ -16,7 +16,7 @@ namespace Clair {
 
 	class Renderer {
 	public:
-		static bool initialize(HWND hwnd, const std::string& clairDataPath);
+		static bool initialize(HWND hwnd);
 		static void terminate();
 
 		static void setViewport(float x, float y, float width, float height);

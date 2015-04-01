@@ -41,6 +41,8 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 							 Clair::VertexLayout::Element::Format::FLOAT3, 0});
 	vertexLayout.addElement({"NORMAL",
 							 Clair::VertexLayout::Element::Format::FLOAT3, 12});
+	//vertexLayout.addElement({"BLA",
+	//						 Clair::VertexLayout::Element::Format::FLOAT2, 0});
 	auto const inputLayout = Clair::Renderer::createInputLayout(vertexLayout,
 																vs);
 
@@ -55,15 +57,6 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 	delete[] meshDesc.vertexData;
 	delete[] meshDesc.indexData;
 	return newMesh;
-}
-
-Clair::Mesh* mesh = nullptr;//loadMesh("../data/test.txt", vs);
-
-void loadMaterial(const std::string& filename, Clair::VertexShader*& vs,
-				  Clair::PixelShader*& ps) {
-	auto byteCode = readBytes(filename);
-	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
-	mesh = loadMesh("../data/test.txt", vs);
 }
 
 Clair::Scene* scene0 = nullptr;
@@ -85,7 +78,9 @@ void Sample::initialize() {
 	// shaders
 	Clair::VertexShader* vs = nullptr;
 	Clair::PixelShader* ps = nullptr;
-	loadMaterial("../data/test.csm", vs, ps);
+	auto byteCode = readBytes("../data/test.csm");
+	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
+	auto mesh = loadMesh("../data/test.txt", vs);
 
 	// ground plane
 	Clair::Object* plane = scene0->createObject();
@@ -114,7 +109,7 @@ void Sample::update() {
 void Sample::render() {
 	Clair::Renderer::clear();
 	Clair::Renderer::setCameraMatrix(Clair::Matrix());
-	//Clair::Renderer::render(scene0);
+	Clair::Renderer::render(scene0);
 	Clair::Renderer::render(scene1);
 }
 
