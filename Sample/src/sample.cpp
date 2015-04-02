@@ -6,12 +6,10 @@
 #include "clair/vertexBuffer.h"
 #include <fstream>
 #include <sstream>
-#pragma warning(push, 3)
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
-#pragma warning(pop)
+#include "glmMath.h"
+#include "SDL2/SDL.h"
+#include "input.h"
+#include "camera.h"
 
 using namespace glm;
 
@@ -67,62 +65,47 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 	return newMesh;
 }
 
-Clair::Scene* scene0 = nullptr;
-Clair::Scene* scene1 = nullptr;
+Clair::Scene* scene = nullptr;
 
 bool Sample::initialize(HWND hwnd) {
 	if (!Clair::Renderer::initialize(hwnd)) return false;
 
-	float m[16] = { 0.0f };
-	float mplane[16] = { 0.0f };
-	memcpy(&m, value_ptr(translate(vec3(0.0f, -0.4f, 0.0f))),
-		   sizeof(float) * 16);
-	memcpy(&mplane, value_ptr(translate(vec3(0.0f, -0.4f, 0.0f)) *
-		   scale(vec3(50.0f, 0.1f, 50.0f))),
-		   sizeof(float) * 16);
+	scene = Clair::Renderer::createScene();
 
-	scene0 = Clair::Renderer::createScene();
-	scene1 = Clair::Renderer::createScene();
-
-	// shaders
 	Clair::VertexShader* vs = nullptr;
 	Clair::PixelShader* ps = nullptr;
 	auto byteCode = readBytes("../data/material.csm");
 	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
 	auto mesh = loadMesh("../data/bunny.cmd", vs);
 
-	// ground plane
-	Clair::Object* plane = scene0->createObject();
-	plane->setMatrix(Clair::Matrix(mplane));
-	plane->setMesh(mesh);
-
-	// cubes
-	const int size = 1;
+	const int size = 2;
 	for (int x = -size; x < size; ++x) {
-		m[12] = static_cast<float>(x) * 3.0f;
+		const float fx = static_cast<float>(x) * 3.0f;
 		for (int y = -size; y < size; ++y) {
-			Clair::Object* cube = scene1->createObject();
-			m[14] = static_cast<float>(y) * 3.0f;
-			cube->setMatrix(Clair::Matrix(m));
+			Clair::Object* cube = scene->createObject();
+			const float fz = static_cast<float>(y) * 3.0f;
+			const mat4 m = translate(vec3(fx, 0.0f, fz));
+			cube->setMatrix(Clair::Matrix(value_ptr(m)));
 			cube->setMesh(mesh);
 		}
 	}
 	return true;
 }
 
-void Sample::update() {
+void Sample::terminate() {
+	Clair::Renderer::terminate();
+}
+
+void Sample::update(const float deltaTime, const float ) {
+	Camera::update(deltaTime);
 }
 
 void Sample::render() {
 	Clair::Renderer::clear();
-	Clair::Renderer::setCameraMatrix(Clair::Matrix());
-	Clair::Renderer::render(scene0);
-	Clair::Renderer::render(scene1);
+	Clair::Renderer::setCameraMatrix(Clair::Matrix(
+										value_ptr(Camera::getViewMatrix())));
+	Clair::Renderer::render(scene);
 	Clair::Renderer::finalizeFrame();
-}
-
-void Sample::terminate() {
-	Clair::Renderer::terminate();
 }
 
 void Sample::onResize(const float width, const float height) {

@@ -32,6 +32,8 @@ ID3D11SamplerState* samplerState = nullptr;
 ID3D11Texture2D* texture = nullptr;
 ID3D11ShaderResourceView* shaderResView = nullptr;
 
+Clair::Matrix cameraViewMat;
+
 namespace Clair {
 	class InputLayout {
 	public:
@@ -65,7 +67,7 @@ std::vector<Mesh*> meshes;
 
 struct ConstantBuffer {
 	Clair::Matrix world;
-	XMMATRIX view;
+	Clair::Matrix view;
 	XMMATRIX projection;
 };
 
@@ -378,14 +380,7 @@ void Clair::Renderer::setViewport(const float x, const float y,
 
 void Clair::Renderer::render(Scene* const scene) {
 	if (!scene) return;
-	static float rot = 0.8f;
-	rot += 0.0001f;
 
-	const XMMATRIX world = XMMatrixRotationY(rot);
-	const XMMATRIX view = XMMatrixLookAtLH(XMVectorSet(cos(rot) * 2.0f, 1.0f,
-										   sin(rot) * 2.0f, 0.0f),
-										   XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
-										   XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,
 														 viewWidth / viewHeight,
 														 0.1f, 100.0f);
@@ -396,7 +391,7 @@ void Clair::Renderer::render(Scene* const scene) {
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 	ConstantBuffer cb;
-	cb.view = view;
+	cb.view = cameraViewMat;
 	cb.projection = projection;
 
 	for (const auto& it : scene->mObjects) {
@@ -532,8 +527,7 @@ Clair::PixelShader* Clair::Renderer::createPixelShader(char* byteCode,
 	return newShader;
 }
 
-Clair::Matrix bla;
 void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {
-	bla = m;
+	cameraViewMat = m;
 	return;
 }

@@ -83,11 +83,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\sample.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\camera.h" />
+    <ClInclude Include="include\glmMath.h" />
+    <ClInclude Include="include\input.h" />
     <ClInclude Include="include\sample.h" />
+    <ClInclude Include="include\timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

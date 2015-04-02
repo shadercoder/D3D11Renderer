@@ -3,4 +3,4 @@ This is my specialization project as part of my education.
 
 **Current state:** _(01/03/2015)_
 
-![](http://i.imgur.com/zcsBFUH.gif)
+![](http://i.imgur.com/ySD8jby.gif)

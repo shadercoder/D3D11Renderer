@@ -3,6 +3,8 @@
 #include "clair/renderer.h"
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_syswm.h"
+#include "input.h"
+#include "timer.h"
 //#include "vld.h"
 
 #ifdef NDEBUG
@@ -46,10 +48,23 @@ int main(int, char*[]) {
 		return -1;
 	}
 
+	Timer timer;
+	timer.start();
+	double deltaTime = 0.0f;
+	double runningTime = 0.0f;
 	while (isRunning) {
+		Input::update();
 		handleEvents();
-		sample.update();
+		if (Input::getKey(SDL_SCANCODE_ESCAPE)) isRunning = false;
+
+		sample.update(static_cast<float>(deltaTime),
+					  static_cast<float>(runningTime));
 		sample.render();
+
+		const double elapsedTime = timer.elapsed();
+		deltaTime = elapsedTime;
+		runningTime += elapsedTime;
+		timer.start();
 	}
 
 	sample.terminate();
@@ -71,10 +86,13 @@ void handleEvents() {
 								static_cast<float>(event.window.data2));
 			}
 			break;
+		case SDL_KEYDOWN:
+			Input::setKeyDown(event.key.keysym.scancode);
+			break;
+		case SDL_KEYUP:
+			Input::setKeyUp(event.key.keysym.scancode);
+			break;
 		default:
-			if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-				isRunning = false;
-			}
 			break;
 		}
 	}
