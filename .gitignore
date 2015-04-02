@@ -1,4 +1,7 @@
 build
 bin
 *.sdf
+*.opensdf
 *.suo
+*\desktop.ini
+*.swp

@@ -87,9 +87,9 @@ bool Sample::initialize(HWND hwnd) {
 	// shaders
 	Clair::VertexShader* vs = nullptr;
 	Clair::PixelShader* ps = nullptr;
-	auto byteCode = readBytes("../data/test.csm");
+	auto byteCode = readBytes("../data/material.csm");
 	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
-	auto mesh = loadMesh("../data/test.txt", vs);
+	auto mesh = loadMesh("../data/bunny.cmd", vs);
 
 	// ground plane
 	Clair::Object* plane = scene0->createObject();
