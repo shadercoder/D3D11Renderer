@@ -6,13 +6,14 @@ namespace Clair {
 	class Scene;
 	class Matrix;
 	class InputLayout;
-	class VertexLayout;
+	class VertexLayoutOld;
 	class VertexBuffer;
 	struct VertexBufferDesc;
 	class VertexShader;
 	class PixelShader;
 	class Mesh;
 	struct MeshDesc;
+	class SubMaterial;
 
 	class Renderer {
 	public:
@@ -28,12 +29,14 @@ namespace Clair {
 		static VertexShader* createVertexShader(char* byteCode, size_t size);
 		static PixelShader* createPixelShader(char* byteCode, size_t size);
 
-		static InputLayout* createInputLayout(VertexLayout& desc,
+		static InputLayout* createInputLayout(VertexLayoutOld& desc,
 											  VertexShader* vs);
 
 		static Mesh* createMesh(MeshDesc& desc);
 		static void createMaterial(char* data, VertexShader*& outVs,
 								   PixelShader*& outPs);
+
+		static SubMaterial* createSubMaterial(char* data);
 
 		static void setCameraMatrix(const Clair::Matrix& m);
 	};

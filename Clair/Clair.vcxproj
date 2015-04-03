@@ -84,6 +84,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\scene.cpp" />
@@ -97,7 +98,6 @@
     <ClInclude Include="include\clair\renderer.h" />
     <ClInclude Include="include\clair\renderPass.h" />
     <ClInclude Include="include\clair\scene.h" />
-    <ClInclude Include="include\clair\vertexAttribute.h" />
     <ClInclude Include="include\clair\vertexBuffer.h" />
     <ClInclude Include="include\clair\vertexLayout.h" />
   </ItemGroup>

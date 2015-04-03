@@ -10,7 +10,7 @@ class VertexLayout {
 */
 
 namespace Clair {
-	class VertexLayout {
+	class VertexLayoutOld {
 	public:
 		class Element {
 		public:

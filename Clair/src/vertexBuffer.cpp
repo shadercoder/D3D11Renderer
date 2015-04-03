@@ -2,6 +2,6 @@
 
 using namespace Clair;
 
-void VertexLayout::addElement(const Element& element) {
+void VertexLayoutOld::addElement(const Element& element) {
 	mElements.push_back(element);
 }

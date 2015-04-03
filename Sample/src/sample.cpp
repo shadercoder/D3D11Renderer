@@ -42,11 +42,11 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 	fread(indData, sizeof(unsigned), numIndices, file);
 	fclose(file);
 
-	Clair::VertexLayout vertexLayout;
+	Clair::VertexLayoutOld vertexLayout;
 	vertexLayout.addElement({"POSITION",
-							 Clair::VertexLayout::Element::Format::FLOAT3, 0});
+							 Clair::VertexLayoutOld::Element::Format::FLOAT3, 0});
 	vertexLayout.addElement({"NORMAL",
-							 Clair::VertexLayout::Element::Format::FLOAT3, 12});
+							 Clair::VertexLayoutOld::Element::Format::FLOAT3, 12});
 	//vertexLayout.addElement({"BLA",
 	//						 Clair::VertexLayout::Element::Format::FLOAT2, 0});
 	auto const inputLayout = Clair::Renderer::createInputLayout(vertexLayout,
@@ -65,30 +65,34 @@ static Clair::Mesh* loadMesh(const std::string& filename,
 	return newMesh;
 }
 
-Clair::Scene* scene = nullptr;
+Clair::Scene* scene {nullptr};
 
 bool Sample::initialize(HWND hwnd) {
 	if (!Clair::Renderer::initialize(hwnd)) return false;
 
 	scene = Clair::Renderer::createScene();
 
-	Clair::VertexShader* vs = nullptr;
-	Clair::PixelShader* ps = nullptr;
+	Clair::VertexShader* vs {nullptr};
+	Clair::PixelShader* ps {nullptr};
 	auto byteCode = readBytes("../data/material.csm");
 	Clair::Renderer::createMaterial(byteCode.data(), vs, ps);
 	auto mesh = loadMesh("../data/bunny.cmd", vs);
 
-	const int size = 2;
+	const int size {2};
 	for (int x = -size; x < size; ++x) {
-		const float fx = static_cast<float>(x) * 3.0f;
+		const float fx {static_cast<float>(x) * 3.0f};
 		for (int y = -size; y < size; ++y) {
-			Clair::Object* cube = scene->createObject();
-			const float fz = static_cast<float>(y) * 3.0f;
-			const mat4 m = translate(vec3(fx, 0.0f, fz));
+			Clair::Object* cube {scene->createObject()};
+			const float fz {static_cast<float>(y) * 3.0f};
+			const mat4 m {translate(vec3(fx, 0.0f, fz))};
 			cube->setMatrix(Clair::Matrix(value_ptr(m)));
 			cube->setMesh(mesh);
 		}
 	}
+
+
+	auto sub = readBytes("../data/sub.csm");
+	Clair::Renderer::createSubMaterial(sub.data());
 	return true;
 }
 

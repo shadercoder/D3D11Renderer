@@ -9,6 +9,8 @@
 #include <DirectXMath.h>
 #include "clair/matrix.h"
 #include "clair/vertexBuffer.h"
+#include "clair/vertexLayout.h"
+#include "clair/material.h"
 
 using namespace DirectX;
 using namespace Clair;
@@ -417,7 +419,7 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
-Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc,
+Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayoutOld& desc,
 													   VertexShader* const vs) {
 	InputLayout* newInputLayout = new InputLayout;
 	inputLayouts.push_back(newInputLayout);
@@ -427,11 +429,11 @@ Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayout& desc,
 	for (const auto& it : desc.mElements) {
 		auto format = DXGI_FORMAT_R32_FLOAT;
 		switch (it.format) {
-		case VertexLayout::Element::Format::FLOAT2: stride += sizeof(float) * 2;
+		case VertexLayoutOld::Element::Format::FLOAT2: stride += sizeof(float) * 2;
 			format = DXGI_FORMAT_R32G32_FLOAT; break;
-		case VertexLayout::Element::Format::FLOAT3: stride += sizeof(float) * 3;
+		case VertexLayoutOld::Element::Format::FLOAT3: stride += sizeof(float) * 3;
 			format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-		case VertexLayout::Element::Format::FLOAT4: stride += sizeof(float) * 4;
+		case VertexLayoutOld::Element::Format::FLOAT4: stride += sizeof(float) * 4;
 			format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
 		}
 		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset,
@@ -490,13 +492,42 @@ Mesh* Renderer::createMesh(MeshDesc& desc) {
 
 void Clair::Renderer::createMaterial(char* data, VertexShader*& vs,
 									 PixelShader*& ps) {
-	const size_t vsSize = *reinterpret_cast<size_t*>(data);
+	size_t vsSize {0};
+	memcpy(&vsSize, data, sizeof(size_t));
 	data += sizeof(size_t);
 	vs = createVertexShader(data, vsSize);
-	data += vsSize;
-	const size_t psSize = *reinterpret_cast<size_t*>(data);
+	data += sizeof(char) * vsSize;
+	size_t psSize {0};
+	memcpy(&psSize, data, sizeof(size_t));
 	data += sizeof(size_t);
 	ps = createPixelShader(data, psSize);
+
+}
+
+SubMaterial* Renderer::createSubMaterial(char* data) {
+	SubMaterial* bla {new SubMaterial()};
+	size_t layoutSize {0};
+	memcpy(&layoutSize, data, sizeof(size_t));
+	data += sizeof(size_t);
+	for (size_t i {0}; i < layoutSize; ++i) {
+		VertexAttribute element{};
+		size_t strSize {0};
+		memcpy(&strSize, data, sizeof(size_t));
+		data += sizeof(size_t);
+		char* str {new char[strSize + 1]};
+		memcpy(str, data, sizeof(char) * strSize);
+		str[strSize] = '\0';
+		element.name = std::string(str);
+		delete[] str;
+		data += sizeof(char) * strSize;
+		int format {0};
+		memcpy(&format, data, sizeof(int));
+		element.format = static_cast<VertexAttribute::Format>(format);
+		data += sizeof(int);
+		bla->vertexLayout.push_back(element);
+	}
+	delete bla;
+	return nullptr;
 }
 
 Clair::VertexShader* Clair::Renderer::createVertexShader(char* byteCode,

@@ -13,9 +13,8 @@ float Camera::msPitch = 0.0f;
 float Camera::msYaw = 0.0f;
 
 void Camera::update(float deltaTime) {
-	const float speed = Input::getKey(SDL_SCANCODE_LSHIFT) ?
-						20.0f * deltaTime :
-						5.0f * deltaTime;
+	const float speed {(Input::getKey(SDL_SCANCODE_LSHIFT) ? 20.0f : 5.0f) *
+					   deltaTime};
 	if (Input::getKey(SDL_SCANCODE_W)) msPosition += msForward * speed;
 	if (Input::getKey(SDL_SCANCODE_S)) msPosition -= msForward * speed;
 	if (Input::getKey(SDL_SCANCODE_D)) msPosition += msRight * speed;
@@ -34,10 +33,10 @@ void Camera::update(float deltaTime) {
 		msIsSnapping = true;
 
 		if (cursor != msSnapPos) {
-			const float rotSpeed = 0.005f;
+			const float rotSpeed {0.005f};
 			msPitch += (cursor.y - msSnapPos.y) * rotSpeed;
 			msYaw += (cursor.x - msSnapPos.x) * rotSpeed;
-			const float maxPitch = 90.0f / 180.0f * static_cast<float>(M_PI);
+			const float maxPitch {90.0f / 180.0f * static_cast<float>(M_PI)};
 			msPitch = max(min(msPitch, maxPitch), -maxPitch);
 		}
 		SDL_WarpMouseInWindow(nullptr, static_cast<int>(msSnapPos.x),
@@ -50,20 +49,20 @@ void Camera::update(float deltaTime) {
 }
 
 void Camera::updateMatrix() {
-	const float cosPitch = cos(msPitch);
-	const float sinPitch = sin(msPitch);
-	const float cosYaw   = cos(msYaw);
-	const float sinYaw   = sin(msYaw);
+	const float cosPitch {cos(msPitch)};
+	const float sinPitch {sin(msPitch)};
+	const float cosYaw   {cos(msYaw)};
+	const float sinYaw   {sin(msYaw)};
  
 	msRight = vec3(cosYaw, 0, -sinYaw);
 	const vec3 yaxis = vec3(sinYaw * sinPitch, cosPitch, cosYaw * sinPitch);
 	msForward = vec3(sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw);
 
-	msViewMatrix  = mat4(vec4(msRight.x, yaxis.x, msForward.x, 0),
-						 vec4(msRight.y, yaxis.y, msForward.y, 0),
-						 vec4(msRight.z, yaxis.z, msForward.z, 0),
-						 vec4(-dot(msRight, msPosition), -dot(yaxis, msPosition),
-							  -dot(msForward, msPosition), 1.0f));
+	msViewMatrix = mat4(vec4(msRight.x, yaxis.x, msForward.x, 0),
+						vec4(msRight.y, yaxis.y, msForward.y, 0),
+						vec4(msRight.z, yaxis.z, msForward.z, 0),
+						vec4(-dot(msRight, msPosition), -dot(yaxis, msPosition),
+							 -dot(msForward, msPosition), 1.0f));
 }
 
 mat4 Camera::getViewMatrix() {

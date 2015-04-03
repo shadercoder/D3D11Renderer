@@ -73,7 +73,7 @@ int main(int, char*[]) {
 	return 0;
 }
 
-void handleEvents() {
+ void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
