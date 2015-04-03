@@ -92,6 +92,12 @@ void handleEvents() {
 		case SDL_KEYUP:
 			Input::setKeyUp(event.key.keysym.scancode);
 			break;
+		case SDL_MOUSEBUTTONDOWN:
+			Input::setMouseButtonDown(event.button.button);
+			break;
+		case SDL_MOUSEBUTTONUP:
+			Input::setMouseButtonUp(event.button.button);
+			break;
 		default:
 			break;
 		}
