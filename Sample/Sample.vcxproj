@@ -92,6 +92,7 @@
     <ClInclude Include="include\camera.h" />
     <ClInclude Include="include\glmMath.h" />
     <ClInclude Include="include\input.h" />
+    <ClInclude Include="include\loadBinaryData.h" />
     <ClInclude Include="include\sample.h" />
     <ClInclude Include="include\timer.h" />
   </ItemGroup>

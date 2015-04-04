@@ -13,7 +13,7 @@ namespace Clair {
 	class PixelShader;
 	class Mesh;
 	struct MeshDesc;
-	class SubMaterial;
+	class Material;
 
 	class Renderer {
 	public:
@@ -36,7 +36,8 @@ namespace Clair {
 		static void createMaterial(char* data, VertexShader*& outVs,
 								   PixelShader*& outPs);
 
-		static SubMaterial* createSubMaterial(char* data);
+		static Material* createMaterial(char* data);
+		static Mesh* createMesh(char* data);
 
 		static void setCameraMatrix(const Clair::Matrix& m);
 	};

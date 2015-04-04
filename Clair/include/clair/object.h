@@ -1,8 +1,12 @@
 #pragma once
 #include "clair/matrix.h"
-#include "clair/vertexBuffer.h"
+#include "clair/renderPass.h"
+#include <map>
 
 namespace Clair {
+	class Mesh;
+	class Material;
+
 	class Node {
 	public:
 		Node() : mMatrix(Matrix()) {}
@@ -22,14 +26,17 @@ namespace Clair {
 		mMatrix = m;
 	}
 
-	class Mesh;
 	class Object : public Node {
 	public:	
 		void setMesh(Mesh* mesh) { mMesh = mesh; }
 		const Mesh* getMesh() const { return mMesh; }
-		
+
+		void setMaterial(RenderPass pass, Clair::Material* subMaterial);
+		Clair::Material* getMaterial(RenderPass pass);
+
 	private:
 		Mesh* mMesh = nullptr;
+		std::map<RenderPass, Material*> mSubMaterials;
 	};
 }
 

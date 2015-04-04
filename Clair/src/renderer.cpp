@@ -6,11 +6,11 @@
 #include "clair/scene.h"
 #include "clair/object.h"
 #include <vector>
-#include <DirectXMath.h>
 #include "clair/matrix.h"
 #include "clair/vertexBuffer.h"
 #include "clair/vertexLayout.h"
 #include "clair/material.h"
+#include "serialization.h"
 
 using namespace DirectX;
 using namespace Clair;
@@ -44,6 +44,7 @@ namespace Clair {
 	};
 	class Mesh {
 	public:
+		VertexLayout vertexLayout {};
 		InputLayout* inputLayout = nullptr;
 		ID3D11Buffer* vertexBuffer = nullptr;
 		ID3D11Buffer* indexBuffer = nullptr;
@@ -419,6 +420,34 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
+Clair::VertexShader* Clair::Renderer::createVertexShader(char* byteCode,
+														 size_t size) {
+	HRESULT result;
+	ID3D11VertexShader* vertexShader = nullptr;
+	result = d3dDevice->CreateVertexShader(byteCode, size, nullptr,
+										   &vertexShader);
+	if (FAILED(result)) {
+		return nullptr;
+	}
+	VertexShader* newShader = new VertexShader{byteCode, size, vertexShader};
+	vertexShaders.push_back(newShader);
+	return newShader;
+}
+
+Clair::PixelShader* Clair::Renderer::createPixelShader(char* byteCode,
+													   size_t size) {
+	HRESULT result;
+	ID3D11PixelShader* pixelShader = nullptr;
+	result = d3dDevice->CreatePixelShader(byteCode, size, nullptr,
+										  &pixelShader);
+	if (FAILED(result)) {
+		return nullptr;
+	}
+	PixelShader* newShader = new PixelShader{byteCode, size, pixelShader};
+	pixelShaders.push_back(newShader);
+	return newShader;
+}
+
 Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayoutOld& desc,
 													   VertexShader* const vs) {
 	InputLayout* newInputLayout = new InputLayout;
@@ -501,61 +530,47 @@ void Clair::Renderer::createMaterial(char* data, VertexShader*& vs,
 	memcpy(&psSize, data, sizeof(size_t));
 	data += sizeof(size_t);
 	ps = createPixelShader(data, psSize);
-
 }
 
-SubMaterial* Renderer::createSubMaterial(char* data) {
-	SubMaterial* bla {new SubMaterial()};
-	size_t layoutSize {0};
-	memcpy(&layoutSize, data, sizeof(size_t));
+Material* Renderer::createMaterial(char* data) {
+	assert(data);
+	Material* material {new Material()};
+	material->vertexLayout = Serialization::
+		readVertexLayoutFromBytes(data);
+	size_t vsSize {0};
+	memcpy(&vsSize, data, sizeof(size_t));
 	data += sizeof(size_t);
-	for (size_t i {0}; i < layoutSize; ++i) {
-		VertexAttribute element{};
-		size_t strSize {0};
-		memcpy(&strSize, data, sizeof(size_t));
-		data += sizeof(size_t);
-		char* str {new char[strSize + 1]};
-		memcpy(str, data, sizeof(char) * strSize);
-		str[strSize] = '\0';
-		element.name = std::string(str);
-		delete[] str;
-		data += sizeof(char) * strSize;
-		int format {0};
-		memcpy(&format, data, sizeof(int));
-		element.format = static_cast<VertexAttribute::Format>(format);
-		data += sizeof(int);
-		bla->vertexLayout.push_back(element);
-	}
-	delete bla;
+	material->vertexShader = createVertexShader(data, vsSize);
+	data += sizeof(char) * vsSize;
+	size_t psSize {0};
+	memcpy(&psSize, data, sizeof(size_t));
+	data += sizeof(size_t);
+	material->pixelShader = createPixelShader(data, psSize);
+	delete material;
 	return nullptr;
 }
 
-Clair::VertexShader* Clair::Renderer::createVertexShader(char* byteCode,
-														 size_t size) {
-	HRESULT result;
-	ID3D11VertexShader* vertexShader = nullptr;
-	result = d3dDevice->CreateVertexShader(byteCode, size, nullptr,
-										   &vertexShader);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	VertexShader* newShader = new VertexShader{byteCode, size, vertexShader};
-	vertexShaders.push_back(newShader);
-	return newShader;
-}
-
-Clair::PixelShader* Clair::Renderer::createPixelShader(char* byteCode,
-													   size_t size) {
-	HRESULT result;
-	ID3D11PixelShader* pixelShader = nullptr;
-	result = d3dDevice->CreatePixelShader(byteCode, size, nullptr,
-										  &pixelShader);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	PixelShader* newShader = new PixelShader{byteCode, size, pixelShader};
-	pixelShaders.push_back(newShader);
-	return newShader;
+Mesh* Renderer::createMesh(char* data) {
+	assert(data);
+	Mesh* mesh {new Mesh{}};
+	mesh->vertexLayout = Serialization::
+		readVertexLayoutFromBytes(data);
+	unsigned numVertices {0};
+	memcpy(&numVertices, data ,sizeof(unsigned));
+	data += sizeof(unsigned);
+	// TODO: softcode stride
+	void* const vertexData {new float[numVertices * 3 * 2]};
+	memcpy(vertexData, data, sizeof(float) * numVertices * 3 * 2);
+	data += sizeof(float) * numVertices * 3 * 2;
+	unsigned numIndices {0};
+	memcpy(&numIndices, data, sizeof(unsigned));
+	data += sizeof(unsigned);
+	unsigned* const indexData {new unsigned[numIndices]};
+	memcpy(indexData, data, sizeof(unsigned) * numIndices);
+	delete[] vertexData;
+	delete[] indexData;
+	delete mesh;
+	return mesh;
 }
 
 void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {

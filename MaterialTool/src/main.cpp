@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include "../../Clair/include/clair/vertexLayout.h"
+#include "../../Clair/src/serialization.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -15,8 +16,6 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 					  const std::string& entryPoint, ID3DBlob** blob);
 
 void writeToFile(const std::string& filename);
-void writeVertexLayout(FILE* file);
-
 
 ID3DBlob* vs {nullptr};
 ID3DBlob* ps {nullptr};
@@ -106,27 +105,13 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 void writeToFile(const std::string& filename) {
 	FILE* outputFile;
 	fopen_s(&outputFile, filename.c_str(), "wb");
-	writeVertexLayout(outputFile);
-	fclose(outputFile); return;
-	//const size_t vsSize = vs->GetBufferSize();
-	////fwrite(&vsSize, sizeof(size_t), 1, outputFile);
-	//fwrite(vs->GetBufferPointer(), sizeof(char), vsSize, outputFile);
-	////const size_t psSize = ps->GetBufferSize();
-	////fwrite(&psSize, sizeof(size_t), 1, outputFile);
-	////fwrite(ps->GetBufferPointer(), sizeof(char), psSize, outputFile);
-	//fclose(outputFile);
-}
-
-void writeVertexLayout(FILE* file) {
-	const size_t layoutSize {vertexLayout.size()};
-	fwrite(&layoutSize, sizeof(size_t), 1, file);
-	for (size_t i {0}; i < layoutSize; ++i) {
-		const auto element = vertexLayout[i];
-		const size_t strSize {element.name.length()};
-		fwrite(&strSize, sizeof(size_t), 1, file);
-		const char* str {element.name.c_str()};
-		fwrite(str, sizeof(char), strSize, file);
-		const int format {static_cast<int>(element.format)};
-		fwrite(&format, sizeof(int), 1, file);
-	}
+	Serialization::writeVertexLayoutToFile(outputFile,
+													   vertexLayout);
+	const size_t vsSize = vs->GetBufferSize();
+	fwrite(&vsSize, sizeof(size_t), 1, outputFile);
+	fwrite(vs->GetBufferPointer(), sizeof(char), vsSize, outputFile);
+	const size_t psSize = ps->GetBufferSize();
+	fwrite(&psSize, sizeof(size_t), 1, outputFile);
+	fwrite(ps->GetBufferPointer(), sizeof(char), psSize, outputFile);
+	fclose(outputFile);
 }
