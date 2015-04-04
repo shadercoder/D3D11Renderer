@@ -82,8 +82,8 @@ int main(int, char*[]) {
 			break;
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-				sample.onResize(static_cast<float>(event.window.data1),
-								static_cast<float>(event.window.data2));
+				sample.onResize(event.window.data1,
+								event.window.data2);
 			}
 			break;
 		case SDL_KEYDOWN:

@@ -7,5 +7,5 @@ public:
 
 	void update(float deltaTime, float runningTime);
 	void render();
-	void onResize(float width, float height);
+	void onResize(int width, int height);
 };

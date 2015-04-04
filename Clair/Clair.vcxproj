@@ -84,6 +84,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\lowLevelRenderer.cpp" />
     <ClCompile Include="src\material.cpp" />
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\renderer.cpp" />
@@ -92,7 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\clair\camera.h" />
-    <ClInclude Include="include\clair\material.h" />
+    <ClInclude Include="src\material.h" />
     <ClInclude Include="include\clair\matrix.h" />
     <ClInclude Include="include\clair\object.h" />
     <ClInclude Include="include\clair\renderer.h" />
@@ -100,6 +101,8 @@
     <ClInclude Include="include\clair\scene.h" />
     <ClInclude Include="include\clair\vertexBuffer.h" />
     <ClInclude Include="include\clair\vertexLayout.h" />
+    <ClInclude Include="src\lowLevelRenderer.h" />
+    <ClInclude Include="src\mesh.h" />
     <ClInclude Include="src\serialization.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

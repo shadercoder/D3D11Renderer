@@ -41,6 +41,6 @@ void Sample::render() {
 	Clair::Renderer::finalizeFrame();
 }
 
-void Sample::onResize(const float width, const float height) {
+void Sample::onResize(const int width, const int height) {
 	Clair::Renderer::setViewport(0, 0, width, height);
 }
