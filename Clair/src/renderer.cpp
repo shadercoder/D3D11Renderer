@@ -6,6 +6,7 @@
 #include <vector>
 #include "clair/matrix.h"
 #include "material.h"
+#include "mesh.h"
 #include "serialization.h"
 #include "lowLevelRenderer.h"
 #include <cassert>
@@ -14,6 +15,7 @@ using namespace Clair;
 
 namespace {
 	std::vector<Clair::Material*> materials;
+	std::vector<Clair::Mesh*> meshes;
 }
 
 bool Clair::Renderer::initialize(HWND hwnd) {
@@ -24,7 +26,14 @@ bool Clair::Renderer::initialize(HWND hwnd) {
 
 void Clair::Renderer::terminate() {
 	LowLevelRenderer::terminate();
+	for (const auto& it : meshes) {
+		LowLevelRenderer::destroyVertexBuffer(it->vertexBuffer);
+		LowLevelRenderer::destroyIndexBuffer(it->indexBuffer);
+		delete it;
+	}
 	for (const auto& it : materials) {
+		LowLevelRenderer::destroyVertexShader(it->vertexShader);
+		LowLevelRenderer::destroyPixelShader(it->pixelShader);
 		delete it;
 	}
 	printf("Clair terminated.\n");
@@ -112,60 +121,35 @@ Clair::Scene* Clair::Renderer::createScene() {
 //	return newInputLayout;
 //}
 
-//Mesh* Renderer::createMesh(MeshDesc& desc) {
-//	Mesh* newMesh = new Mesh;
-//	meshes.push_back(newMesh);
-//	newMesh->inputLayout = desc.inputLayout;
-//	newMesh->indexBufferSize = desc.numIndices;
-//	HRESULT result;
-//	D3D11_BUFFER_DESC vertexBufferDesc;
-//	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-//	vertexBufferDesc.ByteWidth = desc.vertexDataSize;
-//	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-//	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-//	vertexBufferDesc.CPUAccessFlags = 0;
-//	vertexBufferDesc.MiscFlags = 0;
-//	vertexBufferDesc.StructureByteStride = 0;
-//
-//	D3D11_SUBRESOURCE_DATA subResData;
-//	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
-//	subResData.pSysMem = desc.vertexData;
-//
-//	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData,
-//									 &newMesh->vertexBuffer);
-//	if (FAILED(result)) return nullptr;
-//
-//	D3D11_BUFFER_DESC indexBufferDesc;
-//	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-//	indexBufferDesc.ByteWidth = desc.numIndices * sizeof(unsigned);
-//	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-//	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-//	indexBufferDesc.CPUAccessFlags = 0;
-//	indexBufferDesc.MiscFlags = 0;
-//	indexBufferDesc.StructureByteStride = 0;
-//
-//	D3D11_SUBRESOURCE_DATA indexInitData;
-//	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-//	indexInitData.pSysMem = desc.indexData;
-//
-//	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData,
-//									 &newMesh->indexBuffer);
-//	if (FAILED(result)) return nullptr;
-//	return newMesh;
-//}
 
-//void Clair::Renderer::createMaterial(char* data, VertexShader*& vs,
-//									 PixelShader*& ps) {
-//	size_t vsSize {0};
-//	memcpy(&vsSize, data, sizeof(size_t));
-//	data += sizeof(size_t);
-//	vs = createVertexShader(data, vsSize);
-//	data += sizeof(char) * vsSize;
-//	size_t psSize {0};
-//	memcpy(&psSize, data, sizeof(size_t));
-//	data += sizeof(size_t);
-//	ps = createPixelShader(data, psSize);
-//}
+Mesh* Renderer::createMesh(char* data) {
+	assert(data);
+	VertexLayout vertexLayout {Serialization::readVertexLayoutFromBytes(data)};
+	unsigned stride {0};
+	memcpy(&stride, data, sizeof(unsigned));
+	data += sizeof(unsigned);
+	unsigned numVertices {0};
+	memcpy(&numVertices, data ,sizeof(unsigned));
+	data += sizeof(unsigned);
+	char* const vertexData {new char[numVertices * stride]};
+	memcpy(vertexData, data, sizeof(char) * numVertices * stride);
+	data += sizeof(char) * numVertices * stride;
+	unsigned numIndices {0};
+	memcpy(&numIndices, data, sizeof(unsigned));
+	data += sizeof(unsigned);
+	unsigned* const indexData {new unsigned[numIndices]};
+	memcpy(indexData, data, sizeof(unsigned) * numIndices);
+
+	Mesh* const mesh {new Mesh{}};
+	mesh->vertexLayout = vertexLayout;
+	mesh->vertexBuffer = LowLevelRenderer::
+		createVertexBuffer(vertexData, numVertices * stride);
+	mesh->indexBuffer = LowLevelRenderer::
+		createIndexBuffer(indexData, numIndices);
+	mesh->indexBufferSize = numIndices;
+	meshes.push_back(mesh);
+	return mesh;
+}
 
 Material* Renderer::createMaterial(char* data) {
 	assert(data);
@@ -189,32 +173,6 @@ Material* Renderer::createMaterial(char* data) {
 								createPixelShader(psData, psSize);
 	materials.push_back(material);
 	return material;
-}
-
-Mesh* Renderer::createMesh(char* data) {
-	assert(data);
-	//Mesh* mesh {new Mesh{}};
-	//mesh->vertexLayout = Serialization::readVertexLayoutFromBytes(data);
-	//unsigned stride {0};
-	//memcpy(&stride, data, sizeof(unsigned));
-	//data += sizeof(unsigned);
-	//unsigned numVertices {0};
-	//memcpy(&numVertices, data ,sizeof(unsigned));
-	//data += sizeof(unsigned);
-	//void* const vertexData {new char[numVertices * stride]};
-	//memcpy(vertexData, data, sizeof(char) * numVertices * stride);
-	//data += sizeof(float) * numVertices * 3 * 2;
-	//unsigned numIndices {0};
-	//memcpy(&numIndices, data, sizeof(unsigned));
-	//data += sizeof(unsigned);
-	//unsigned* const indexData {new unsigned[numIndices]};
-	//memcpy(indexData, data, sizeof(unsigned) * numIndices);
-	//delete[] vertexData;
-	//delete[] indexData;
-	//delete mesh;
-	//return mesh;
-	++data;
-	return nullptr;
 }
 
 void Clair::Renderer::setCameraMatrix(const Clair::Matrix&) {

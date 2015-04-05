@@ -13,11 +13,11 @@
 	#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #endif
 
-Sample sample;	
-SDL_Window*	SDL_window = nullptr;
-bool isRunning = true;
+static Sample sample;	
+static SDL_Window*	SDL_window = nullptr;
+static bool isRunning = true;
 
-void handleEvents();
+static void handleEvents();
 
 int main(int, char*[]) {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -82,8 +82,7 @@ int main(int, char*[]) {
 			break;
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-				sample.onResize(event.window.data1,
-								event.window.data2);
+				sample.onResize(event.window.data1, event.window.data2);
 			}
 			break;
 		case SDL_KEYDOWN:

@@ -18,8 +18,8 @@ namespace Clair {
 		static void finalizeFrame();
 
 		static Scene* createScene();
-		static Material* createMaterial(char* data);
 		static Mesh* createMesh(char* data);
+		static Material* createMaterial(char* data);
 		static void setCameraMatrix(const Clair::Matrix& m);
 		static void render(Scene* scene);
 	};

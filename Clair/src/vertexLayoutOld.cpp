@@ -1,4 +1,4 @@
-#include "clair/vertexBuffer.h"
+#include "clair/vertexLayoutOld.h"
 
 using namespace Clair;
 

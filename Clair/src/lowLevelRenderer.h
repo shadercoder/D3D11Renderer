@@ -5,6 +5,8 @@ namespace Clair {
 	//class Material;
 	class VertexShader;
 	class PixelShader;
+	class VertexBuffer;
+	class IndexBuffer;
 
 	class LowLevelRenderer {
 	public:
@@ -15,9 +17,18 @@ namespace Clair {
 		static void finalizeFrame();
 		static void setViewport(int x, int y, int width, int height);
 
-		static VertexShader* createVertexShader(char* const vsData,
-												const size_t vsSize);
-		static PixelShader* createPixelShader(char* const psData,
-											  const size_t psSize);
+		static VertexShader* createVertexShader(char* vsData,
+												size_t vsSize);
+		static PixelShader* createPixelShader(char* psData,
+											  size_t psSize);
+		static VertexBuffer* createVertexBuffer(char* bufferData,
+												unsigned bufferSize);
+		static IndexBuffer* createIndexBuffer(unsigned* bufferData,
+											  unsigned bufferSize);
+
+		static void destroyVertexShader(VertexShader* vertexShader);
+		static void destroyPixelShader(PixelShader* pixelShader);
+		static void destroyVertexBuffer(VertexBuffer* vertexBuffer);
+		static void destroyIndexBuffer(IndexBuffer* indexBuffer);
 	};
 }

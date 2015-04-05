@@ -16,11 +16,11 @@ bool Sample::initialize(HWND hwnd) {
 
 	scene = Clair::Renderer::createScene();
 
-	auto materialData = loadBinaryData("../data/material.cmat");
-	Clair::Renderer::createMaterial(materialData.data());
-
 	auto meshData = loadBinaryData("../data/model.cmod");
 	Clair::Renderer::createMesh(meshData.data());
+
+	auto materialData = loadBinaryData("../data/material.cmat");
+	Clair::Renderer::createMaterial(materialData.data());
 
 	return true;
 }
