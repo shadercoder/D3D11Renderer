@@ -83,18 +83,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\camera.cpp" />
-    <ClCompile Include="src\input.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\sample.cpp" />
+    <ClCompile Include="src\Camera2.cpp" />
+    <ClCompile Include="src\Input2.cpp" />
+    <ClCompile Include="src\Main2.cpp" />
+    <ClCompile Include="src\Sample2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\camera.h" />
-    <ClInclude Include="include\glmMath.h" />
-    <ClInclude Include="include\input.h" />
-    <ClInclude Include="include\loadBinaryData.h" />
-    <ClInclude Include="include\sample.h" />
-    <ClInclude Include="include\timer.h" />
+    <ClInclude Include="include\Camera2.h" />
+    <ClInclude Include="include\GlmMath2.h" />
+    <ClInclude Include="include\Input2.h" />
+    <ClInclude Include="include\LoadBinaryData2.h" />
+    <ClInclude Include="include\Sample2.h" />
+    <ClInclude Include="include\Timer2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

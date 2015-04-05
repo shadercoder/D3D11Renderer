@@ -83,29 +83,29 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\camera.cpp" />
-    <ClCompile Include="src\lowLevelRenderer.cpp" />
-    <ClCompile Include="src\material.cpp" />
-    <ClCompile Include="src\object.cpp" />
-    <ClCompile Include="src\renderer.cpp" />
-    <ClCompile Include="src\scene.cpp" />
-    <ClCompile Include="src\vertexLayoutOld.cpp" />
+    <ClCompile Include="src\Camera2.cpp" />
+    <ClCompile Include="src\LowLevelRenderer2.cpp" />
+    <ClCompile Include="src\Material2.cpp" />
+    <ClCompile Include="src\Object2.cpp" />
+    <ClCompile Include="src\Renderer2.cpp" />
+    <ClCompile Include="src\Scene2.cpp" />
+    <ClCompile Include="src\VertexLayoutOld2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\clair\camera.h" />
-    <ClInclude Include="src\indexBuffer.h" />
-    <ClInclude Include="src\material.h" />
-    <ClInclude Include="include\clair\matrix.h" />
-    <ClInclude Include="include\clair\object.h" />
-    <ClInclude Include="include\clair\renderer.h" />
-    <ClInclude Include="include\clair\renderPass.h" />
-    <ClInclude Include="include\clair\scene.h" />
-    <ClInclude Include="include\clair\vertexLayoutOld.h" />
-    <ClInclude Include="include\clair\vertexLayout.h" />
-    <ClInclude Include="src\lowLevelRenderer.h" />
-    <ClInclude Include="src\mesh.h" />
-    <ClInclude Include="src\serialization.h" />
-    <ClInclude Include="src\vertexBuffer.h" />
+    <ClInclude Include="include\Clair2\Camera2.h" />
+    <ClInclude Include="src\IndexBuffer2.h" />
+    <ClInclude Include="src\Material2.h" />
+    <ClInclude Include="include\Clair2\Matrix2.h" />
+    <ClInclude Include="include\Clair2\Object2.h" />
+    <ClInclude Include="include\Clair2\Renderer2.h" />
+    <ClInclude Include="include\Clair2\RenderPass2.h" />
+    <ClInclude Include="include\Clair2\Scene2.h" />
+    <ClInclude Include="include\Clair2\VertexLayoutOld2.h" />
+    <ClInclude Include="include\Clair2\VertexLayout2.h" />
+    <ClInclude Include="src\LowLevelRenderer2.h" />
+    <ClInclude Include="src\Mesh2.h" />
+    <ClInclude Include="src\Serialization2.h" />
+    <ClInclude Include="src\VertexBuffer2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
