@@ -14,6 +14,7 @@ namespace Clair {
 
 	private:
 		friend class Renderer;
+		friend class LowLevelRenderer;
 		std::vector<Object*> mObjects;
 	};
 };

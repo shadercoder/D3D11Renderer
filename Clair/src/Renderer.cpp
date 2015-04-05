@@ -14,8 +14,9 @@
 using namespace Clair;
 
 namespace {
-	std::vector<Clair::Material*> materials;
+	std::vector<Clair::Scene*> scenes;
 	std::vector<Clair::Mesh*> meshes;
+	std::vector<Clair::Material*> materials;
 }
 
 bool Clair::Renderer::initialize(HWND hwnd) {
@@ -26,6 +27,9 @@ bool Clair::Renderer::initialize(HWND hwnd) {
 
 void Clair::Renderer::terminate() {
 	LowLevelRenderer::terminate();
+	for (const auto& it : scenes) {
+		delete it;
+	}
 	for (const auto& it : meshes) {
 		LowLevelRenderer::destroyVertexBuffer(it->vertexBuffer);
 		LowLevelRenderer::destroyIndexBuffer(it->indexBuffer);
@@ -55,72 +59,43 @@ void Clair::Renderer::setViewport(const int x, const int y,
 void Clair::Renderer::render(Scene* const scene) {
 	if (!scene) return;
 
-	//const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,
-	//													 viewWidth / viewHeight,
+	LowLevelRenderer::render(scene);
+	//const xmmatrix projection = xmmatrixperspectivefovlh(xm_pidiv2,
+	//													 viewwidth / viewheight,
 	//													 0.1f, 100.0f);
 	//
-	//d3dDeviceContext->VSSetShader(vertexShaders[0]->shader, nullptr, 0);
-	//d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
-	//d3dDeviceContext->PSSetShader(pixelShaders[0]->shader, nullptr, 0);
-	//d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
-	//d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
-	//ConstantBuffer cb;
-	//cb.view = cameraViewMat;
+	//d3ddevicecontext->vssetshader(vertexshaders[0]->shader, nullptr, 0);
+	//d3ddevicecontext->vssetconstantbuffers(0, 1, &constantbuffer);
+	//d3ddevicecontext->pssetshader(pixelshaders[0]->shader, nullptr, 0);
+	//d3ddevicecontext->pssetshaderresources(0, 1, &shaderresview);
+	//d3ddevicecontext->pssetsamplers(0, 1, &samplerstate);
+	//constantbuffer cb;
+	//cb.view = cameraviewmat;
 	//cb.projection = projection;
 	//
-	//for (const auto& it : scene->mObjects) {
-	//	const Mesh* const mesh = it->getMesh();
+	//for (const auto& it : scene->mobjects) {
+	//	const mesh* const mesh = it->getmesh();
 	//	if (!mesh) continue;
-	//	cb.world = it->getMatrix();
-	//	d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb,
+	//	cb.world = it->getmatrix();
+	//	d3ddevicecontext->updatesubresource(constantbuffer, 0, nullptr, &cb,
 	//										0, 0);
-	//	const UINT stride = mesh->inputLayout->stride;
-	//	const UINT offset = 0;
-	//	d3dDeviceContext->IASetInputLayout(mesh->inputLayout->inputLayout);
-	//	d3dDeviceContext->IASetVertexBuffers(0, 1, &mesh->vertexBuffer,
+	//	const uint stride = mesh->inputlayout->stride;
+	//	const uint offset = 0;
+	//	d3ddevicecontext->iasetinputlayout(mesh->inputlayout->inputlayout);
+	//	d3ddevicecontext->iasetvertexbuffers(0, 1, &mesh->vertexbuffer,
 	//										 &stride, &offset);
-	//	d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer,
-	//									   DXGI_FORMAT_R32_UINT, 0);
-	//	d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
+	//	d3ddevicecontext->iasetindexbuffer(mesh->indexbuffer,
+	//									   dxgi_format_r32_uint, 0);
+	//	d3ddevicecontext->drawindexed(mesh->indexbuffersize, 0, 0);
 	//}
 }
 
 Clair::Scene* Clair::Renderer::createScene() {
 	Clair::Scene* const newScene = new Scene();
-	//scenes.push_back(newScene);
-	delete newScene;
+	scenes.push_back(newScene);
+	//delete newScene;
 	return newScene;
 }
-
-//Clair::InputLayout* Clair::Renderer::createInputLayout(VertexLayoutOld& desc,
-//													   VertexShader* const vs) {
-//	InputLayout* newInputLayout = new InputLayout;
-//	inputLayouts.push_back(newInputLayout);
-//	HRESULT result;
-//	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc;
-//	unsigned stride = 0;
-//	for (const auto& it : desc.mElements) {
-//		auto format = DXGI_FORMAT_R32_FLOAT;
-//		switch (it.format) {
-//		case VertexLayoutOld::Element::Format::FLOAT2: stride += sizeof(float) * 2;
-//			format = DXGI_FORMAT_R32G32_FLOAT; break;
-//		case VertexLayoutOld::Element::Format::FLOAT3: stride += sizeof(float) * 3;
-//			format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-//		case VertexLayoutOld::Element::Format::FLOAT4: stride += sizeof(float) * 4;
-//			format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
-//		}
-//		layoutDesc.push_back({it.name.c_str(), 0, format, 0, it.offset,
-//							  D3D11_INPUT_PER_VERTEX_DATA, 0});
-//	}
-//	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
-//										  vs->byteCode, vs->byteCodeSize,
-//										  &newInputLayout->inputLayout);
-//	if (FAILED(result)) return nullptr;
-//	newInputLayout->stride = stride;
-//	
-//	return newInputLayout;
-//}
-
 
 Mesh* Renderer::createMesh(char* data) {
 	assert(data);
@@ -148,6 +123,8 @@ Mesh* Renderer::createMesh(char* data) {
 		createIndexBuffer(indexData, numIndices);
 	mesh->indexBufferSize = numIndices;
 	meshes.push_back(mesh);
+	delete[] vertexData;
+	delete[] indexData;
 	return mesh;
 }
 
@@ -175,7 +152,7 @@ Material* Renderer::createMaterial(char* data) {
 	return material;
 }
 
-void Clair::Renderer::setCameraMatrix(const Clair::Matrix&) {
-	//cameraViewMat = m;
+void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {
+	LowLevelRenderer::setCameraMatrix(m);
 	return;
 }

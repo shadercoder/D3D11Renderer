@@ -6,10 +6,12 @@
 namespace Clair {
 	class Mesh;
 	class Material;
+	class InputLayout;
 
 	class Node {
 	public:
 		Node() : mMatrix(Matrix()) {}
+		virtual ~Node() {}
 
 		Matrix getMatrix() const;
 		void setMatrix(const Matrix& m);
@@ -28,15 +30,27 @@ namespace Clair {
 
 	class Object : public Node {
 	public:	
-		void setMesh(Mesh* mesh) { mMesh = mesh; }
+		~Object();
+
+		void setMesh(Mesh* mesh);
 		const Mesh* getMesh() const { return mMesh; }
 
-		void setMaterial(RenderPass pass, Clair::Material* subMaterial);
-		Clair::Material* getMaterial(RenderPass pass);
+		void setMaterial(RenderPass pass, Material* material);
+		Material* getMaterial(RenderPass pass);
+
+		InputLayout* getInputLayout() const { return mInputLayout; }
 
 	private:
-		Mesh* mMesh = nullptr;
-		std::map<RenderPass, Material*> mSubMaterials;
+		class MaterialInstance {
+		public:
+			bool isGood {false};
+			Material* material {nullptr};
+		};
+		void recreateInputLayout(MaterialInstance* materialInstance);
+
+		Mesh* mMesh {nullptr};
+		std::map<RenderPass, MaterialInstance*> mMatInstances {};
+		InputLayout* mInputLayout {};
 	};
 }
 

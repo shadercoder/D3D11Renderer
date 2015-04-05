@@ -14,13 +14,16 @@ Clair::Scene* scene {nullptr};
 bool Sample::initialize(HWND hwnd) {
 	if (!Clair::Renderer::initialize(hwnd)) return false;
 
-	scene = Clair::Renderer::createScene();
-
 	auto meshData = loadBinaryData("../data/model.cmod");
-	Clair::Renderer::createMesh(meshData.data());
+	auto mesh = Clair::Renderer::createMesh(meshData.data());
 
 	auto materialData = loadBinaryData("../data/material.cmat");
-	Clair::Renderer::createMaterial(materialData.data());
+	auto material = Clair::Renderer::createMaterial(materialData.data());
+
+	scene = Clair::Renderer::createScene();
+	Clair::Object* obj {scene->createObject()};
+	obj->setMesh(mesh);
+	obj->setMaterial(Clair::RenderPass::DEFAULT, material);
 
 	return true;
 }
