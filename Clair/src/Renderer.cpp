@@ -1,14 +1,14 @@
 #include <Windows.h>
-#include "clair/renderer.h"
+#include "Clair/Renderer.h"
 #include <stdio.h>
-#include "clair/scene.h"
-#include "clair/object.h"
+#include "Clair/Scene.h"
+#include "Clair/Object.h"
 #include <vector>
-#include "clair/matrix.h"
-#include "material.h"
-#include "mesh.h"
-#include "serialization.h"
-#include "lowLevelRenderer.h"
+#include "Clair/Matrix.h"
+#include "Material.h"
+#include "Mesh.h"
+#include "Serialization.h"
+#include "LowLevelRenderer.h"
 #include <cassert>
 
 using namespace Clair;

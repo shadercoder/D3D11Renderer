@@ -1,10 +1,10 @@
 #include <Windows.h>
-#include "sample.h"
-#include "clair/renderer.h"
+#include "Sample.h"
+#include "Clair/Renderer.h"
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_syswm.h"
-#include "input.h"
-#include "timer.h"
+#include "Input.h"
+#include "Timer.h"
 //#include "vld.h"
 
 #ifdef NDEBUG

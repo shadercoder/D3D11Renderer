@@ -1,5 +1,5 @@
 #pragma once
-#include "glmMath.h"
+#include "GlmMath.h"
 
 class Camera {
 public:

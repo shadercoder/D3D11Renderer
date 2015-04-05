@@ -1,5 +1,5 @@
 #pragma once
-#include "clair/object.h"
+#include "Clair/Object.h"
 
 namespace Clair {
 	class Camera : public Node {

@@ -1,7 +1,7 @@
 #pragma once
-#include "clair/vertexLayout.h"
-#include "vertexBuffer.h"
-#include "indexBuffer.h"
+#include "Clair/VertexLayout.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 namespace Clair {
 	class VertexShader;

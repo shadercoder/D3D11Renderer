@@ -1,6 +1,6 @@
 #pragma once
-#include "clair/matrix.h"
-#include "clair/renderPass.h"
+#include "Clair/Matrix.h"
+#include "Clair/RenderPass.h"
 #include <map>
 
 namespace Clair {

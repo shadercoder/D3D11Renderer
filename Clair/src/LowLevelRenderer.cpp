@@ -1,10 +1,10 @@
 #include <Windows.h>
-#include "lowLevelRenderer.h"
+#include "LowLevelRenderer.h"
 #include <d3d11.h>
 #include <DirectXMath.h>
-#include "clair/matrix.h"
-#include "vertexBuffer.h"
-#include "indexBuffer.h"
+#include "Clair/Matrix.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 #pragma comment(lib, "d3d11.lib")
 

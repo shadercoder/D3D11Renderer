@@ -1,5 +1,5 @@
 #pragma once
-#include "clair/vertexLayout.h"
+#include "Clair/VertexLayout.h"
 
 namespace Clair {
 	//class Material;

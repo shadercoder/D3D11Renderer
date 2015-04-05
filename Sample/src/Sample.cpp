@@ -1,11 +1,11 @@
 #include <Windows.h>
-#include "sample.h"
-#include "clair/renderer.h"
-#include "clair/scene.h"
-#include "clair/object.h"
-#include "glmMath.h"
-#include "camera.h"
-#include "loadBinaryData.h"
+#include "Sample.h"
+#include "Clair/Renderer.h"
+#include "Clair/Scene.h"
+#include "Clair/Object.h"
+#include "GlmMath.h"
+#include "Camera.h"
+#include "LoadBinaryData.h"
 
 using namespace glm;
 

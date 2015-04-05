@@ -1,5 +1,5 @@
 #pragma once
-#include "../include/clair/vertexLayout.h"
+#include "../include/Clair/VertexLayout.h"
 
 namespace Clair {
 	class Serialization {

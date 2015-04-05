@@ -1,5 +1,5 @@
-#include "clair/object.h"
-#include "material.h"
+#include "Clair/Object.h"
+#include "Material.h"
 
 using namespace Clair;
 

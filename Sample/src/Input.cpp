@@ -1,4 +1,4 @@
-#include "input.h"
+#include "Input.h"
 #include <memory>
 
 std::array<bool, SDL_NUM_SCANCODES> Input::msKeys;

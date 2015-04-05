@@ -1,5 +1,5 @@
-#include "clair/scene.h"
-#include "clair/object.h"
+#include "Clair/Scene.h"
+#include "Clair/Object.h"
 
 Clair::Scene::Scene()
 	: mObjects	(std::vector<Object*>()) {
