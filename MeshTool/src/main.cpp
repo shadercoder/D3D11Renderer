@@ -11,11 +11,11 @@ using namespace Assimp;
 void convertMesh(const std::string& inFile, const std::string& outFile);
 
 int main(int argc, char* argv[]) {
-	(void)argc;
-	(void)argv;
-	//for (int i = 1; i < argc; ++i) {
-	//	convertMesh(argv[i], "test.txt");
-	//}
+	if (argc > 1) {
+		for (int i = 1; i < argc; ++i) {
+			convertMesh(argv[i], "test.txt");
+		}
+	}
 	convertMesh("bunny.obj",
 				"D:/School/Specialization/ClairRenderer/Sample/"
 				"data/model.cmod");
@@ -50,7 +50,7 @@ void convertMesh(const std::string& inFile, const std::string& outFile) {
 								Clair::VertexAttribute::Format::FLOAT3});
 		stride += sizeof(float) * 3;
 	}
-	Serialization::writeVertexLayoutToFile(file, vertexLayout);
+	Clair::Serialization::writeVertexLayoutToFile(file, vertexLayout);
 	fwrite(&stride, sizeof(unsigned), 1, file);
 
 	// write model

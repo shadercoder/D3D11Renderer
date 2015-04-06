@@ -37,7 +37,9 @@ Material* Object::getMaterial(const RenderPass pass) {
 	if (mMatInstances.count(pass) == 0) {
 		return nullptr;
 	}
-	return mMatInstances[pass]->material;
+	auto const material = mMatInstances[pass];
+	if (!material->isGood) return nullptr;
+	return material->material;
 }
 
 void Object::recreateInputLayout(MaterialInstance* const materialInstance) {

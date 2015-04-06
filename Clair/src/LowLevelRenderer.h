@@ -5,6 +5,7 @@ struct HWND__;
 typedef HWND__* HWND;
 
 namespace Clair {
+	enum class RenderPass;
 	class Scene;
 	class Matrix;
 	class VertexBuffer;
@@ -23,6 +24,7 @@ namespace Clair {
 		static void setViewport(int x, int y, int width, int height);
 		static void render(Scene* scene);
 		static void setCameraMatrix(const Matrix& m);
+		static void setRenderPass(RenderPass pass);
 
 		static VertexBuffer* createVertexBuffer(char* bufferData,
 												unsigned bufferSize);

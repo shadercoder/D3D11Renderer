@@ -51,6 +51,10 @@ void Clair::Renderer::finalizeFrame() {
 	LowLevelRenderer::finalizeFrame();
 }
 
+void Renderer::setRenderPass(const RenderPass pass) {
+	LowLevelRenderer::setRenderPass(pass);
+}
+
 void Clair::Renderer::setViewport(const int x, const int y,
 								  const int width, const int height) {
 	LowLevelRenderer::setViewport(x, y, width, height);
@@ -120,7 +124,7 @@ Mesh* Renderer::createMesh(char* data) {
 	mesh->vertexBuffer = LowLevelRenderer::
 		createVertexBuffer(vertexData, numVertices * stride);
 	mesh->indexBuffer = LowLevelRenderer::
-		createIndexBuffer(indexData, numIndices);
+		createIndexBuffer(indexData, numIndices * sizeof(unsigned));
 	mesh->indexBufferSize = numIndices;
 	meshes.push_back(mesh);
 	delete[] vertexData;

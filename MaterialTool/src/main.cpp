@@ -21,11 +21,16 @@ ID3DBlob* vs {nullptr};
 ID3DBlob* ps {nullptr};
 Clair::VertexLayout vertexLayout {};
 
-int main(int , char* []) {
-	//if (argc < 1) return -1;
-	//std::cout << "Converting " << argv[1] << std::endl;
-	//std::ifstream file(argv[1]);
-	std::ifstream file("default.hlsl");
+int main(int argc, char* argv[]) {
+	std::string inFile {"default.hlsl"};
+	std::string outFile {"mat.cmat"};
+	if (argc > 1) {
+		std::cout << "Converting " << argv[1] << std::endl;
+		inFile = argv[1];
+	} else {
+		outFile = "D:/School/Specialization/ClairRenderer/Sample/data/sub.csm";
+	}
+	std::ifstream file(inFile);
 	if (file.fail()) {
 		return -1;
 	}
@@ -69,7 +74,7 @@ int main(int , char* []) {
 		return -1;
 	}
 	
-	writeToFile("D:/School/Specialization/ClairRenderer/Sample/data/sub.csm");
+	writeToFile(outFile);
 
 	// Clean up
 	vs->Release();
@@ -105,8 +110,7 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 void writeToFile(const std::string& filename) {
 	FILE* outputFile;
 	fopen_s(&outputFile, filename.c_str(), "wb");
-	Serialization::writeVertexLayoutToFile(outputFile,
-													   vertexLayout);
+	Clair::Serialization::writeVertexLayoutToFile(outputFile, vertexLayout);
 	const size_t vsSize = vs->GetBufferSize();
 	fwrite(&vsSize, sizeof(size_t), 1, outputFile);
 	fwrite(vs->GetBufferPointer(), sizeof(char), vsSize, outputFile);

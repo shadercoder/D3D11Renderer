@@ -9,6 +9,7 @@
 #include "Clair/Scene.h"
 #include "Clair/Object.h"
 #include "Material.h"
+#include "Clair/RenderPass.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -52,7 +53,8 @@ namespace {
 
 	std::vector<InputLayout*> inputLayouts;
 
-	Clair::Matrix cameraViewMat {};
+	Matrix cameraViewMat {};
+	RenderPass gRenderPass {};
 }
 
 struct ConstantBuffer {
@@ -150,7 +152,7 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;//D3D11_CULL_NONE;
 	rasterizerDesc.FrontCounterClockwise = FALSE;
 	rasterizerDesc.DepthBias = 0;
 	rasterizerDesc.DepthBiasClamp = 0.0f;
@@ -366,8 +368,10 @@ void LowLevelRenderer::render(Scene* const scene) {
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
-		auto vs = it->getMaterial(RenderPass::DEFAULT)->vertexShader->d3dShader;
-		auto ps = it->getMaterial(RenderPass::DEFAULT)->pixelShader->d3dShader;
+		auto material = it->getMaterial(gRenderPass);
+		if (!material) continue;
+		auto vs = material->vertexShader->d3dShader;
+		auto ps = material->pixelShader->d3dShader;
 		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
 		d3dDeviceContext->PSSetShader(ps, nullptr, 0);
 		cb.world = it->getMatrix();
@@ -388,6 +392,10 @@ void LowLevelRenderer::render(Scene* const scene) {
 
 void LowLevelRenderer::setCameraMatrix(const Matrix& m) {
 	cameraViewMat = m;
+}
+
+void LowLevelRenderer::setRenderPass(const RenderPass pass) {
+	gRenderPass = pass;
 }
 
 VertexBuffer* LowLevelRenderer::createVertexBuffer(char* const bufferData,
@@ -421,7 +429,7 @@ IndexBuffer* LowLevelRenderer::createIndexBuffer(unsigned* const bufferData,
 	HRESULT result {};
 	D3D11_BUFFER_DESC indexBufferDesc {};
 	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	indexBufferDesc.ByteWidth = bufferSize * sizeof(unsigned);
+	indexBufferDesc.ByteWidth = bufferSize;
 	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
@@ -447,15 +455,19 @@ InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
 	InputLayout* const inputLayout {new InputLayout};
 	HRESULT result {};
 	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc {};
+	unsigned stride {0};
 	unsigned offset {0};
 	for (const auto& it : vertexLayout) {
 		auto format = DXGI_FORMAT_R32_FLOAT;
+		offset = stride;
 		switch (it.format) {
-		case VertexAttribute::Format::FLOAT2: offset += sizeof(float) * 2;
+		case VertexAttribute::Format::FLOAT1: stride += sizeof(float) * 1;
+			format = DXGI_FORMAT_R32_FLOAT; break;
+		case VertexAttribute::Format::FLOAT2: stride += sizeof(float) * 2;
 			format = DXGI_FORMAT_R32G32_FLOAT; break;
-		case VertexAttribute::Format::FLOAT3: offset += sizeof(float) * 3;
+		case VertexAttribute::Format::FLOAT3: stride += sizeof(float) * 3;
 			format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-		case VertexAttribute::Format::FLOAT4: offset += sizeof(float) * 4;
+		case VertexAttribute::Format::FLOAT4: stride += sizeof(float) * 4;
 			format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
 		}
 		layoutDesc.push_back({it.name.c_str(), 0, format, 0, offset,
@@ -466,7 +478,7 @@ InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
 										  vertexShader->byteCodeSize,
 										  &inputLayout->d3dInputLayout);
 	if (FAILED(result)) return nullptr;
-	inputLayout->stride = offset;
+	inputLayout->stride = stride;
 	return inputLayout;
 }
 

@@ -3,6 +3,7 @@
 namespace Clair {
 	enum class RenderPass {
 		DEFAULT,
-		SHADOW
+		SHADOW,
+		NORMALS_ONLY
 	};
 }
