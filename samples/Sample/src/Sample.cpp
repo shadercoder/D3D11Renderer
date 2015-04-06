@@ -16,7 +16,7 @@ using namespace glm;
 
 Clair::Scene* scene {nullptr};
 
-bool Sample::initialize(HWND hwnd) {
+bool Sample::initialize(const HWND hwnd) {
 	// Initialize Clair using the window's HWND.
 	if (!Clair::Renderer::initialize(hwnd)) return false;
 
