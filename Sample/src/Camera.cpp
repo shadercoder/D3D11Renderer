@@ -29,18 +29,20 @@ void Camera::update(float deltaTime) {
 		ivec2 icursor;
 		SDL_GetMouseState(&icursor.x, &icursor.y);
 		vec2 cursor (static_cast<int>(icursor.x), static_cast<int>(icursor.y));
-		if (!msIsSnapping) msSnapPos = cursor;
-		msIsSnapping = true;
-
-		if (cursor != msSnapPos) {
-			const float rotSpeed {0.005f};
-			msPitch += (cursor.y - msSnapPos.y) * rotSpeed;
-			msYaw += (cursor.x - msSnapPos.x) * rotSpeed;
-			const float maxPitch {90.0f / 180.0f * static_cast<float>(M_PI)};
-			msPitch = max(min(msPitch, maxPitch), -maxPitch);
+		if (!msIsSnapping) {
+			msSnapPos = cursor;
+			msIsSnapping = true;
+		} else {
+			if (cursor != msSnapPos) {
+				const float rotSpeed {0.005f};
+				msPitch += (cursor.y - msSnapPos.y) * rotSpeed;
+				msYaw += (cursor.x - msSnapPos.x) * rotSpeed;
+				const float maxPitch {90.0f / 180.0f * static_cast<float>(M_PI)};
+				msPitch = max(min(msPitch, maxPitch), -maxPitch);
+				SDL_WarpMouseInWindow(nullptr, static_cast<int>(msSnapPos.x),
+									  static_cast<int>(msSnapPos.y));
+			}
 		}
-		SDL_WarpMouseInWindow(nullptr, static_cast<int>(msSnapPos.x),
-							  static_cast<int>(msSnapPos.y));
 	} else {
 		msIsSnapping = false;
 		SDL_ShowCursor(1);

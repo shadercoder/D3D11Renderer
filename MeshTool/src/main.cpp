@@ -15,10 +15,11 @@ int main(int argc, char* argv[]) {
 		for (int i = 1; i < argc; ++i) {
 			convertMesh(argv[i], "test.txt");
 		}
+	} else {
+		convertMesh("bunny.obj", "test.txt");
+					//"D:/School/Specialization/ClairRenderer/Sample/"
+					//"data/model.cmod");
 	}
-	convertMesh("bunny.obj",
-				"D:/School/Specialization/ClairRenderer/Sample/"
-				"data/model.cmod");
 	return 0;
 }
 

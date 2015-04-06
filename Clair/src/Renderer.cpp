@@ -64,40 +64,11 @@ void Clair::Renderer::render(Scene* const scene) {
 	if (!scene) return;
 
 	LowLevelRenderer::render(scene);
-	//const xmmatrix projection = xmmatrixperspectivefovlh(xm_pidiv2,
-	//													 viewwidth / viewheight,
-	//													 0.1f, 100.0f);
-	//
-	//d3ddevicecontext->vssetshader(vertexshaders[0]->shader, nullptr, 0);
-	//d3ddevicecontext->vssetconstantbuffers(0, 1, &constantbuffer);
-	//d3ddevicecontext->pssetshader(pixelshaders[0]->shader, nullptr, 0);
-	//d3ddevicecontext->pssetshaderresources(0, 1, &shaderresview);
-	//d3ddevicecontext->pssetsamplers(0, 1, &samplerstate);
-	//constantbuffer cb;
-	//cb.view = cameraviewmat;
-	//cb.projection = projection;
-	//
-	//for (const auto& it : scene->mobjects) {
-	//	const mesh* const mesh = it->getmesh();
-	//	if (!mesh) continue;
-	//	cb.world = it->getmatrix();
-	//	d3ddevicecontext->updatesubresource(constantbuffer, 0, nullptr, &cb,
-	//										0, 0);
-	//	const uint stride = mesh->inputlayout->stride;
-	//	const uint offset = 0;
-	//	d3ddevicecontext->iasetinputlayout(mesh->inputlayout->inputlayout);
-	//	d3ddevicecontext->iasetvertexbuffers(0, 1, &mesh->vertexbuffer,
-	//										 &stride, &offset);
-	//	d3ddevicecontext->iasetindexbuffer(mesh->indexbuffer,
-	//									   dxgi_format_r32_uint, 0);
-	//	d3ddevicecontext->drawindexed(mesh->indexbuffersize, 0, 0);
-	//}
 }
 
 Clair::Scene* Clair::Renderer::createScene() {
 	Clair::Scene* const newScene = new Scene();
 	scenes.push_back(newScene);
-	//delete newScene;
 	return newScene;
 }
 
@@ -110,14 +81,12 @@ Mesh* Renderer::createMesh(char* data) {
 	unsigned numVertices {0};
 	memcpy(&numVertices, data ,sizeof(unsigned));
 	data += sizeof(unsigned);
-	char* const vertexData {new char[numVertices * stride]};
-	memcpy(vertexData, data, sizeof(char) * numVertices * stride);
+	char* const vertexData {data};
 	data += sizeof(char) * numVertices * stride;
 	unsigned numIndices {0};
 	memcpy(&numIndices, data, sizeof(unsigned));
 	data += sizeof(unsigned);
-	unsigned* const indexData {new unsigned[numIndices]};
-	memcpy(indexData, data, sizeof(unsigned) * numIndices);
+	unsigned* const indexData {reinterpret_cast<unsigned*>(data)};
 
 	Mesh* const mesh {new Mesh{}};
 	mesh->vertexLayout = vertexLayout;
@@ -127,8 +96,6 @@ Mesh* Renderer::createMesh(char* data) {
 		createIndexBuffer(indexData, numIndices * sizeof(unsigned));
 	mesh->indexBufferSize = numIndices;
 	meshes.push_back(mesh);
-	delete[] vertexData;
-	delete[] indexData;
 	return mesh;
 }
 

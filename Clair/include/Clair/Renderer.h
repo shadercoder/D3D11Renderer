@@ -1,9 +1,7 @@
 #pragma once
-#include <string>
-#include <vector>
+#include "Clair/RenderPass.h"
 
 namespace Clair {
-	enum class RenderPass;
 	class Scene;
 	class Matrix;
 	class Mesh;

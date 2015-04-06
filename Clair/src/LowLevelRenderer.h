@@ -1,11 +1,11 @@
 #pragma once
 #include "Clair/VertexLayout.h"
+#include "Clair/RenderPass.h"
 
 struct HWND__;
 typedef HWND__* HWND;
 
 namespace Clair {
-	enum class RenderPass;
 	class Scene;
 	class Matrix;
 	class VertexBuffer;

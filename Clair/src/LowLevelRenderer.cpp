@@ -356,7 +356,7 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 void LowLevelRenderer::render(Scene* const scene) {
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,
 														 viewWidth / viewHeight,
-														 0.1f, 100.0f);
+														 0.01f, 100.0f);
 
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);

@@ -90,12 +90,12 @@
     <ClCompile Include="src\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Clair\RenderPass.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="include\Clair\Matrix.h" />
     <ClInclude Include="include\Clair\Object.h" />
     <ClInclude Include="include\Clair\Renderer.h" />
-    <ClInclude Include="include\Clair\RenderPass.h" />
     <ClInclude Include="include\Clair\Scene.h" />
     <ClInclude Include="include\Clair\VertexLayout.h" />
     <ClInclude Include="src\LowLevelRenderer.h" />
