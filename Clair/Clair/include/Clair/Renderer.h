@@ -1,6 +1,9 @@
 #pragma once
 #include "Clair/RenderPass.h"
 
+struct HWND__;
+typedef HWND__* HWND;
+
 namespace Clair {
 	class Scene;
 	class Matrix;

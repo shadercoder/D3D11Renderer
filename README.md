@@ -3,7 +3,7 @@
 This is my specialization project as part of my education.
 
 ###Demonstration
-The following is an excerpt from [Sample.cpp](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/Sample/src/Sample.cpp), with a GIF demonstrating the result of this code.
+The following is an excerpt from [BasicSample.cpp](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/BasicSample/src/BasicSample.cpp), with a GIF demonstrating the result of this code.
 ```C++
 CLAIR_RENDER_PASS_ENUM(Pass) {
 	DEFAULT,

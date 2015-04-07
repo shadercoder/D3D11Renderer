@@ -9,7 +9,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MaterialTool", "Clair\Mater
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshTool", "Clair\MeshTool\MeshTool.vcxproj", "{C14D8FD8-BC3F-4DA7-A565-3A85E48B8CDD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample", "samples\Sample\Sample.vcxproj", "{D85A11CE-C0A9-4CF4-8C32-FF94ABE5D7DE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BasicSample", "samples\BasicSample\BasicSample.vcxproj", "{D85A11CE-C0A9-4CF4-8C32-FF94ABE5D7DE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8C0015E0-1B25-4D6D-84A0-82355815B4A5} = {8C0015E0-1B25-4D6D-84A0-82355815B4A5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SampleCommon", "samples\SampleCommon\SampleCommon.vcxproj", "{8C0015E0-1B25-4D6D-84A0-82355815B4A5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02F6B314-A5AA-487C-84A6-7F2063B93446} = {02F6B314-A5AA-487C-84A6-7F2063B93446}
 		{582B9B5B-3ABD-46ED-8824-210A364B0C3C} = {582B9B5B-3ABD-46ED-8824-210A364B0C3C}
@@ -38,6 +43,10 @@ Global
 		{D85A11CE-C0A9-4CF4-8C32-FF94ABE5D7DE}.Debug|Win32.Build.0 = Debug|Win32
 		{D85A11CE-C0A9-4CF4-8C32-FF94ABE5D7DE}.Release|Win32.ActiveCfg = Release|Win32
 		{D85A11CE-C0A9-4CF4-8C32-FF94ABE5D7DE}.Release|Win32.Build.0 = Release|Win32
+		{8C0015E0-1B25-4D6D-84A0-82355815B4A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8C0015E0-1B25-4D6D-84A0-82355815B4A5}.Debug|Win32.Build.0 = Debug|Win32
+		{8C0015E0-1B25-4D6D-84A0-82355815B4A5}.Release|Win32.ActiveCfg = Release|Win32
+		{8C0015E0-1B25-4D6D-84A0-82355815B4A5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
