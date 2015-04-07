@@ -39,7 +39,9 @@ int main(int argc, char* argv[]) {
 	printf(">  Converting files:\n");
 
 	// Scan files
-	scanFolder(gInPath);
+	if (!scanFolder("")) {
+		return -1;
+	}
 
 	// Finish
 	gTimeStampFile.close();
@@ -51,10 +53,10 @@ int main(int argc, char* argv[]) {
 
 static bool scanFolder(const std::string& folder) {
 	WIN32_FIND_DATA ffd {};
-	HANDLE result {INVALID_HANDLE_VALUE};
-	const std::string currFolder {folder + ".\\*"};
-	result = FindFirstFile(currFolder.c_str(), &ffd);
-	if (result == INVALID_HANDLE_VALUE) {
+	HANDLE hFile {INVALID_HANDLE_VALUE};
+	const std::string currFolder {gInPath + folder + ".\\*"};
+	hFile = FindFirstFile(currFolder.c_str(), &ffd);
+	if (hFile == INVALID_HANDLE_VALUE) {
 		return false;
 	}
 	++gIndentLevel;
@@ -76,7 +78,10 @@ static bool scanFolder(const std::string& folder) {
 		if (subPos != std::string::npos && currFile.substr(subPos) == ".cmod") {
 			printf(">  %s %s\n", indent.c_str(), ffd.cFileName);
 			++gNumSucceeded;
-			gTimeStampFile << folder << '/' + currFile << '\n';
+			gTimeStampFile << folder << '/' + currFile << "|"
+				 << std::to_string(ffd.ftLastWriteTime.dwHighDateTime) << "|"
+				 << std::to_string(ffd.ftLastWriteTime.dwLowDateTime)
+				 << '\n';
 		}
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			printf(">  %s %s\n", indent.c_str(), ffd.cFileName);
@@ -87,8 +92,8 @@ static bool scanFolder(const std::string& folder) {
 				++gNumFailed;
 			}
 		}
-	} while (FindNextFile(result, &ffd) != 0);
-	FindClose(result);
+	} while (FindNextFile(hFile, &ffd) != 0);
+	FindClose(hFile);
 	--gIndentLevel;
 	return true;
 }
