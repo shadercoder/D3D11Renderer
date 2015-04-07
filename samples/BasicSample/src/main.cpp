@@ -7,9 +7,7 @@
 	#pragma comment(linker, "/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup")
 #endif
 
-int main(int argc, char* argv[]) {
-	(void)argc;
-	(void)argv;
+int main(int, char* []) {
 	BasicSample* const basicSample {new BasicSample{}};
 	if (!SampleCommon::Framework::run(basicSample, "Clair basic sample")) {
 		delete basicSample;
