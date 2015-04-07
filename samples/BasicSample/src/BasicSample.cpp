@@ -30,7 +30,8 @@ bool BasicSample::initialize(const HWND hwnd) {
 
 	// Load materials from file and send them to Clair as byte array (char*).
 	auto defaultMatData =
-		loadBinaryData("../../common/data/materials/default.cmat");
+		//loadBinaryData("../../common/data/materials/default.cmat");
+		loadBinaryData("../../common/data/defaultMat.cmat");
 	auto defaultMat = Clair::Renderer::createMaterial(defaultMatData.data());
 	auto normalsMatData =
 		loadBinaryData("../../common/data/materials/normals.cmat");

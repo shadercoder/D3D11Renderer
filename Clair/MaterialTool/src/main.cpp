@@ -21,16 +21,28 @@ ID3DBlob* vs {nullptr};
 ID3DBlob* ps {nullptr};
 Clair::VertexLayout vertexLayout {};
 
+static std::string gInFile {"../../rawdata"};
+static std::string gOutFile {"../../data"};
+static bool gSilentMode {false};
+
 int main(int argc, char* argv[]) {
-	std::string inFile {"default.hlsl"};
-	std::string outFile {"mat.cmat"};
-	if (argc > 1) {
-		std::cout << "Converting " << argv[1] << std::endl;
-		inFile = argv[1];
+	// Get paths from command arguments (or hardcoded values for debugging)
+	if (argc < 3) {
+		return -1;
 	} else {
-		outFile = "D:/School/Specialization/ClairRenderer/Sample/data/sub.csm";
+		gInFile = argv[1];
+		gOutFile = argv[2];
+		if (argc == 4) {
+			if (std::string{argv[3]} == "-s") {
+				gSilentMode = true;
+			}
+		}
 	}
-	std::ifstream file(inFile);
+	if (!gSilentMode) {
+		std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
+	}
+
+	std::ifstream file(gInFile);
 	if (file.fail()) {
 		return -1;
 	}
@@ -43,8 +55,10 @@ int main(int argc, char* argv[]) {
 	// VERTEX SHADER
 	hr = compileShader(source, "vs_5_0", "vsMain", &vs);
 	if (FAILED(hr)) {
-		std::printf("FAILED!\n");
-		getchar();
+		if (!gSilentMode) {
+			std::printf("FAILED!\n");
+		}
+		//getchar();
 		return -1;
 	}
 	ID3D11ShaderReflection* pVertexShaderReflection {nullptr};
@@ -52,8 +66,10 @@ int main(int argc, char* argv[]) {
 						  vs->GetBufferSize(),
 						  IID_ID3D11ShaderReflection,
 						  (void**)&pVertexShaderReflection))){
-		std::printf("FAILED!\n");
-		getchar();
+		if (!gSilentMode) {
+			std::printf("FAILED!\n");
+		}
+		//getchar();
 		return -1;
 	}
 	D3D11_SHADER_DESC shaderDesc {};
@@ -69,12 +85,14 @@ int main(int argc, char* argv[]) {
 	// PIXEL SHADER
 	hr = compileShader(source, "ps_5_0", "psMain", &ps);
 	if (FAILED(hr)) {
-		std::printf("FAILED!\n");
-		getchar();
+		if (!gSilentMode) {
+			std::printf("FAILED!\n");
+		}
+		//getchar();
 		return -1;
 	}
 	
-	writeToFile(outFile);
+	writeToFile(gOutFile);
 
 	// Clean up
 	vs->Release();
