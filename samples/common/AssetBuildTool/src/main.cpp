@@ -21,7 +21,8 @@ int main(int argc, char* argv[]) {
 		gInFile = argv[1];
 		gOutFile = argv[2];
 	}
-	printf("------ AssetBuildTool started ------\n");
+	printf("\n");
+	printf(">------ AssetBuildTool started ------\n");
 
 	// Check for timestamp file
 	const std::string timeStampFileName {gInFile + "\\.AssetBuild"};
@@ -46,8 +47,16 @@ int main(int argc, char* argv[]) {
 	// Finish
 	gTimeStampFile.close();
 	printf("========== AssetBuildTool: "
-		   "%u succeeded, %u failed, %u up-to-date ==========\n",
+		   "%i succeeded, %i failed, %i up-to-date ==========\n",
 		   gNumSucceeded, gNumFailed, gNumUpToDate);
+	if (gNumFailed > 0) {
+		const char* const fileword {gNumFailed == 1 ? "file" : "files"};
+		printf("ERROR: AssetBuildTool: %i %s failed to convert, "
+			   "see build output.\n", gNumFailed, fileword);
+		printf("\n");
+		return -1;
+	}
+	printf("\n");
 	return 0;
 }
 
@@ -76,7 +85,6 @@ static bool scanFolder(const std::string& folder) {
 		}
 		const auto subPos = currFile.find_last_of(".");
 		if (subPos != std::string::npos && currFile.substr(subPos) == ".hlsl") {
-			printf(">  %s %s\n", indent.c_str(), ffd.cFileName);
 			std::string currOutFile {currFile};
 			currOutFile = currOutFile.substr(0, currOutFile.length() - 4);
 			currOutFile += "cmat";
@@ -85,18 +93,29 @@ static bool scanFolder(const std::string& folder) {
 				 << std::to_string(ffd.ftLastWriteTime.dwLowDateTime)
 				 << '\n';
 			std::string command {"..\\..\\Clair\\MaterialTool\\bin\\"
+#ifdef NDEBUG
+									   "MaterialTool.exe "};
+#else
 									   "MaterialTool_d.exe "};
-			command += gInFile + folder + currFile + " ";
-			command += gOutFile + folder + currOutFile + " -s";
-			std::system(command.c_str());
-			++gNumSucceeded;
+#endif
+			command += gInFile + folder + "/" + currFile + " ";
+			command += gOutFile + folder + "/" + currOutFile + " -s";
+			if (std::system(command.c_str()) == 0) {
+				printf(">  %s %s -> %s\n", indent.c_str(), ffd.cFileName,
+										   currOutFile.c_str());
+				++gNumSucceeded;
+			} else {
+				printf(">  %s %s -> FAILED\n", indent.c_str(), ffd.cFileName);
+				++gNumFailed;
+			}
 		}
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			printf(">  %s %s\n", indent.c_str(), ffd.cFileName);
 			//printf(">  %s %s (dir) - %d %d\n", indent.c_str(), ffd.cFileName,
 			//	   ffd.ftLastWriteTime.dwHighDateTime,
 			//	   ffd.ftLastWriteTime.dwLowDateTime);
-			if (!scanFolder(folder + "/" + currFile)) {
+			std::string subPath {folder + (gIndentLevel > 0 ? "/" : "") + currFile};
+			if (!scanFolder(subPath)) {
 				++gNumFailed;
 			}
 		}

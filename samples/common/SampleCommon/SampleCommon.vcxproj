@@ -85,6 +85,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include;..\..\..\Clair\Clair\include;F:\lib\Visual Leak Detector\include;..\..\..\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>NDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

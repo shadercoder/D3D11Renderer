@@ -4,14 +4,21 @@
 using namespace glm;
 using namespace SampleCommon;
 
-mat4 Camera::msViewMatrix = mat4();
-vec3 Camera::msPosition = vec3(0.0f);
-vec3 Camera::msForward = vec3(0.0f);
-vec3 Camera::msRight = vec3(0.0f);
-vec2 Camera::msSnapPos = vec2(0.0f);
-bool Camera::msIsSnapping = false;
-float Camera::msPitch = 0.0f;
-float Camera::msYaw = 0.0f;
+mat4 Camera::msViewMatrix {};
+vec3 Camera::msPosition {0.0f};
+vec3 Camera::msForward {0.0f};
+vec3 Camera::msRight {0.0f};
+vec2 Camera::msSnapPos {0.0f};
+bool Camera::msIsSnapping {false};
+float Camera::msPitch {0.0f};
+float Camera::msYaw {0.0f};
+
+void Camera::initialize(const glm::vec3& position,
+						const float pitch, const float yaw) {
+	msPosition = position;
+	msPitch = pitch;
+	msYaw = yaw;
+}
 
 void Camera::update(const float deltaTime) {
 	const float speed {(Input::getKey(SDL_SCANCODE_LSHIFT) ? 20.0f : 5.0f) *

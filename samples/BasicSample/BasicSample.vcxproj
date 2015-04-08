@@ -97,7 +97,7 @@
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>$(ProjectDir)\..\common\AssetBuildTool\bin\AssetBuildTool_d.exe $(ProjectDir)\..\common\rawdata\ $(ProjectDir)\..\common\data\</Command>
+      <Command>$(ProjectDir)\..\common\AssetBuildTool\bin\AssetBuildTool.exe $(ProjectDir)\..\common\rawdata\ $(ProjectDir)\..\common\data\</Command>
       <Outputs>nonExistingFileNameSoItAlwaysExecutes</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>

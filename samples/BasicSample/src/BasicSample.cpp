@@ -51,6 +51,7 @@ bool BasicSample::initialize(const HWND hwnd) {
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
 
+	Camera::initialize(vec3{3.74f, 1.82f, 3.40f}, 0.49f, 0.77f);
 	return true;
 }
 
