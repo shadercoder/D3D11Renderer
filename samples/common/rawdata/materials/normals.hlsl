@@ -36,10 +36,5 @@ VSOut vsMain(VSIn vsIn) {
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
 float4 psMain(VSOut psIn) : SV_TARGET {
-	float3 n = normalize(psIn.Normal);
-	float3 l = normalize(float3(-1.0, 1.0, 1.0));
-	float3 col = saturate(dot(normalize(l), n) * 1.0 / max(0.001, dot(l, l)));
-	col = pow(col, 1.0 / 2.2);
-	col *= float3(0.8, 0.4, 0.2);
-	return float4(col, 1.0);
+	return float4(normalize(psIn.Normal), 1.0);
 }

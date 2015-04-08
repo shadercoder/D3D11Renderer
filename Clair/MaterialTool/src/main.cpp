@@ -7,6 +7,7 @@
 #include <vector>
 #include "../../Clair/include/clair/vertexLayout.h"
 #include "../../Clair/src/serialization.h"
+#include "ErrorCodes.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -15,20 +16,21 @@
 HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 					  const std::string& entryPoint, ID3DBlob** blob);
 
-void writeToFile(const std::string& filename);
+bool writeToFile(const std::string& filename);
 
 ID3DBlob* vs {nullptr};
 ID3DBlob* ps {nullptr};
 Clair::VertexLayout vertexLayout {};
 
-static std::string gInFile {"../../rawdata"};
-static std::string gOutFile {"../../data"};
+static std::string gInFile {"../../../samples/common/rawdata/materials/default.hlsl"};
+static std::string gOutFile {"../../../samples/common/data/test/bla.cmat"};
 static bool gSilentMode {false};
 
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc < 3) {
-		return -1;
+		//return -1;
+		return MaterialToolError::ARGS;
 	} else {
 		gInFile = argv[1];
 		gOutFile = argv[2];
@@ -39,12 +41,12 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	if (!gSilentMode) {
-		std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
+		//std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
 	}
 
 	std::ifstream file(gInFile);
 	if (file.fail()) {
-		return -1;
+		return MaterialToolError::READ;
 	}
 	std::stringstream buffer;
 	buffer << file.rdbuf();
@@ -59,7 +61,7 @@ int main(int argc, char* argv[]) {
 			std::printf("FAILED!\n");
 		}
 		//getchar();
-		return -1;
+		return MaterialToolError::VS;
 	}
 	ID3D11ShaderReflection* pVertexShaderReflection {nullptr};
 	if (FAILED(D3DReflect(vs->GetBufferPointer(),
@@ -70,7 +72,7 @@ int main(int argc, char* argv[]) {
 			std::printf("FAILED!\n");
 		}
 		//getchar();
-		return -1;
+		return MaterialToolError::REFLECT;
 	}
 	D3D11_SHADER_DESC shaderDesc {};
 	pVertexShaderReflection->GetDesc(&shaderDesc);
@@ -89,15 +91,17 @@ int main(int argc, char* argv[]) {
 			std::printf("FAILED!\n");
 		}
 		//getchar();
-		return -1;
+		return MaterialToolError::PS;
 	}
 	
-	writeToFile(gOutFile);
+	if (!writeToFile(gOutFile)) {
+		return MaterialToolError::WRITE;
+	}
 
 	// Clean up
 	vs->Release();
 	ps->Release();
-	return 0;
+	return MaterialToolError::SUCCESS;
 }
 
 HRESULT compileShader(const std::string& sourceCode, const std::string& target,
@@ -125,9 +129,11 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 	return hr;
 }
 
-void writeToFile(const std::string& filename) {
+bool writeToFile(const std::string& filename) {
 	FILE* outputFile;
-	fopen_s(&outputFile, filename.c_str(), "wb");
+	if (fopen_s(&outputFile, filename.c_str(), "wb") != 0) {
+		return false;
+	}
 	Clair::Serialization::writeVertexLayoutToFile(outputFile, vertexLayout);
 	const size_t vsSize = vs->GetBufferSize();
 	fwrite(&vsSize, sizeof(size_t), 1, outputFile);
@@ -136,4 +142,5 @@ void writeToFile(const std::string& filename) {
 	fwrite(&psSize, sizeof(size_t), 1, outputFile);
 	fwrite(ps->GetBufferPointer(), sizeof(char), psSize, outputFile);
 	fclose(outputFile);
+	return true;
 }
