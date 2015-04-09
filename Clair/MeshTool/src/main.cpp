@@ -71,15 +71,17 @@ int convertMesh(const std::string& inFile, const std::string& outFile) {
 	fwrite(&stride, sizeof(unsigned), 1, file);
 
 	// write model
+	// Note: Switch Y<->Z and winding order
+	//		 because of the way Blender exports .objs.
 	fwrite(&mesh.mNumVertices, sizeof(unsigned), 1, file);
 	for (unsigned j = 0; j < mesh.mNumVertices; j++) {
 		const float v[3] = { mesh.mVertices[j].x,
-							 mesh.mVertices[j].y,
-							 mesh.mVertices[j].z };
+							 mesh.mVertices[j].z,
+							 mesh.mVertices[j].y };
 		fwrite(v, sizeof(float), 3, file);
 		const float n[3] = { mesh.mNormals[j].x,
-							 mesh.mNormals[j].y,
-							 mesh.mNormals[j].z };
+							 mesh.mNormals[j].z,
+							 mesh.mNormals[j].y };
 		fwrite(n, sizeof(float), 3, file);
 	}
 	const unsigned numIndices = mesh.mNumFaces * 3;
@@ -87,8 +89,8 @@ int convertMesh(const std::string& inFile, const std::string& outFile) {
 	for (unsigned j = 0 ; j < mesh.mNumFaces ; j++) {
 		const unsigned ind[3] = {
 			mesh.mFaces[j].mIndices[0],
-			mesh.mFaces[j].mIndices[1],
-			mesh.mFaces[j].mIndices[2] };
+			mesh.mFaces[j].mIndices[2],
+			mesh.mFaces[j].mIndices[1] };
 		fwrite(ind, sizeof(unsigned), 3, file);
 		//assert(face.mNumIndices == 3);
 	}

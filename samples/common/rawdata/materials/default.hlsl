@@ -37,7 +37,7 @@ VSOut vsMain(VSIn vsIn) {
 // -----------------------------------------------------------------------------
 float4 psMain(VSOut psIn) : SV_TARGET {
 	float3 n = normalize(psIn.Normal);
-	float3 l = normalize(float3(-1.0, 1.0, 1.0));
+	float3 l = normalize(float3(-1.0, 1.0, -1.0));
 	float3 col = saturate(dot(normalize(l), n) * 1.0 / max(0.001, dot(l, l)));
 	col *= float3(1.0, 0.3, 0.1);
 	col = pow(col, 1.0 / 2.2);
