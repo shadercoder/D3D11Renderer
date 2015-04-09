@@ -5,34 +5,50 @@
 #include <string>
 #include "../../Clair/include/clair/vertexLayout.h"
 #include "../../Clair/src/serialization.h"
+#include "ErrorCodes.h"
 
 using namespace Assimp;
 
-void convertMesh(const std::string& inFile, const std::string& outFile);
+static std::string gInFile {"../../../samples/common/rawdata/materials/default.hlsl"};
+static std::string gOutFile {"../../../samples/common/data/test/bla.cmat"};
+static bool gSilentMode {false};
+
+int convertMesh(const std::string& inFile, const std::string& outFile);
 
 int main(int argc, char* argv[]) {
-	if (argc > 1) {
-		for (int i = 1; i < argc; ++i) {
-			convertMesh(argv[i], "test.txt");
-		}
+	// Get paths from command arguments (or hardcoded values for debugging)
+	if (argc < 3) {
+		//return -1;
+		return MeshToolError::ARGS;
 	} else {
-		convertMesh("bunny.obj", "test.txt");
-					//"D:/School/Specialization/ClairRenderer/Sample/"
-					//"data/model.cmod");
+		gInFile = argv[1];
+		gOutFile = argv[2];
+		if (argc == 4) {
+			if (std::string{argv[3]} == "-s") {
+				gSilentMode = true;
+			}
+		}
 	}
-	return 0;
+	if (!gSilentMode) {
+		//std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
+	}
+	const int result {convertMesh(gInFile, gOutFile)};
+	return result;
 }
 
-void convertMesh(const std::string& inFile, const std::string& outFile) {
+int convertMesh(const std::string& inFile, const std::string& outFile) {
 	Importer importer;
 	const aiScene* const scene = importer.ReadFile(inFile,
 												   aiProcess_Triangulate);
 	if (!scene) {
-		std::cout << "Couldn't load " << inFile << std::endl;
-		getchar();
-		return;
+		if (!gSilentMode) {
+			std::cout << "Couldn't load " << inFile << std::endl;
+		}
+		return MeshToolError::READ;
 	}
-	std::cout << "Converting " << inFile << std::endl;
+	if (!gSilentMode) {
+		std::cout << "Converting " << inFile << std::endl;
+	}
 
 	FILE* file {nullptr};
 	fopen_s(&file, outFile.c_str(), "wb");
@@ -77,4 +93,5 @@ void convertMesh(const std::string& inFile, const std::string& outFile) {
 		//assert(face.mNumIndices == 3);
 	}
 	fclose(file);
+	return MeshToolError::SUCCESS;
 }

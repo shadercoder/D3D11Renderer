@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include "../../../../Clair/MaterialTool/include/ErrorCodes.h"
+#include "../../../../Clair/MeshTool/include/ErrorCodes.h"
 
 static std::string gInFile {"../../rawdata"};
 static std::string gOutFile {"../../data"};
@@ -156,7 +157,9 @@ void processFile(const std::string& currFile, const std::string& folder,
 		++gNumSucceeded;
 	} else {
 		if (isMesh) {
-			
+			printf(">  %s %s -> FAILED (MeshTool: %s)\n", gIndent.c_str(),
+				   ffd.cFileName,
+				   MeshToolError::ERROR_STRING[commandResult].c_str());
 		} else {
 			printf(">  %s %s -> FAILED (MaterialTool: %s)\n", gIndent.c_str(),
 				   ffd.cFileName,
