@@ -6,6 +6,7 @@
 #include "../../../Clair/include/clair/vertexLayout.h"
 #include "../../../Clair/src/serialization.h"
 #include "ErrorCodes.h"
+#include "../../common/CommandLineUtils.h"
 
 using namespace Assimp;
 

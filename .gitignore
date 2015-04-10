@@ -1,7 +1,10 @@
 build
-bin
 *.sdf
 *.opensdf
 *.suo
 *\desktop.ini
 *.swp
+
+# Don't commit bin folders (unless they have dlls in them then commit only those dlls).
+**/bin/*
+!**/bin/*.dll

@@ -8,6 +8,7 @@
 #include "../../../Clair/include/clair/vertexLayout.h"
 #include "../../../Clair/src/serialization.h"
 #include "ErrorCodes.h"
+#include "../../common/CommandLineUtils.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
