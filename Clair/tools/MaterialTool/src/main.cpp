@@ -5,8 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "../../Clair/include/clair/vertexLayout.h"
-#include "../../Clair/src/serialization.h"
+#include "../../../Clair/include/clair/vertexLayout.h"
+#include "../../../Clair/src/serialization.h"
 #include "ErrorCodes.h"
 
 #pragma comment(lib, "d3d11.lib")

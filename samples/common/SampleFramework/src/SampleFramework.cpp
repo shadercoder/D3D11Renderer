@@ -1,12 +1,12 @@
-#include "SampleCommon/SampleCommon.h"
+#include "SampleFramework/SampleFramework.h"
 #include <Windows.h>
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_syswm.h"
-#include "SampleCommon/Input.h"
-#include "SampleCommon/Timer.h"
-#include "SampleCommon/SampleBase.h"
+#include "SampleFramework/Input.h"
+#include "SampleFramework/Timer.h"
+#include "SampleFramework/SampleBase.h"
 
-using namespace SampleCommon;
+using namespace SampleFramework;
 
 static SampleBase* gSample {nullptr};
 static SDL_Window* SDL_window {nullptr};

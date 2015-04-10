@@ -3,8 +3,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <string>
-#include "../../Clair/include/clair/vertexLayout.h"
-#include "../../Clair/src/serialization.h"
+#include "../../../Clair/include/clair/vertexLayout.h"
+#include "../../../Clair/src/serialization.h"
 #include "ErrorCodes.h"
 
 using namespace Assimp;

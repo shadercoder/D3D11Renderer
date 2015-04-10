@@ -1,7 +1,7 @@
 #pragma once
 #include "GlmMath.h"
 
-namespace SampleCommon {
+namespace SampleFramework {
 	class Camera {
 	public:
 		static void initialize(const glm::vec3& position,

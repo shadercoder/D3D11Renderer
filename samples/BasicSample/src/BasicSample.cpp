@@ -2,13 +2,13 @@
 #include "Clair/Renderer.h"
 #include "Clair/Scene.h"
 #include "Clair/Object.h"
-#include "SampleCommon/GlmMath.h"
-#include "SampleCommon/Camera.h"
-#include "SampleCommon/LoadBinaryData.h"
-#include "SampleCommon/Input.h"
+#include "SampleFramework/GlmMath.h"
+#include "SampleFramework/Camera.h"
+#include "SampleFramework/LoadBinaryData.h"
+#include "SampleFramework/Input.h"
 //#include "vld.h"
 
-using namespace SampleCommon;
+using namespace SampleFramework;
 using namespace glm;
 
 CLAIR_RENDER_PASS_ENUM (Pass) {

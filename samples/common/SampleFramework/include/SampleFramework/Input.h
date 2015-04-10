@@ -2,7 +2,7 @@
 #include "SDL2/SDL.h"
 #include <array>
 
-namespace SampleCommon {
+namespace SampleFramework {
 	class Input {
 	public:
 		static void initialize();

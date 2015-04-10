@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
-#include "../../../../Clair/MaterialTool/include/ErrorCodes.h"
-#include "../../../../Clair/MeshTool/include/ErrorCodes.h"
+#include "../../../../Clair/tools/MaterialTool/include/ErrorCodes.h"
+#include "../../../../Clair/tools/MeshTool/include/ErrorCodes.h"
 
 static std::string gInFile {"../../rawdata"};
 static std::string gOutFile {"../../data"};
@@ -128,14 +128,14 @@ void processFile(const std::string& currFile, const std::string& folder,
 	// Run the correct command line tool
 	std::string command {};
 	if (isMesh) {
-		command = std::string{"..\\..\\Clair\\MeshTool\\bin\\"
+		command = std::string{"..\\..\\Clair\\tools\\MeshTool\\bin\\"
 		#ifdef NDEBUG
 							 "MeshTool.exe "};
 		#else
 							 "MeshTool_d.exe "};
 		#endif
 	} else {
-		command = std::string{"..\\..\\Clair\\MaterialTool\\bin\\"
+		command = std::string{"..\\..\\Clair\\tools\\MaterialTool\\bin\\"
 		#ifdef NDEBUG
 							 "MaterialTool.exe "};
 		#else

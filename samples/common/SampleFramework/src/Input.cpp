@@ -1,6 +1,6 @@
-#include "SampleCommon/Input.h"
+#include "SampleFramework/Input.h"
 
-using namespace SampleCommon;
+using namespace SampleFramework;
 
 std::array<bool, SDL_NUM_SCANCODES> Input::msKeys;
 std::array<bool, SDL_NUM_SCANCODES> Input::msPrevKeys;

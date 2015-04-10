@@ -1,7 +1,7 @@
 #pragma once
-#include "SampleCommon/SampleBase.h"
+#include "SampleFramework/SampleBase.h"
 
-class BasicSample : public SampleCommon::SampleBase {
+class BasicSample : public SampleFramework::SampleBase {
 public:
 	bool initialize(HWND hwnd) override;
 	void terminate() override;

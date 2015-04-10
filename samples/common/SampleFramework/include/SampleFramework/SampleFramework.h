@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace SampleCommon {
+namespace SampleFramework {
 	class SampleBase;
 
 	class Framework {

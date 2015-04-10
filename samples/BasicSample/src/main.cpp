@@ -1,4 +1,4 @@
-#include "SampleCommon/SampleCommon.h"
+#include "SampleFramework/SampleFramework.h"
 #include "BasicSample.h"
 
 #ifdef NDEBUG
@@ -9,7 +9,7 @@
 
 int main(int, char* []) {
 	BasicSample* const basicSample {new BasicSample{}};
-	if (!SampleCommon::Framework::run(basicSample, "Clair basic sample")) {
+	if (!SampleFramework::Framework::run(basicSample, "Clair basic sample")) {
 		delete basicSample;
 		return -1;
 	}

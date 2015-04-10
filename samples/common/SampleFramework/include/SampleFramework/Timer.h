@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 
-namespace SampleCommon {
+namespace SampleFramework {
 	class Timer {
 	public:
 		void start() {

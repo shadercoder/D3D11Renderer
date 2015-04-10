@@ -1,8 +1,8 @@
-#include "SampleCommon/Camera.h"
-#include "SampleCommon/Input.h"
+#include "SampleFramework/Camera.h"
+#include "SampleFramework/Input.h"
 
 using namespace glm;
-using namespace SampleCommon;
+using namespace SampleFramework;
 
 mat4 Camera::msViewMatrix {};
 vec3 Camera::msPosition {0.0f};

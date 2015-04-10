@@ -3,7 +3,7 @@
 struct HWND__;
 typedef HWND__* HWND;
 
-namespace SampleCommon {
+namespace SampleFramework {
 	class SampleBase {
 	public:
 		SampleBase() = default;

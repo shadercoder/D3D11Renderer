@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="include\SampleCommon\Camera.h" />
+    <ClInclude Include="include\SampleCommon\GlmMath.h" />
+    <ClInclude Include="include\SampleCommon\Input.h" />
+    <ClInclude Include="include\SampleCommon\LoadBinaryData.h" />
+    <ClInclude Include="include\SampleCommon\SampleBase.h" />
+    <ClInclude Include="include\SampleCommon\Timer.h" />
+    <ClInclude Include="include\SampleFramework\Camera.h" />
+    <ClInclude Include="include\SampleFramework\GlmMath.h" />
+    <ClInclude Include="include\SampleFramework\Input.h" />
+    <ClInclude Include="include\SampleFramework\LoadBinaryData.h" />
+    <ClInclude Include="include\SampleFramework\SampleBase.h" />
+    <ClInclude Include="include\SampleFramework\SampleFramework.h" />
+    <ClInclude Include="include\SampleFramework\Timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\SampleFramework.cpp" />
+  </ItemGroup>
+</Project>
