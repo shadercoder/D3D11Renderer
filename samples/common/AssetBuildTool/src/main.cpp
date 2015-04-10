@@ -134,6 +134,8 @@ void processFile(const std::string& currFile, const std::string& folder,
 		#else
 							 "MeshTool_d.exe "};
 		#endif
+		command += gInFile + folder + "/" + currFile + " ";
+		command += gOutFile + folder + "/" + currOutFile + " -sb";
 	} else {
 		command = std::string{"..\\..\\Clair\\tools\\MaterialTool\\bin\\"
 		#ifdef NDEBUG
@@ -141,9 +143,9 @@ void processFile(const std::string& currFile, const std::string& folder,
 		#else
 							 "MaterialTool_d.exe "};
 		#endif
+		command += gInFile + folder + "/" + currFile + " ";
+		command += gOutFile + folder + "/" + currOutFile + " -s";
 	}
-	command += gInFile + folder + "/" + currFile + " ";
-	command += gOutFile + folder + "/" + currOutFile + " ";
 	const int commandResult {std::system(command.c_str())};
 
 	// Check if it was successful

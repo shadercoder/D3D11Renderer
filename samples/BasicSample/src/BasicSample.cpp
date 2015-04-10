@@ -41,17 +41,17 @@ bool BasicSample::initialize(const HWND hwnd) {
 	scene = Clair::Renderer::createScene();
 	Clair::Object* const plane {scene->createObject()};
 	plane->setMesh(planeMesh);
-	plane->setMatrix(Clair::Matrix{value_ptr(scale(vec3{1.0f} * 10.0f))});
+	plane->setMatrix(Clair::Matrix{value_ptr(scale(vec3{1.0f} * 1.0f))});
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
 	Clair::Object* const bunny {scene->createObject()};
 	bunny->setMesh(bunnyMesh);
 	bunny->setMatrix(
-		Clair::Matrix{value_ptr(translate(vec3{5.0f, 0.0f, 5.0f}))});
+		Clair::Matrix{value_ptr(translate(vec3{0.0f, 0.0f, 0.0f}))});
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
 
-	Camera::initialize(vec3{4.69f, 1.70f, 3.26f}, 0.480f, 0.005f);
+	Camera::initialize(vec3{-0.31f, 1.68f, -2.21f}, 0.415f, 0.015f);
 	return true;
 }
 

@@ -30,17 +30,15 @@ static bool gSilentMode {false};
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc < 3) {
-		//return -1;
 		return MaterialToolError::ARGS;
-	} else {
-		gInFile = argv[1];
-		gOutFile = argv[2];
-		if (argc == 4) {
-			if (std::string{argv[3]} == "-s") {
-				gSilentMode = true;
-			}
-		}
 	}
+	gInFile = argv[1];
+	gOutFile = argv[2];
+	const auto commands = CommandLineUtils::getCommands(argc - 2, argv + 2);
+	for (const char c : commands) {
+		if		(c == 's') gSilentMode = true;
+	}
+
 	if (!gSilentMode) {
 		//std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
 	}

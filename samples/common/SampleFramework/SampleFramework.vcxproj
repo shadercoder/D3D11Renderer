@@ -10,6 +10,20 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\SampleFramework\Camera.h" />
+    <ClInclude Include="include\SampleFramework\GlmMath.h" />
+    <ClInclude Include="include\SampleFramework\Input.h" />
+    <ClInclude Include="include\SampleFramework\LoadBinaryData.h" />
+    <ClInclude Include="include\SampleFramework\SampleBase.h" />
+    <ClInclude Include="include\SampleFramework\SampleFramework.h" />
+    <ClInclude Include="include\SampleFramework\Timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\SampleFramework.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3B6C93C9-0FCE-4838-B498-54408CCF3E93}</ProjectGuid>
     <RootNamespace>SampleFramework</RootNamespace>
@@ -75,26 +89,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="include\SampleCommon\Camera.h" />
-    <ClInclude Include="include\SampleCommon\GlmMath.h" />
-    <ClInclude Include="include\SampleCommon\Input.h" />
-    <ClInclude Include="include\SampleCommon\LoadBinaryData.h" />
-    <ClInclude Include="include\SampleCommon\SampleBase.h" />
-    <ClInclude Include="include\SampleCommon\Timer.h" />
-    <ClInclude Include="include\SampleFramework\Camera.h" />
-    <ClInclude Include="include\SampleFramework\GlmMath.h" />
-    <ClInclude Include="include\SampleFramework\Input.h" />
-    <ClInclude Include="include\SampleFramework\LoadBinaryData.h" />
-    <ClInclude Include="include\SampleFramework\SampleBase.h" />
-    <ClInclude Include="include\SampleFramework\SampleFramework.h" />
-    <ClInclude Include="include\SampleFramework\Timer.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\Input.cpp" />
-    <ClCompile Include="src\SampleFramework.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

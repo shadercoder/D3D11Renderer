@@ -36,5 +36,5 @@ VSOut vsMain(VSIn vsIn) {
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
 float4 psMain(VSOut psIn) : SV_TARGET {
-	return float4(normalize(psIn.Normal), 1.0);
+	return float4(normalize(psIn.Normal) * 0.5 + 0.5, 1.0);
 }

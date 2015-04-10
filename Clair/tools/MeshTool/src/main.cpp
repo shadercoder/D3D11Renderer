@@ -13,25 +13,24 @@ using namespace Assimp;
 static std::string gInFile {"../../../samples/common/rawdata/materials/default.hlsl"};
 static std::string gOutFile {"../../../samples/common/data/test/bla.cmat"};
 static bool gSilentMode {false};
+static bool gBlenderObjMode {false};
 
 int convertMesh(const std::string& inFile, const std::string& outFile);
 
 int main(int argc, char* argv[]) {
-	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc < 3) {
-		//return -1;
 		return MeshToolError::ARGS;
-	} else {
-		gInFile = argv[1];
-		gOutFile = argv[2];
-		if (argc == 4) {
-			if (std::string{argv[3]} == "-s") {
-				gSilentMode = true;
-			}
-		}
 	}
+	gInFile = argv[1];
+	gOutFile = argv[2];
+	const auto commands = CommandLineUtils::getCommands(argc - 2, argv + 2);
+	for (const char c : commands) {
+		if		(c == 's') gSilentMode = true;
+		else if (c == 'b') gBlenderObjMode = true;
+	}
+
 	if (!gSilentMode) {
-		//std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
+		std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
 	}
 	const int result {convertMesh(gInFile, gOutFile)};
 	return result;
@@ -72,27 +71,35 @@ int convertMesh(const std::string& inFile, const std::string& outFile) {
 	fwrite(&stride, sizeof(unsigned), 1, file);
 
 	// write model
-	// Note: Switch Y<->Z and winding order
-	//		 because of the way Blender exports .objs.
 	fwrite(&mesh.mNumVertices, sizeof(unsigned), 1, file);
 	for (unsigned j = 0; j < mesh.mNumVertices; j++) {
-		const float v[3] = { mesh.mVertices[j].x,
-							 mesh.mVertices[j].z,
-							 mesh.mVertices[j].y };
+		float v[3] = { mesh.mVertices[j].x,
+					   mesh.mVertices[j].y,
+					   mesh.mVertices[j].z };
+		if (gBlenderObjMode) v[2] = -v[2];
 		fwrite(v, sizeof(float), 3, file);
-		const float n[3] = { mesh.mNormals[j].x,
-							 mesh.mNormals[j].z,
-							 mesh.mNormals[j].y };
+		float n[3] = { mesh.mNormals[j].x,
+					   mesh.mNormals[j].y,
+					   mesh.mNormals[j].z };
+		if (gBlenderObjMode) n[2] = -n[2];
 		fwrite(n, sizeof(float), 3, file);
 	}
 	const unsigned numIndices = mesh.mNumFaces * 3;
 	fwrite(&numIndices, sizeof(unsigned), 1, file);
 	for (unsigned j = 0 ; j < mesh.mNumFaces ; j++) {
-		const unsigned ind[3] = {
-			mesh.mFaces[j].mIndices[0],
-			mesh.mFaces[j].mIndices[2],
-			mesh.mFaces[j].mIndices[1] };
-		fwrite(ind, sizeof(unsigned), 3, file);
+		if (gBlenderObjMode) {
+			const unsigned ind[3] = {
+				mesh.mFaces[j].mIndices[0],
+				mesh.mFaces[j].mIndices[2],
+				mesh.mFaces[j].mIndices[1] };
+			fwrite(ind, sizeof(unsigned), 3, file);
+		} else {
+			const unsigned ind[3] = {
+				mesh.mFaces[j].mIndices[0],
+				mesh.mFaces[j].mIndices[1],
+				mesh.mFaces[j].mIndices[2] };
+			fwrite(ind, sizeof(unsigned), 3, file);
+		}
 		//assert(face.mNumIndices == 3);
 	}
 	fclose(file);
