@@ -1,5 +1,4 @@
 #pragma once
-#include "Clair/VertexLayout.h"
 #include "Clair/RenderPass.h"
 
 struct ID3D11Device;
@@ -9,8 +8,6 @@ typedef HWND__* HWND;
 namespace Clair {
 	class Scene;
 	class Matrix;
-	class InputLayout;
-	class VertexShader;
 
 	class LowLevelRenderer {
 	public:
@@ -24,10 +21,5 @@ namespace Clair {
 		static void render(Scene* scene);
 		static void setCameraMatrix(const Matrix& m);
 		static void setRenderPass(RenderPass pass);
-
-		static InputLayout* createInputLayout(const VertexLayout& vertexLayout,
-											  VertexShader* vertexShader);
-
-		static void destroyInputLayout(InputLayout* inputLayout);
 	};
 }

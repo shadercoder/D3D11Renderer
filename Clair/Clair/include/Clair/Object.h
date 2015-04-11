@@ -38,12 +38,12 @@ namespace Clair {
 		void setMaterial(RenderPass pass, Material* material);
 		Material* getMaterial(RenderPass pass);
 
-		InputLayout* getInputLayout() const { return mInputLayout; }
+		InputLayout* getInputLayout() const;
 
 	private:
 		class MaterialInstance {
 		public:
-			bool isGood {false};
+			bool isValid {false};
 			Material* material {nullptr};
 		};
 		void recreateInputLayout(MaterialInstance* materialInstance);
@@ -52,5 +52,9 @@ namespace Clair {
 		std::map<RenderPass, MaterialInstance*> mMatInstances {};
 		InputLayout* mInputLayout {};
 	};
+
+	inline InputLayout* Object::getInputLayout() const {
+		return mInputLayout;
+	}
 }
 

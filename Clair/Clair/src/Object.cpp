@@ -2,6 +2,7 @@
 #include "Material.h"
 #include "LowLevelRenderer.h"
 #include "Mesh.h"
+#include "InputLayout.h"
 
 using namespace Clair;
 
@@ -9,7 +10,7 @@ Object::~Object() {
 	for (const auto& it : mMatInstances) {
 		delete it.second;
 	}
-	LowLevelRenderer::destroyInputLayout(mInputLayout);
+	delete mInputLayout;
 }
 
 void Object::setMesh(Mesh* const mesh) {
@@ -27,7 +28,7 @@ void Object::setMaterial(const RenderPass pass,
 		instance = mMatInstances[pass];
 	} else {
 		instance = mMatInstances[pass];
-		instance->isGood = false;
+		instance->isValid = false;
 	}
 	instance->material = material;
 	recreateInputLayout(instance);
@@ -38,20 +39,21 @@ Material* Object::getMaterial(const RenderPass pass) {
 		return nullptr;
 	}
 	auto const material = mMatInstances[pass];
-	if (!material->isGood) return nullptr;
+	if (!material->isValid) return nullptr;
 	return material->material;
 }
 
 void Object::recreateInputLayout(MaterialInstance* const materialInstance) {
 	bool isCompatible {true};
 	if (isCompatible) {
-		materialInstance->isGood = true;
+		materialInstance->isValid = true;
 		if (mInputLayout) {
-			LowLevelRenderer::destroyInputLayout(mInputLayout);
+			delete mInputLayout;
 		}
-		mInputLayout = LowLevelRenderer::createInputLayout(mMesh->vertexLayout,
-								materialInstance->material->getVertexShader());
+		mInputLayout = new InputLayout {
+			LowLevelRenderer::getD3dDevice(), mMesh->getVertexLayout(),
+			materialInstance->material->getVertexShader() };
 	} else {
-		materialInstance->isGood = false;
+		materialInstance->isValid = false;
 	}
 }

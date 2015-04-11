@@ -84,6 +84,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\IndexBuffer.cpp" />
+    <ClCompile Include="src\InputLayout.cpp" />
     <ClCompile Include="src\LowLevelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
@@ -97,6 +98,7 @@
   <ItemGroup>
     <ClInclude Include="include\Clair\RenderPass.h" />
     <ClInclude Include="src\IndexBuffer.h" />
+    <ClInclude Include="src\InputLayout.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="include\Clair\Matrix.h" />
     <ClInclude Include="include\Clair\Object.h" />

@@ -14,19 +14,12 @@
 #include "PixelShader.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "InputLayout.h"
 
 #pragma comment(lib, "d3d11.lib")
 
 using namespace Clair;
 using namespace DirectX;
-
-namespace Clair {
-	class InputLayout {
-	public:
-		ID3D11InputLayout* d3dInputLayout {nullptr};
-		unsigned stride {0};
-	};
-}
 
 namespace {
 	ID3D11Device* d3dDevice {nullptr};
@@ -38,13 +31,10 @@ namespace {
 	ID3D11Texture2D* depthStencilBuffer {nullptr};
 	ID3D11RasterizerState* rasterizerState {nullptr};
 
-	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11Buffer* constantBuffer = nullptr;
 	ID3D11SamplerState* samplerState = nullptr;
 	ID3D11Texture2D* texture = nullptr;
 	ID3D11ShaderResourceView* shaderResView = nullptr;
-
-	std::vector<InputLayout*> inputLayouts;
 
 	Matrix cameraViewMat {};
 	RenderPass gRenderPass {};
@@ -258,11 +248,6 @@ void LowLevelRenderer::terminate() {
 	releaseComObject(texture);
 	releaseComObject(samplerState);
 	releaseComObject(constantBuffer);
-	releaseComObject(inputLayout);
-	for (const auto& it : inputLayouts) {
-		releaseComObject(it->d3dInputLayout);
-		delete it;
-	}
 	releaseComObject(rasterizerState);
 	releaseComObject(depthStencilBuffer);
 	releaseComObject(depthStencilView);
@@ -375,17 +360,19 @@ void LowLevelRenderer::render(Scene* const scene) {
 		cb.world = it->getMatrix();
 		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb,
 											0, 0);
-		const UINT stride {it->getInputLayout()->stride};
+		const UINT stride {it->getInputLayout()->getStride()};
 		const UINT offset {0};
 		d3dDeviceContext->IASetInputLayout(
-			it->getInputLayout()->d3dInputLayout);
-		ID3D11Buffer* const vertexBuffer {mesh->vertexBuffer->getD3dBuffer()};
+			it->getInputLayout()->getD3dInputLayout());
+		ID3D11Buffer* const vertexBuffer {
+			mesh->getVertexBuffer()->getD3dBuffer()
+		};
 		d3dDeviceContext->IASetVertexBuffers(0, 1,
 											 &vertexBuffer,
 											 &stride, &offset);
-		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer->getD3dBuffer(),
-										   DXGI_FORMAT_R32_UINT, 0);
-		d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
+		d3dDeviceContext->IASetIndexBuffer(
+			mesh->getIndexBuffer()->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		d3dDeviceContext->DrawIndexed(mesh->getIndexBufferSize(), 0, 0);
 	}
 }
 
@@ -395,43 +382,4 @@ void LowLevelRenderer::setCameraMatrix(const Matrix& m) {
 
 void LowLevelRenderer::setRenderPass(const RenderPass pass) {
 	gRenderPass = pass;
-}
-
-InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
-												 vertexLayout,
-												 VertexShader* const
-												 vertexShader) {
-	InputLayout* const inputLayout {new InputLayout};
-	HRESULT result {};
-	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc {};
-	unsigned stride {0};
-	unsigned offset {0};
-	for (const auto& it : vertexLayout) {
-		auto format = DXGI_FORMAT_R32_FLOAT;
-		offset = stride;
-		switch (it.format) {
-		case VertexAttribute::Format::FLOAT1: stride += sizeof(float) * 1;
-			format = DXGI_FORMAT_R32_FLOAT; break;
-		case VertexAttribute::Format::FLOAT2: stride += sizeof(float) * 2;
-			format = DXGI_FORMAT_R32G32_FLOAT; break;
-		case VertexAttribute::Format::FLOAT3: stride += sizeof(float) * 3;
-			format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-		case VertexAttribute::Format::FLOAT4: stride += sizeof(float) * 4;
-			format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
-		}
-		layoutDesc.push_back({it.name.c_str(), 0, format, 0, offset,
-							  D3D11_INPUT_PER_VERTEX_DATA, 0});
-	}
-	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
-										  vertexShader->getByteCode(),
-										  vertexShader->getByteCodeSize(),
-										  &inputLayout->d3dInputLayout);
-	if (FAILED(result)) return nullptr;
-	inputLayout->stride = stride;
-	return inputLayout;
-}
-
-void LowLevelRenderer::destroyInputLayout(InputLayout* const inputLayout) {
-	releaseComObject(inputLayout->d3dInputLayout);
-	delete inputLayout;
 }

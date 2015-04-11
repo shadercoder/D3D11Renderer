@@ -7,7 +7,6 @@
 #include "Clair/Matrix.h"
 #include "Material.h"
 #include "Mesh.h"
-#include "Serialization.h"
 #include "LowLevelRenderer.h"
 #include <cassert>
 
@@ -30,8 +29,6 @@ void Clair::Renderer::terminate() {
 		delete it;
 	}
 	for (const auto& it : meshes) {
-		delete it->vertexBuffer;
-		delete it->indexBuffer;
 		delete it;
 	}
 	for (const auto& it : materials) {
@@ -72,34 +69,15 @@ Clair::Scene* Clair::Renderer::createScene() {
 
 Mesh* Renderer::createMesh(const char* data) {
 	assert(data);
-	VertexLayout vertexLayout {Serialization::readVertexLayoutFromBytes(data)};
-	unsigned stride {0};
-	memcpy(&stride, data, sizeof(unsigned));
-	data += sizeof(unsigned);
-	unsigned numVertices {0};
-	memcpy(&numVertices, data ,sizeof(unsigned));
-	data += sizeof(unsigned);
-	const char* const vertexData {data};
-	data += sizeof(char) * numVertices * stride;
-	unsigned numIndices {0};
-	memcpy(&numIndices, data, sizeof(unsigned));
-	data += sizeof(unsigned);
-	const unsigned* const indexData {reinterpret_cast<const unsigned*>(data)};
-
-	Mesh* const mesh {new Mesh{}};
-	mesh->vertexLayout = vertexLayout;
-	mesh->vertexBuffer = new VertexBuffer {LowLevelRenderer::getD3dDevice(),
-										   vertexData, numVertices * stride};
-	mesh->indexBuffer = new IndexBuffer {
-		LowLevelRenderer::getD3dDevice(), indexData,
-		numIndices * sizeof(unsigned)
+	Mesh* const mesh {
+		new Mesh {LowLevelRenderer::getD3dDevice(), data}
 	};
-	mesh->indexBufferSize = numIndices;
 	meshes.push_back(mesh);
 	return mesh;
 }
 
 Material* Renderer::createMaterial(char* const data) {
+	assert(data);
 	Material* const material {
 		new Material {LowLevelRenderer::getD3dDevice(), data}
 	};
