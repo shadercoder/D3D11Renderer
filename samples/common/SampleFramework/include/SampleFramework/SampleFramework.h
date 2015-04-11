@@ -6,6 +6,7 @@ namespace SampleFramework {
 
 	class Framework {
 	public:
-		static bool run(SampleBase* sample, const std::string& caption);
+		static bool run(SampleBase* sample, const std::string& caption,
+						int width, int height);
 	};
 }

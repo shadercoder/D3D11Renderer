@@ -9,7 +9,8 @@
 
 int main(int, char* []) {
 	BasicSample* const basicSample {new BasicSample{}};
-	if (!SampleFramework::Framework::run(basicSample, "Clair basic sample")) {
+	if (!SampleFramework::Framework::run(basicSample, "Clair basic sample",
+										 960, 640)) {
 		delete basicSample;
 		return -1;
 	}

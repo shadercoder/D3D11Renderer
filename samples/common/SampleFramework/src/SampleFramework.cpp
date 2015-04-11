@@ -9,15 +9,17 @@
 using namespace SampleFramework;
 
 static SampleBase* gSample {nullptr};
-static SDL_Window* SDL_window {nullptr};
-static bool isRunning {true};
+static SDL_Window* gSDL_window {nullptr};
+static bool gIsRunning {true};
+static int gWidth {0};
+static int gHeight {0};
 
 static void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch(event.type) {
 		case SDL_QUIT:
-			isRunning = false;
+			gIsRunning = false;
 			break;
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -42,18 +44,21 @@ static void handleEvents() {
 	}
 }
 
-bool Framework::run(SampleBase* const sample, const std::string& caption) {
+bool Framework::run(SampleBase* const sample, const std::string& caption,
+					const int width, const int height) {
 	gSample = sample;
+	gWidth = width;
+	gHeight = height;
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		MessageBox(nullptr, "Couldn't initialize SDL2", "Fatal error",
 				   MB_OK | MB_ICONERROR);
 		return false;
 	}
 	
-	SDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_CENTERED,
-								  SDL_WINDOWPOS_CENTERED, 640, 480,
+	gSDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_CENTERED,
+								  SDL_WINDOWPOS_CENTERED, gWidth, gHeight,
 								  SDL_WINDOW_RESIZABLE);
-	if (!SDL_window) {
+	if (!gSDL_window) {
 		MessageBox(nullptr, (std::string("Couldn't initialize SDL2:\n") +
 				   SDL_GetError()).c_str(), "Fatal error",
 				   MB_OK | MB_ICONERROR);
@@ -62,7 +67,7 @@ bool Framework::run(SampleBase* const sample, const std::string& caption) {
 	}
 	SDL_SysWMinfo info;
 	SDL_VERSION(&info.version);
-	SDL_GetWindowWMInfo(SDL_window, &info);
+	SDL_GetWindowWMInfo(gSDL_window, &info);
 
 	if (!gSample->initialize(info.info.win.window)) {
 		MessageBox(nullptr, "Couldn't initialize Clair.",
@@ -71,15 +76,16 @@ bool Framework::run(SampleBase* const sample, const std::string& caption) {
 		SDL_Quit();
 		return false;
 	}
+	gSample->onResize(gWidth, gHeight);
 
 	Timer timer;
 	timer.start();
 	double deltaTime = 0.0f;
 	double runningTime = 0.0f;
-	while (isRunning) {
+	while (gIsRunning) {
 		Input::update();
 		handleEvents();
-		if (Input::getKey(SDL_SCANCODE_ESCAPE)) isRunning = false;
+		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
 
 		gSample->update(static_cast<float>(deltaTime),
 						static_cast<float>(runningTime));
