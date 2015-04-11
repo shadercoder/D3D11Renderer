@@ -50,7 +50,7 @@ void Object::recreateInputLayout(MaterialInstance* const materialInstance) {
 			LowLevelRenderer::destroyInputLayout(mInputLayout);
 		}
 		mInputLayout = LowLevelRenderer::createInputLayout(mMesh->vertexLayout,
-									materialInstance->material->vertexShader);
+								materialInstance->material->getVertexShader());
 	} else {
 		materialInstance->isGood = false;
 	}

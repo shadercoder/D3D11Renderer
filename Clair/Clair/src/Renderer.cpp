@@ -19,25 +19,25 @@ namespace {
 	std::vector<Clair::Material*> materials;
 }
 
-bool Clair::Renderer::initialize(HWND hwnd) {
+bool Clair::Renderer::initialize(const HWND hwnd) {
 	const bool result {LowLevelRenderer::initialize(hwnd)};
 	printf("Clair initialized.\n");
 	return result;
 }
 
 void Clair::Renderer::terminate() {
-	LowLevelRenderer::terminate();
 	for (const auto& it : scenes) {
 		delete it;
 	}
 	for (const auto& it : meshes) {
-		LowLevelRenderer::destroyVertexBuffer(it->vertexBuffer);
-		LowLevelRenderer::destroyIndexBuffer(it->indexBuffer);
+		delete it->vertexBuffer;
+		delete it->indexBuffer;
 		delete it;
 	}
 	for (const auto& it : materials) {
 		delete it;
 	}
+	LowLevelRenderer::terminate();
 	printf("Clair terminated.\n");
 }
 
@@ -70,7 +70,7 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
-Mesh* Renderer::createMesh(char* data) {
+Mesh* Renderer::createMesh(const char* data) {
 	assert(data);
 	VertexLayout vertexLayout {Serialization::readVertexLayoutFromBytes(data)};
 	unsigned stride {0};
@@ -79,19 +79,21 @@ Mesh* Renderer::createMesh(char* data) {
 	unsigned numVertices {0};
 	memcpy(&numVertices, data ,sizeof(unsigned));
 	data += sizeof(unsigned);
-	char* const vertexData {data};
+	const char* const vertexData {data};
 	data += sizeof(char) * numVertices * stride;
 	unsigned numIndices {0};
 	memcpy(&numIndices, data, sizeof(unsigned));
 	data += sizeof(unsigned);
-	unsigned* const indexData {reinterpret_cast<unsigned*>(data)};
+	const unsigned* const indexData {reinterpret_cast<const unsigned*>(data)};
 
 	Mesh* const mesh {new Mesh{}};
 	mesh->vertexLayout = vertexLayout;
-	mesh->vertexBuffer = LowLevelRenderer::
-		createVertexBuffer(vertexData, numVertices * stride);
-	mesh->indexBuffer = LowLevelRenderer::
-		createIndexBuffer(indexData, numIndices * sizeof(unsigned));
+	mesh->vertexBuffer = new VertexBuffer {LowLevelRenderer::getD3dDevice(),
+										   vertexData, numVertices * stride};
+	mesh->indexBuffer = new IndexBuffer {
+		LowLevelRenderer::getD3dDevice(), indexData,
+		numIndices * sizeof(unsigned)
+	};
 	mesh->indexBufferSize = numIndices;
 	meshes.push_back(mesh);
 	return mesh;

@@ -9,11 +9,23 @@ namespace Clair {
 
 	class Material {
 	public:
-		Material(ID3D11Device* d3dDevice, char* data);
+		Material(ID3D11Device* d3dDevice, const char* data);
 		~Material();
 
-		VertexLayout vertexLayout {};
-		VertexShader* vertexShader {nullptr};
-		PixelShader* pixelShader {nullptr};
+		VertexShader* getVertexShader() const;
+		PixelShader* getPixelShader() const;
+
+	private:
+		VertexLayout mVertexLayout {};
+		VertexShader* mVertexShader {nullptr};
+		PixelShader* mPixelShader {nullptr};
 	};
+
+	inline VertexShader* Material::getVertexShader() const {
+		return mVertexShader;
+	}
+
+	inline PixelShader* Material::getPixelShader() const {
+		return mPixelShader;
+	}
 }

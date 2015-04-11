@@ -21,7 +21,7 @@ namespace Clair {
 
 		static void setRenderPass(RenderPass pass);
 		static Scene* createScene();
-		static Mesh* createMesh(char* data);
+		static Mesh* createMesh(const char* data);
 		static Material* createMaterial(char* data);
 		static void setCameraMatrix(const Clair::Matrix& m);
 		static void render(Scene* scene);

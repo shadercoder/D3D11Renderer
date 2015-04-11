@@ -7,12 +7,12 @@ namespace Clair {
 	class VertexShader;
 	class PixelShader;
 
-	//typedef std::vector<unsigned> VertexLayoutOffsets;
-
 	class Mesh {
 	public:
+	//	Mesh(ID3D11Device* d3dDevice, const char* data);
+
+	//private:
 		VertexLayout vertexLayout {};
-		//VertexLayoutOffsets vertexLayoutOffsets {};
 		VertexBuffer* vertexBuffer {nullptr};
 		IndexBuffer* indexBuffer {nullptr};
 		unsigned indexBufferSize {0};

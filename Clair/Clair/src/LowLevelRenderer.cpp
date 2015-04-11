@@ -12,6 +12,8 @@
 #include "Clair/RenderPass.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -366,8 +368,8 @@ void LowLevelRenderer::render(Scene* const scene) {
 		if (!mesh) continue;
 		auto material = it->getMaterial(gRenderPass);
 		if (!material) continue;
-		auto vs = material->vertexShader->getD3dShader();
-		auto ps = material->pixelShader->getD3dShader();
+		auto vs = material->getVertexShader()->getD3dShader();
+		auto ps = material->getPixelShader()->getD3dShader();
 		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
 		d3dDeviceContext->PSSetShader(ps, nullptr, 0);
 		cb.world = it->getMatrix();
@@ -377,10 +379,11 @@ void LowLevelRenderer::render(Scene* const scene) {
 		const UINT offset {0};
 		d3dDeviceContext->IASetInputLayout(
 			it->getInputLayout()->d3dInputLayout);
+		ID3D11Buffer* const vertexBuffer {mesh->vertexBuffer->getD3dBuffer()};
 		d3dDeviceContext->IASetVertexBuffers(0, 1,
-											 &mesh->vertexBuffer->d3dBuffer,
+											 &vertexBuffer,
 											 &stride, &offset);
-		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer->d3dBuffer,
+		d3dDeviceContext->IASetIndexBuffer(mesh->indexBuffer->getD3dBuffer(),
 										   DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->indexBufferSize, 0, 0);
 	}
@@ -392,56 +395,6 @@ void LowLevelRenderer::setCameraMatrix(const Matrix& m) {
 
 void LowLevelRenderer::setRenderPass(const RenderPass pass) {
 	gRenderPass = pass;
-}
-
-VertexBuffer* LowLevelRenderer::createVertexBuffer(char* const bufferData,
-												   const unsigned bufferSize) {
-	VertexBuffer* const vertexBuffer {new VertexBuffer};
-	HRESULT result {};
-	D3D11_BUFFER_DESC vertexBufferDesc {};
-	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	vertexBufferDesc.ByteWidth = bufferSize;
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA subResData {};
-	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
-	subResData.pSysMem = bufferData;
-
-	result = d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData,
-									 &vertexBuffer->d3dBuffer);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	return vertexBuffer;
-}
-
-IndexBuffer* LowLevelRenderer::createIndexBuffer(unsigned* const bufferData,
-												 const unsigned bufferSize) {
-	IndexBuffer* const indexBuffer {new IndexBuffer};
-	HRESULT result {};
-	D3D11_BUFFER_DESC indexBufferDesc {};
-	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	indexBufferDesc.ByteWidth = bufferSize;
-	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA indexInitData {};
-	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	indexInitData.pSysMem = bufferData;
-
-	result = d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData,
-									 &indexBuffer->d3dBuffer);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	return indexBuffer;
 }
 
 InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
@@ -476,16 +429,6 @@ InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
 	if (FAILED(result)) return nullptr;
 	inputLayout->stride = stride;
 	return inputLayout;
-}
-
-void LowLevelRenderer::destroyVertexBuffer(VertexBuffer* const vertexBuffer) {
-	releaseComObject(vertexBuffer->d3dBuffer);
-	delete vertexBuffer;
-}
-
-void LowLevelRenderer::destroyIndexBuffer(IndexBuffer* const indexBuffer) {
-	releaseComObject(indexBuffer->d3dBuffer);
-	delete indexBuffer;
 }
 
 void LowLevelRenderer::destroyInputLayout(InputLayout* const inputLayout) {

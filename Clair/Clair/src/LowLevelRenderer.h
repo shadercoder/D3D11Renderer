@@ -9,8 +9,6 @@ typedef HWND__* HWND;
 namespace Clair {
 	class Scene;
 	class Matrix;
-	class VertexBuffer;
-	class IndexBuffer;
 	class InputLayout;
 	class VertexShader;
 
@@ -27,15 +25,9 @@ namespace Clair {
 		static void setCameraMatrix(const Matrix& m);
 		static void setRenderPass(RenderPass pass);
 
-		static VertexBuffer* createVertexBuffer(char* bufferData,
-												unsigned bufferSize);
-		static IndexBuffer* createIndexBuffer(unsigned* bufferData,
-											  unsigned bufferSize);
 		static InputLayout* createInputLayout(const VertexLayout& vertexLayout,
 											  VertexShader* vertexShader);
 
-		static void destroyVertexBuffer(VertexBuffer* vertexBuffer);
-		static void destroyIndexBuffer(IndexBuffer* indexBuffer);
 		static void destroyInputLayout(InputLayout* inputLayout);
 	};
 }

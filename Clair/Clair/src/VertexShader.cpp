@@ -7,8 +7,10 @@ VertexShader::VertexShader(ID3D11Device* const d3dDevice,
 						   const unsigned byteCodeSize)
 	: mByteCode		{byteCode}
 	, mByteCodeSize	{byteCodeSize} {
-	HRESULT result {d3dDevice->CreateVertexShader(byteCode, byteCodeSize,
-					nullptr, &mD3dShader)};
+	const HRESULT result {
+		d3dDevice->CreateVertexShader(byteCode, byteCodeSize,
+									  nullptr, &mD3dShader)
+	};
 	if (!FAILED(result)) {
 		mIsValid = true;
 	}
