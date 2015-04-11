@@ -86,8 +86,10 @@
     <ClCompile Include="src\LowLevelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\PixelShader.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\Scene.cpp" />
+    <ClCompile Include="src\VertexShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Clair\RenderPass.h" />
@@ -100,8 +102,10 @@
     <ClInclude Include="include\Clair\VertexLayout.h" />
     <ClInclude Include="src\LowLevelRenderer.h" />
     <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\PixelShader.h" />
     <ClInclude Include="src\Serialization.h" />
     <ClInclude Include="src\VertexBuffer.h" />
+    <ClInclude Include="src\VertexShader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

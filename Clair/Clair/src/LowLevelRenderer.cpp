@@ -10,6 +10,8 @@
 #include "Clair/Object.h"
 #include "Material.h"
 #include "Clair/RenderPass.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -21,17 +23,6 @@ namespace Clair {
 	public:
 		ID3D11InputLayout* d3dInputLayout {nullptr};
 		unsigned stride {0};
-	};
-
-	class VertexShader {
-	public:
-		char* byteCode {nullptr};
-		size_t byteCodeSize {0};
-		ID3D11VertexShader* d3dShader {nullptr};
-	};
-	class PixelShader {
-	public:
-		ID3D11PixelShader* d3dShader {nullptr};
 	};
 }
 
@@ -191,7 +182,7 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 
 	D3D11_SUBRESOURCE_DATA constInitData;
 	ZeroMemory(&constInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	unsigned testInitData[] = { 0, 1, 2, 3, 4 };
+	const unsigned testInitData[] {0, 1, 2, 3, 4};
 	constInitData.pSysMem = testInitData;
 
 	result = d3dDevice->CreateBuffer(&constBufferDesc, &constInitData,
@@ -278,6 +269,11 @@ void LowLevelRenderer::terminate() {
 	releaseComObject(d3dDeviceContext);
 	releaseComObject(d3dDevice);
 }
+
+ID3D11Device* LowLevelRenderer::getD3dDevice() {
+	return d3dDevice;
+}
+
 
 void LowLevelRenderer::clear() {
 	const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
@@ -370,8 +366,8 @@ void LowLevelRenderer::render(Scene* const scene) {
 		if (!mesh) continue;
 		auto material = it->getMaterial(gRenderPass);
 		if (!material) continue;
-		auto vs = material->vertexShader->d3dShader;
-		auto ps = material->pixelShader->d3dShader;
+		auto vs = material->vertexShader->getD3dShader();
+		auto ps = material->pixelShader->getD3dShader();
 		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
 		d3dDeviceContext->PSSetShader(ps, nullptr, 0);
 		cb.world = it->getMatrix();
@@ -474,52 +470,12 @@ InputLayout* LowLevelRenderer::createInputLayout(const VertexLayout&
 							  D3D11_INPUT_PER_VERTEX_DATA, 0});
 	}
 	result = d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
-										  vertexShader->byteCode,
-										  vertexShader->byteCodeSize,
+										  vertexShader->getByteCode(),
+										  vertexShader->getByteCodeSize(),
 										  &inputLayout->d3dInputLayout);
 	if (FAILED(result)) return nullptr;
 	inputLayout->stride = stride;
 	return inputLayout;
-}
-
-VertexShader* LowLevelRenderer::createVertexShader(char* const vsData,
-												   const size_t vsSize) {
-	HRESULT result {};
-	ID3D11VertexShader* vertexShader {nullptr};
-	result = d3dDevice->CreateVertexShader(vsData, vsSize, nullptr,
-										   &vertexShader);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	VertexShader* newShader = new VertexShader{};
-	newShader->byteCode = vsData;
-	newShader->byteCodeSize = vsSize;
-	newShader->d3dShader = vertexShader;
-	return newShader;
-}
-
-PixelShader* LowLevelRenderer::createPixelShader(char* const psData,
-												 const size_t psSize) {
-	HRESULT result {};
-	ID3D11PixelShader* pixelShader {nullptr};
-	result = d3dDevice->CreatePixelShader(psData, psSize, nullptr,
-										  &pixelShader);
-	if (FAILED(result)) {
-		return nullptr;
-	}
-	PixelShader* newShader = new PixelShader{};
-	newShader->d3dShader = pixelShader;
-	return newShader;
-}
-
-void LowLevelRenderer::destroyVertexShader(VertexShader* const vertexShader) {
-	releaseComObject(vertexShader->d3dShader);
-	delete vertexShader;
-}
-
-void LowLevelRenderer::destroyPixelShader(PixelShader* const pixelShader) {
-	releaseComObject(pixelShader->d3dShader);
-	delete pixelShader;
 }
 
 void LowLevelRenderer::destroyVertexBuffer(VertexBuffer* const vertexBuffer) {

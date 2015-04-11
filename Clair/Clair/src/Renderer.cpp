@@ -36,8 +36,6 @@ void Clair::Renderer::terminate() {
 		delete it;
 	}
 	for (const auto& it : materials) {
-		LowLevelRenderer::destroyVertexShader(it->vertexShader);
-		LowLevelRenderer::destroyPixelShader(it->pixelShader);
 		delete it;
 	}
 	printf("Clair terminated.\n");
@@ -67,7 +65,7 @@ void Clair::Renderer::render(Scene* const scene) {
 }
 
 Clair::Scene* Clair::Renderer::createScene() {
-	Clair::Scene* const newScene = new Scene();
+	Clair::Scene* const newScene {new Scene{}};
 	scenes.push_back(newScene);
 	return newScene;
 }
@@ -99,26 +97,10 @@ Mesh* Renderer::createMesh(char* data) {
 	return mesh;
 }
 
-Material* Renderer::createMaterial(char* data) {
-	assert(data);
-	const VertexLayout vertexLayout {
-		Serialization::readVertexLayoutFromBytes(data)};
-	size_t vsSize {0};
-	memcpy(&vsSize, data, sizeof(size_t));
-	data += sizeof(size_t);
-	char* const vsData = data;
-	data += sizeof(char) * vsSize;
-	size_t psSize {0};
-	memcpy(&psSize, data, sizeof(size_t));
-	data += sizeof(size_t);
-	char* const psData = data;
-
-	Material* const material {new Material{}};
-	material->vertexLayout = vertexLayout;
-	material->vertexShader = LowLevelRenderer::
-								createVertexShader(vsData, vsSize);
-	material->pixelShader = LowLevelRenderer::
-								createPixelShader(psData, psSize);
+Material* Renderer::createMaterial(char* const data) {
+	Material* const material {
+		new Material {LowLevelRenderer::getD3dDevice(), data}
+	};
 	materials.push_back(material);
 	return material;
 }
