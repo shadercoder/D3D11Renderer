@@ -50,7 +50,7 @@
     <OutDir>bin\</OutDir>
     <IntDir>build\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
-    <CustomBuildBeforeTargets>PreBuildEvent</CustomBuildBeforeTargets>
+    <CustomBuildBeforeTargets>PostBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\</OutDir>

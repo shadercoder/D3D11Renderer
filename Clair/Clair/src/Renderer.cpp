@@ -85,7 +85,7 @@ Material* Renderer::createMaterial(char* const data) {
 	return material;
 }
 
-void Clair::Renderer::setCameraMatrix(const Clair::Matrix& m) {
+void Clair::Renderer::setCameraMatrix(const Clair::Float4x4& m) {
 	LowLevelRenderer::setCameraMatrix(m);
 	return;
 }

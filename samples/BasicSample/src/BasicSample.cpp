@@ -41,13 +41,12 @@ bool BasicSample::initialize(const HWND hwnd) {
 	scene = Clair::Renderer::createScene();
 	Clair::Object* const plane {scene->createObject()};
 	plane->setMesh(planeMesh);
-	plane->setMatrix(Clair::Matrix{value_ptr(scale(vec3{1.0f} * 1.0f))});
+	plane->setMatrix(value_ptr(scale(vec3{1.0f} * 1.0f)));
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
 	Clair::Object* const bunny {scene->createObject()};
 	bunny->setMesh(bunnyMesh);
-	bunny->setMatrix(
-		Clair::Matrix{value_ptr(translate(vec3{0.0f, 0.0f, 0.0f}))});
+	bunny->setMatrix(value_ptr(translate(vec3{0.0f, 0.0f, 0.0f})));
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
 
@@ -62,9 +61,9 @@ void BasicSample::terminate() {
 void BasicSample::update(const float deltaTime, const float ) {
 	// Update camera matrix and current render pass based on input.
 	Camera::update(deltaTime);
-	if (Input::getKeyDown(SDL_SCANCODE_N)) {
+	if (Input::getKeyDown(SDL_SCANCODE_1)) {
 		Clair::Renderer::setRenderPass(CLAIR_RENDER_PASS(Pass::DEFAULT));
-	} else if (Input::getKeyDown(SDL_SCANCODE_M)) {
+	} else if (Input::getKeyDown(SDL_SCANCODE_2)) {
 		Clair::Renderer::setRenderPass(CLAIR_RENDER_PASS(Pass::NORMALS));
 	}
 }
@@ -72,8 +71,7 @@ void BasicSample::update(const float deltaTime, const float ) {
 void BasicSample::render() {
 	// Render the scene(s)
 	Clair::Renderer::clear();
-	Clair::Renderer::setCameraMatrix(
-		Clair::Matrix{value_ptr(Camera::getViewMatrix())});
+	Clair::Renderer::setCameraMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(scene);
 	Clair::Renderer::finalizeFrame();
 }

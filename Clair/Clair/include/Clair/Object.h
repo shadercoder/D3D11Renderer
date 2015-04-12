@@ -10,21 +10,21 @@ namespace Clair {
 
 	class Node {
 	public:
-		Node() : mMatrix(Matrix()) {}
+		Node() : mMatrix{Float4x4{}} {}
 		virtual ~Node() {}
 
-		Matrix getMatrix() const;
-		void setMatrix(const Matrix& m);
+		Float4x4 getMatrix() const;
+		void setMatrix(const Float4x4& m);
 
 	private:
-		Matrix mMatrix;
+		Float4x4 mMatrix;
 	};
 
-	inline Matrix Node::getMatrix() const {
+	inline Float4x4 Node::getMatrix() const {
 		return mMatrix;
 	}
 	
-	inline void Node::setMatrix(const Matrix& m) {
+	inline void Node::setMatrix(const Float4x4& m) {
 		mMatrix = m;
 	}
 
@@ -57,4 +57,3 @@ namespace Clair {
 		return mInputLayout;
 	}
 }
-

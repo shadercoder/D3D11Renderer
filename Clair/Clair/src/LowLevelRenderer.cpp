@@ -36,13 +36,13 @@ namespace {
 	ID3D11Texture2D* texture = nullptr;
 	ID3D11ShaderResourceView* shaderResView = nullptr;
 
-	Matrix cameraViewMat {};
+	Float4x4 cameraViewMat {};
 	RenderPass gRenderPass {};
 }
 
 struct ConstantBuffer {
-	Clair::Matrix world;
-	Clair::Matrix view;
+	Clair::Float4x4 world;
+	Clair::Float4x4 view;
 	XMMATRIX projection;
 };
 
@@ -376,7 +376,7 @@ void LowLevelRenderer::render(Scene* const scene) {
 	}
 }
 
-void LowLevelRenderer::setCameraMatrix(const Matrix& m) {
+void LowLevelRenderer::setCameraMatrix(const Float4x4& m) {
 	cameraViewMat = m;
 }
 
