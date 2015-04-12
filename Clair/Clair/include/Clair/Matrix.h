@@ -12,6 +12,7 @@ namespace Clair {
 		Matrix(const T* data);
 		Matrix(const Matrix& other);
 		Matrix<T, x, y>& operator=(const Matrix<T, x, y>& other);
+		const T* operator[](int index) const;
 		T* operator[](int index);
 
 	private:
@@ -45,6 +46,11 @@ namespace Clair {
 	Matrix<T, x, y>::operator=(const Matrix<T, x, y>& other) {
 		memcpy(&m, &other.m, x * y * sizeof(T));
 		return *this;
+	}
+	template<typename T, size_t x, size_t y>
+	inline const T*
+	Matrix<T, x, y>::operator[](const int index) const {
+		return m[index];
 	}
 
 	template<typename T, size_t x, size_t y>

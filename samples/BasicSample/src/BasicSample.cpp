@@ -1,6 +1,5 @@
 #include "BasicSample.h"
 #include "Clair/Renderer.h"
-#include "Clair/Scene.h"
 #include "Clair/Object.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
@@ -15,8 +14,6 @@ CLAIR_RENDER_PASS_ENUM (Pass) {
 	DEFAULT,
 	NORMALS
 };
-
-Clair::Scene* scene {nullptr};
 
 bool BasicSample::initialize(const HWND hwnd) {
 	// Initialize Clair using the window's HWND.
@@ -38,13 +35,13 @@ bool BasicSample::initialize(const HWND hwnd) {
 	auto normalsMat = Clair::Renderer::createMaterial(normalsMatData.data());
 
 	// Create a scene and objects with the meshes and materials assigned.
-	scene = Clair::Renderer::createScene();
-	Clair::Object* const plane {scene->createObject()};
+	mScene = Clair::Renderer::createScene();
+	Clair::Object* const plane {mScene->createObject()};
 	plane->setMesh(planeMesh);
 	plane->setMatrix(value_ptr(scale(vec3{1.0f} * 1.0f)));
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
 	plane->setMaterial(CLAIR_RENDER_PASS(Pass::NORMALS), normalsMat);
-	Clair::Object* const bunny {scene->createObject()};
+	Clair::Object* const bunny {mScene->createObject()};
 	bunny->setMesh(bunnyMesh);
 	bunny->setMatrix(value_ptr(translate(vec3{0.0f, 0.0f, 0.0f})));
 	bunny->setMaterial(CLAIR_RENDER_PASS(Pass::DEFAULT), defaultMat);
@@ -56,6 +53,13 @@ bool BasicSample::initialize(const HWND hwnd) {
 
 void BasicSample::terminate() {
 	Clair::Renderer::terminate();
+}
+
+void BasicSample::onResize(const int width, const int height,
+						   const float aspect) {
+	Clair::Renderer::setViewport(0, 0, width, height);
+	Clair::Renderer::setProjectionMatrix(
+		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
 }
 
 void BasicSample::update(const float deltaTime, const float ) {
@@ -71,11 +75,7 @@ void BasicSample::update(const float deltaTime, const float ) {
 void BasicSample::render() {
 	// Render the scene(s)
 	Clair::Renderer::clear();
-	Clair::Renderer::setCameraMatrix(value_ptr(Camera::getViewMatrix()));
-	Clair::Renderer::render(scene);
+	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
+	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();
-}
-
-void BasicSample::onResize(const int width, const int height) {
-	Clair::Renderer::setViewport(0, 0, width, height);
 }

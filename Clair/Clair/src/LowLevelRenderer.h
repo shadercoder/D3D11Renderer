@@ -19,7 +19,8 @@ namespace Clair {
 		static void finalizeFrame();
 		static void setViewport(int x, int y, int width, int height);
 		static void render(Scene* scene);
-		static void setCameraMatrix(const Float4x4& m);
+		static void setViewMatrix(const Float4x4& view);
+		static void setProjectionMatrix(const Float4x4& projection);
 		static void setRenderPass(RenderPass pass);
 	};
 }

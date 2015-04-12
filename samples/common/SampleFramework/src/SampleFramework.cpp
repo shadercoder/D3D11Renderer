@@ -13,6 +13,13 @@ static SDL_Window* gSDL_window {nullptr};
 static bool gIsRunning {true};
 static int gWidth {0};
 static int gHeight {0};
+static float gAspect {0.0f};
+
+static void setWindowSize(const int width, const int height) {
+	gWidth = width;
+	gHeight = height;
+	gAspect = static_cast<float>(gWidth) / static_cast<float>(gHeight);
+}
 
 static void handleEvents() {
 	SDL_Event event;
@@ -23,7 +30,8 @@ static void handleEvents() {
 			break;
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-				gSample->onResize(event.window.data1, event.window.data2);
+				setWindowSize(event.window.data1, event.window.data2);
+				gSample->onResize(gWidth, gHeight, gAspect);
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -46,9 +54,8 @@ static void handleEvents() {
 
 bool Framework::run(SampleBase* const sample, const std::string& caption,
 					const int width, const int height) {
+	setWindowSize(width, height);
 	gSample = sample;
-	gWidth = width;
-	gHeight = height;
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		MessageBox(nullptr, "Couldn't initialize SDL2", "Fatal error",
 				   MB_OK | MB_ICONERROR);
@@ -76,7 +83,8 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 		SDL_Quit();
 		return false;
 	}
-	gSample->onResize(gWidth, gHeight);
+
+	gSample->onResize(gWidth, gHeight, gAspect);
 
 	Timer timer;
 	timer.start();

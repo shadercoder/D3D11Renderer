@@ -55,7 +55,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\</OutDir>
     <IntDir>build\$(Configuration)\</IntDir>
-    <CustomBuildBeforeTargets>PreBuildEvent</CustomBuildBeforeTargets>
+    <CustomBuildBeforeTargets>PostBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

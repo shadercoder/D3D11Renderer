@@ -21,6 +21,7 @@ Material::Material(ID3D11Device* const d3dDevice, const char* data) {
 	const char* const psData = data;
 	mVertexShader = new VertexShader{d3dDevice, vsData, vsSize};
 	mPixelShader = new PixelShader{d3dDevice, psData, psSize};
+	mIsValid = mVertexShader->isValid() && mPixelShader->isValid();
 }
 
 Material::~Material() {

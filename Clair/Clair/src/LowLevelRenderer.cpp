@@ -36,14 +36,15 @@ namespace {
 	ID3D11Texture2D* texture = nullptr;
 	ID3D11ShaderResourceView* shaderResView = nullptr;
 
-	Float4x4 cameraViewMat {};
+	Float4x4 cameraView {};
+	Float4x4 cameraProjection {};
 	RenderPass gRenderPass {};
 }
 
 struct ConstantBuffer {
-	Clair::Float4x4 world;
-	Clair::Float4x4 view;
-	XMMATRIX projection;
+	Float4x4 world;
+	Float4x4 view;
+	Float4x4 projection;
 };
 
 template<typename T>
@@ -337,22 +338,20 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 }
 
 void LowLevelRenderer::render(Scene* const scene) {
-	const XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,
-														 viewWidth / viewHeight,
-														 0.01f, 100.0f);
-
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 	ConstantBuffer cb;
-	cb.view = cameraViewMat;
-	cb.projection = projection;
+	cb.view = cameraView;
+	cb.projection = cameraProjection;
 
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
 		auto material = it->getMaterial(gRenderPass);
-		if (!material) continue;
+		if (!material || !material->isValid()) {
+			continue;
+		}
 		auto vs = material->getVertexShader()->getD3dShader();
 		auto ps = material->getPixelShader()->getD3dShader();
 		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
@@ -376,8 +375,12 @@ void LowLevelRenderer::render(Scene* const scene) {
 	}
 }
 
-void LowLevelRenderer::setCameraMatrix(const Float4x4& m) {
-	cameraViewMat = m;
+void LowLevelRenderer::setViewMatrix(const Float4x4& view) {
+	cameraView = view;
+}
+
+void LowLevelRenderer::setProjectionMatrix(const Float4x4& projection) {
+	cameraProjection = projection;
 }
 
 void LowLevelRenderer::setRenderPass(const RenderPass pass) {
