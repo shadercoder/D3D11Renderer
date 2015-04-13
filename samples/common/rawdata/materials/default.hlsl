@@ -7,6 +7,10 @@ cbuffer Buf : register(b0) {
 	matrix Projection;
 }
 
+cbuffer Material : register(b1) {
+	float4 DiffuseColor;
+}
+
 Texture2D texAlbedo : register(t0);
 SamplerState samplerLinear : register(s0);
 
@@ -39,7 +43,7 @@ float4 psMain(VSOut psIn) : SV_TARGET {
 	float3 n = normalize(psIn.Normal);
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
 	float3 col = saturate(dot(normalize(l), n) * 1.0 / max(0.001, dot(l, l)));
-	col *= float3(1.0, 0.3, 0.1);
+	col *= DiffuseColor.xyz;
 	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);
 }

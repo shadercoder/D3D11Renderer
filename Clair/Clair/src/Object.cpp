@@ -1,5 +1,5 @@
 #include "Clair/Object.h"
-#include "Material.h"
+#include "Clair/Material.h"
 #include "LowLevelRenderer.h"
 #include "Mesh.h"
 #include "InputLayout.h"
@@ -20,8 +20,8 @@ void Object::setMesh(Mesh* const mesh) {
 	}
 }
 
-void Object::setMaterial(const RenderPass pass,
-						 Material* const material) {
+MaterialInstance* Object::setMaterial(const RenderPass pass,
+									  Material* const material) {
 	MaterialInstance* instance {nullptr};
 	if (mMatInstances.count(pass) == 0) {
 		mMatInstances[pass] = new MaterialInstance {};
@@ -32,15 +32,16 @@ void Object::setMaterial(const RenderPass pass,
 	}
 	instance->material = material;
 	recreateInputLayout(instance);
+	return instance;
 }
 
-Material* Object::getMaterial(const RenderPass pass) {
+MaterialInstance* Object::getMaterial(const RenderPass pass) {
 	if (mMatInstances.count(pass) == 0) {
 		return nullptr;
 	}
 	auto const material = mMatInstances[pass];
 	if (!material->isValid) return nullptr;
-	return material->material;
+	return material;
 }
 
 void Object::recreateInputLayout(MaterialInstance* const materialInstance) {

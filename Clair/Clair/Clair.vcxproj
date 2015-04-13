@@ -83,10 +83,12 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ConstantBuffer.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\InputLayout.cpp" />
     <ClCompile Include="src\LowLevelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\MaterialInstance.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PixelShader.cpp" />
@@ -96,10 +98,12 @@
     <ClCompile Include="src\VertexShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Clair\MaterialInstance.h" />
+    <ClInclude Include="src\ConstantBuffer.h" />
     <ClInclude Include="include\Clair\RenderPass.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\InputLayout.h" />
-    <ClInclude Include="src\Material.h" />
+    <ClInclude Include="include\Clair\Material.h" />
     <ClInclude Include="include\Clair\Matrix.h" />
     <ClInclude Include="include\Clair\Object.h" />
     <ClInclude Include="include\Clair\Renderer.h" />

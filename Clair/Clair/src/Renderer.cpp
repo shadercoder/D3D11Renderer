@@ -5,7 +5,7 @@
 #include "Clair/Object.h"
 #include <vector>
 #include "Clair/Matrix.h"
-#include "Material.h"
+#include "Clair/Material.h"
 #include "Mesh.h"
 #include "LowLevelRenderer.h"
 #include <cassert>

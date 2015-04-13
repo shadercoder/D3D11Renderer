@@ -8,13 +8,14 @@
 #include "Mesh.h"
 #include "Clair/Scene.h"
 #include "Clair/Object.h"
-#include "Material.h"
+#include "Clair/Material.h"
 #include "Clair/RenderPass.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "InputLayout.h"
+#include "ConstantBuffer.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -41,7 +42,7 @@ namespace {
 	RenderPass gRenderPass {};
 }
 
-struct ConstantBuffer {
+struct ConstantBufferTemp {
 	Float4x4 world;
 	Float4x4 view;
 	Float4x4 projection;
@@ -166,7 +167,7 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 
 	D3D11_BUFFER_DESC constBufferDesc;
 	ZeroMemory(&constBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	constBufferDesc.ByteWidth = sizeof(ConstantBuffer);
+	constBufferDesc.ByteWidth = sizeof(ConstantBufferTemp);
 	constBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	constBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	constBufferDesc.CPUAccessFlags = 0;
@@ -341,19 +342,28 @@ void LowLevelRenderer::render(Scene* const scene) {
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
-	ConstantBuffer cb;
+	ConstantBufferTemp cb;
 	cb.view = cameraView;
 	cb.projection = cameraProjection;
 
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
-		auto material = it->getMaterial(gRenderPass);
+		auto material = it->getMaterial(gRenderPass)->material;
 		if (!material || !material->isValid()) {
 			continue;
 		}
 		auto vs = material->getVertexShader()->getD3dShader();
 		auto ps = material->getPixelShader()->getD3dShader();
+		// material const buffer start
+		auto matCb = material->getConstantBuffer();
+		if (!matCb->isValid()) continue;
+		auto matCbData = it->getMaterial(gRenderPass)->getConstantBufferData();
+		auto matD3d = matCb->getD3dBuffer();
+		d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
+											0, 0);
+		d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
+		// material const buffer end
 		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
 		d3dDeviceContext->PSSetShader(ps, nullptr, 0);
 		cb.world = it->getMatrix();

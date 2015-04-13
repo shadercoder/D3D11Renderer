@@ -1,6 +1,7 @@
 #pragma once
 #include "Clair/Matrix.h"
 #include "Clair/RenderPass.h"
+#include "Clair/MaterialInstance.h"
 #include <map>
 
 namespace Clair {
@@ -35,17 +36,12 @@ namespace Clair {
 		void setMesh(Mesh* mesh);
 		const Mesh* getMesh() const { return mMesh; }
 
-		void setMaterial(RenderPass pass, Material* material);
-		Material* getMaterial(RenderPass pass);
+		MaterialInstance* setMaterial(RenderPass pass, Material* material);
+		MaterialInstance* getMaterial(RenderPass pass);
 
 		InputLayout* getInputLayout() const;
 
 	private:
-		class MaterialInstance {
-		public:
-			bool isValid {false};
-			Material* material {nullptr};
-		};
 		void recreateInputLayout(MaterialInstance* materialInstance);
 
 		Mesh* mMesh {nullptr};

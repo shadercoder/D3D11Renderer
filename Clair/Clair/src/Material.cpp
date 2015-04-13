@@ -1,9 +1,10 @@
-#include "Material.h"
+#include "Clair/Material.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
 #include <d3d11.h>
 #include "Serialization.h"
 #include <cassert>
+#include "ConstantBuffer.h"
 
 using namespace Clair;
 
@@ -27,4 +28,16 @@ Material::Material(ID3D11Device* const d3dDevice, const char* data) {
 Material::~Material() {
 	delete mVertexShader;
 	delete mPixelShader;
+	if (mConstantBuffer) {
+		delete mConstantBuffer;
+	}
+	if (mConstantBufferData) {
+		delete mConstantBufferData;
+	}
+}
+
+char* Material::createConstantBuffer(const size_t size) {
+	mConstantBuffer = new ConstantBuffer{size};
+	mConstantBufferData = new char[size]();
+	return mConstantBufferData;
 }
