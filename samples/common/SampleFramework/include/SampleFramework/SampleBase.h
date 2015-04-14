@@ -13,7 +13,23 @@ namespace SampleFramework {
 		virtual void terminate() = 0;
 
 		virtual void onResize(int width, int height, float aspect) = 0;
-		virtual void update(float deltaTime, float runningTime) = 0;
+		virtual void update() = 0;
 		virtual void render() = 0;
+
+		float getDeltaTime() const;
+		float getRunningTime() const;
+
+	private:
+		friend class Framework;
+		float mDeltaTime;
+		float mRunningTime;
 	};
+
+	inline float SampleBase::getDeltaTime() const {
+		return mDeltaTime;
+	}
+
+	inline float SampleBase::getRunningTime() const {
+		return mRunningTime;
+	}
 }

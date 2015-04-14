@@ -1,7 +1,6 @@
 #pragma once
 #include "Clair/VertexLayout.h"
 
-struct ID3D11Device;
 struct ID3D11InputLayout;
 
 namespace Clair {
@@ -9,7 +8,7 @@ namespace Clair {
 
 	class InputLayout {
 	public:
-		InputLayout(ID3D11Device* d3dDevice, const VertexLayout& vertexLayout,
+		InputLayout(const VertexLayout& vertexLayout,
 					const VertexShader* vertexShader);
 		~InputLayout();
 

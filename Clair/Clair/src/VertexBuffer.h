@@ -1,12 +1,11 @@
 #pragma once
 
-struct ID3D11Device;
 struct ID3D11Buffer;
 
 namespace Clair {
 	class VertexBuffer {
 	public:
-		VertexBuffer(ID3D11Device* d3dDevice, const char* bufferData,
+		VertexBuffer(const char* bufferData,
 					 unsigned bufferSize);
 		~VertexBuffer();
 

@@ -1,14 +1,12 @@
 #pragma once
 
-struct ID3D11Device;
 struct ID3D11PixelShader;
 
 namespace Clair {
 	class PixelShader {
 	public:
-		PixelShader(ID3D11Device* d3dDevice,
-					 const char* byteCode,
-					 unsigned byteCodeSize);
+		PixelShader(const char* byteCode,
+					unsigned byteCodeSize);
 		~PixelShader();
 
 		bool isValid() const;

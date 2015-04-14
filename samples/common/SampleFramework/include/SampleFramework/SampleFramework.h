@@ -1,5 +1,5 @@
 #pragma once
-#include <string>
+#include "SampleFramework/Logger.h"
 
 namespace SampleFramework {
 	class SampleBase;

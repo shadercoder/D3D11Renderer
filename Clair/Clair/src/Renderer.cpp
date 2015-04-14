@@ -8,7 +8,7 @@
 #include "Clair/Material.h"
 #include "Mesh.h"
 #include "LowLevelRenderer.h"
-#include <cassert>
+#include "Clair/Debug.h"
 
 using namespace Clair;
 
@@ -18,9 +18,10 @@ namespace {
 	std::vector<Clair::Material*> materials;
 }
 
-bool Clair::Renderer::initialize(const HWND hwnd) {
+bool Clair::Renderer::initialize(const HWND hwnd, LogCallback logCallback) {
 	const bool result {LowLevelRenderer::initialize(hwnd)};
-	printf("Clair initialized.\n");
+	Log::msCallback = logCallback;
+	CLAIR_LOG("Clair initialized");
 	return result;
 }
 
@@ -35,7 +36,7 @@ void Clair::Renderer::terminate() {
 		delete it;
 	}
 	LowLevelRenderer::terminate();
-	printf("Clair terminated.\n");
+	CLAIR_LOG("Clair terminated");
 }
 
 void Clair::Renderer::clear() {
@@ -67,20 +68,16 @@ Clair::Scene* Clair::Renderer::createScene() {
 	return newScene;
 }
 
-Mesh* Renderer::createMesh(const char* data) {
-	assert(data);
-	Mesh* const mesh {
-		new Mesh {LowLevelRenderer::getD3dDevice(), data}
-	};
+Mesh* Renderer::createMesh(const char* const data) {
+	CLAIR_ASSERT(data, "Mesh data is null");
+	Mesh* const mesh {new Mesh {data}};
 	meshes.push_back(mesh);
 	return mesh;
 }
 
-Material* Renderer::createMaterial(char* const data) {
-	assert(data);
-	Material* const material {
-		new Material {LowLevelRenderer::getD3dDevice(), data}
-	};
+Material* Renderer::createMaterial(const char* const data) {
+	CLAIR_ASSERT(data, "Material data is null");
+	Material* const material {new Material {data}};
 	materials.push_back(material);
 	return material;
 }

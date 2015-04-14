@@ -1,7 +1,7 @@
 #pragma once
 #include "Clair/VertexLayout.h"
-
-struct ID3D11Device;
+#include "Clair/MaterialConstBufferData.h"
+#include "Clair/Debug.h"
 
 namespace Clair {
 	class VertexShader;
@@ -10,33 +10,34 @@ namespace Clair {
 
 	class Material {
 	public:
-		Material(ID3D11Device* d3dDevice, const char* data);
+		Material(const char* data);
 		~Material();
 
-		// Sets constant buffer type, creates data and returns pointer to it.
 		template<typename T>
-		T* setConstantBuffer();
+		T* getConstantBufferPs();
 
 		bool isValid() const;
 		VertexShader* getVertexShader() const;
 		PixelShader* getPixelShader() const;
-		ConstantBuffer* getConstantBuffer() const;
-		const char* getConstantBufferData() const;
+		ConstantBuffer* getConstantBufferPs() const;
+		const MaterialConstBufferData* getConstBufferData() const;
 
 	private:
-		char* createConstantBuffer(size_t size);
-
-		bool mIsValid {false};
+		MaterialConstBufferData mCBufferData {};
 		VertexLayout mVertexLayout {};
 		VertexShader* mVertexShader {nullptr};
 		PixelShader* mPixelShader {nullptr};
-		ConstantBuffer* mConstantBuffer {nullptr};
-		char* mConstantBufferData {nullptr};
+		ConstantBuffer* mCBufferVs {nullptr};
+		ConstantBuffer* mCBufferGs {nullptr};
+		ConstantBuffer* mCBufferPs {nullptr};
+		bool mIsValid {false};
 	};
 
 	template<typename T>
-	T* Material::setConstantBuffer() {
-		return reinterpret_cast<T*>(createConstantBuffer(sizeof(T)));
+	T* Material::getConstantBufferPs() {
+		CLAIR_ASSERT(sizeof(T) == mCBufferData.sizePs,
+					 "CBuffer data interpreted as class with wrong size");
+		return reinterpret_cast<T*>(mCBufferData.dataPs);
 	}
 
 	inline bool Material::isValid() const {
@@ -51,11 +52,11 @@ namespace Clair {
 		return mPixelShader;
 	}
 
-	inline ConstantBuffer* Material::getConstantBuffer() const {
-		return mConstantBuffer;
+	inline ConstantBuffer* Material::getConstantBufferPs() const {
+		return mCBufferPs;
 	}
 
-	inline const char* Material::getConstantBufferData() const {
-		return mConstantBufferData;
+	inline const MaterialConstBufferData* Material::getConstBufferData() const {
+		return &mCBufferData;
 	}
 }

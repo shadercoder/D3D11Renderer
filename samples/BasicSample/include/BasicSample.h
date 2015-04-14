@@ -9,7 +9,7 @@ public:
 	void terminate() override;
 
 	void onResize(int width, int height, float aspect) override;
-	void update(float deltaTime, float runningTime) override;
+	void update() override;
 	void render() override;
 
 private:

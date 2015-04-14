@@ -1,13 +1,11 @@
 #pragma once
 
-struct ID3D11Device;
 struct ID3D11VertexShader;
 
 namespace Clair {
 	class VertexShader {
 	public:
-		VertexShader(ID3D11Device* d3dDevice,
-					 const char* byteCode,
+		VertexShader(const char* byteCode,
 					 unsigned byteCodeSize);
 		~VertexShader();
 

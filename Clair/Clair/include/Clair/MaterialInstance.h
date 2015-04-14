@@ -4,27 +4,39 @@
 namespace Clair {
 	class MaterialInstance {
 	public:
-		~MaterialInstance();
-
-		bool isValid {false};
-		Material* material {nullptr};
+		explicit MaterialInstance(const Material* material);
 
 		template<typename T>
-		T* setConstantBuffer();
+		T* getConstantBufferPs();
 
-		const char* getConstantBufferData() const;
+		bool isValid() const;
+		const Material* getMaterial() const;
+		const MaterialConstBufferData* getConstBufferData() const;
 
 	private:
-		char* mConstantBufferData {nullptr};
+		MaterialConstBufferData mCBufferData;
+		const Material* mMaterial {nullptr};
+		bool mIsValid {false};
 	};
 
 	template<typename T>
-	inline T* MaterialInstance::setConstantBuffer() {
-		mConstantBufferData = new char[sizeof(T)]();
-		return reinterpret_cast<T*>(mConstantBufferData);
+	inline T* MaterialInstance::getConstantBufferPs() {
+		CLAIR_ASSERT(sizeof(T) == mCBufferData.sizePs, 
+					 "CBuffer data interpreted as class with wrong size");
+		mCBufferData.dataPs = new char[sizeof(T)]();
+		return reinterpret_cast<T*>(mCBufferData.dataPs);
 	}
 
-	inline const char* MaterialInstance::getConstantBufferData() const {
-		return mConstantBufferData;
+	inline bool MaterialInstance::isValid() const {
+		return mIsValid;
+	}
+
+	inline const Material* MaterialInstance::getMaterial() const {
+		return mMaterial;
+	}
+
+	inline const MaterialConstBufferData*
+	MaterialInstance::getConstBufferData() const {
+		return &mCBufferData;
 	}
 }

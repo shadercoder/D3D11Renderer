@@ -1,8 +1,6 @@
 #pragma once
 #include "Clair/VertexLayout.h"
 
-struct ID3D11Device;
-
 namespace Clair {
 	class IndexBuffer;
 	class VertexBuffer;
@@ -11,7 +9,7 @@ namespace Clair {
 
 	class Mesh {
 	public:
-		Mesh(ID3D11Device* d3dDevice, const char* data);
+		Mesh(const char* data);
 		~Mesh();
 
 		VertexLayout& getVertexLayout();

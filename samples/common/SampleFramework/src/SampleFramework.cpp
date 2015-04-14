@@ -95,13 +95,14 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 		handleEvents();
 		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
 
-		gSample->update(static_cast<float>(deltaTime),
-						static_cast<float>(runningTime));
+		gSample->update();
 		gSample->render();
 
 		const double elapsedTime = timer.elapsed();
 		deltaTime = elapsedTime;
 		runningTime += elapsedTime;
+		gSample->mDeltaTime = static_cast<float>(deltaTime);
+		gSample->mRunningTime = static_cast<float>(runningTime);
 		timer.start();
 	}
 

@@ -349,16 +349,17 @@ void LowLevelRenderer::render(Scene* const scene) {
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
-		auto material = it->getMaterial(gRenderPass)->material;
+		auto material = it->getMaterial(gRenderPass)->getMaterial();
 		if (!material || !material->isValid()) {
 			continue;
 		}
 		auto vs = material->getVertexShader()->getD3dShader();
 		auto ps = material->getPixelShader()->getD3dShader();
 		// material const buffer start
-		auto matCb = material->getConstantBuffer();
+		auto matCb = material->getConstantBufferPs();
 		if (!matCb->isValid()) continue;
-		auto matCbData = it->getMaterial(gRenderPass)->getConstantBufferData();
+		auto matCbData = it->getMaterial(gRenderPass)->
+								getConstBufferData()->dataPs;
 		auto matD3d = matCb->getD3dBuffer();
 		d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
 											0, 0);

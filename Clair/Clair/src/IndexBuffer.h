@@ -1,13 +1,11 @@
 #pragma once
 
-struct ID3D11Device;
 struct ID3D11Buffer;
 
 namespace Clair {
 	class IndexBuffer {
 	public:
-		IndexBuffer(ID3D11Device* d3dDevice, const unsigned* bufferData,
-					unsigned bufferSize);
+		IndexBuffer(const unsigned* bufferData, unsigned bufferSize);
 		~IndexBuffer();
 
 		bool isValid() const;

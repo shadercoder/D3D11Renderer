@@ -1,14 +1,14 @@
 #include "InputLayout.h"
 #include <d3d11.h>
 #include "VertexShader.h"
-#include <cassert>
+#include "LowLevelRenderer.h"
+#include "Clair/Debug.h"
 
 using namespace Clair;
 
-InputLayout::InputLayout(ID3D11Device* const d3dDevice,
-						 const VertexLayout& vertexLayout,
+InputLayout::InputLayout(const VertexLayout& vertexLayout,
 						 const VertexShader* const vertexShader) {
-	assert(vertexShader);
+	CLAIR_ASSERT(vertexShader, "Vertex shader is null");
 	std::vector<D3D11_INPUT_ELEMENT_DESC> layoutDesc {};
 	unsigned offset {0};
 	for (const auto& it : vertexLayout) {
@@ -27,6 +27,7 @@ InputLayout::InputLayout(ID3D11Device* const d3dDevice,
 		layoutDesc.push_back({it.name.c_str(), 0, format, 0, offset,
 							  D3D11_INPUT_PER_VERTEX_DATA, 0});
 	}
+	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
 	const HRESULT result {
 		d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
 										  vertexShader->getByteCode(),

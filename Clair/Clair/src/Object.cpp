@@ -22,15 +22,12 @@ void Object::setMesh(Mesh* const mesh) {
 
 MaterialInstance* Object::setMaterial(const RenderPass pass,
 									  Material* const material) {
-	MaterialInstance* instance {nullptr};
-	if (mMatInstances.count(pass) == 0) {
-		mMatInstances[pass] = new MaterialInstance {};
-		instance = mMatInstances[pass];
-	} else {
-		instance = mMatInstances[pass];
-		instance->isValid = false;
+	CLAIR_ASSERT(material, "Material is null");
+	MaterialInstance* const instance {new MaterialInstance{material}};
+	if (mMatInstances.count(pass) != 0) {
+		delete mMatInstances[pass];
 	}
-	instance->material = material;
+	mMatInstances[pass] = instance;
 	recreateInputLayout(instance);
 	return instance;
 }
@@ -40,21 +37,21 @@ MaterialInstance* Object::getMaterial(const RenderPass pass) {
 		return nullptr;
 	}
 	auto const material = mMatInstances[pass];
-	if (!material->isValid) return nullptr;
+	//if (!material->isValid()) return nullptr;
 	return material;
 }
 
 void Object::recreateInputLayout(MaterialInstance* const materialInstance) {
 	bool isCompatible {true};
 	if (isCompatible) {
-		materialInstance->isValid = true;
+		//materialInstance->isValid = true;
 		if (mInputLayout) {
 			delete mInputLayout;
 		}
 		mInputLayout = new InputLayout {
-			LowLevelRenderer::getD3dDevice(), mMesh->getVertexLayout(),
-			materialInstance->material->getVertexShader() };
+			mMesh->getVertexLayout(),
+			materialInstance->getMaterial()->getVertexShader()};
 	} else {
-		materialInstance->isValid = false;
+		//materialInstance->isValid = false;
 	}
 }

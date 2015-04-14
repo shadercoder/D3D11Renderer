@@ -1,10 +1,10 @@
 #include "VertexBuffer.h"
 #include <d3d11.h>
+#include "LowLevelRenderer.h"
 
 using namespace Clair;
 
-VertexBuffer::VertexBuffer(ID3D11Device* const d3dDevice,
-						   const char* const bufferData,
+VertexBuffer::VertexBuffer(const char* const bufferData,
 						   const unsigned bufferSize) {
 	D3D11_BUFFER_DESC vertexBufferDesc {};
 	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -19,6 +19,7 @@ VertexBuffer::VertexBuffer(ID3D11Device* const d3dDevice,
 	ZeroMemory(&subResData, sizeof(D3D11_SUBRESOURCE_DATA));
 	subResData.pSysMem = bufferData;
 
+	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
 	const HRESULT result {
 		d3dDevice->CreateBuffer(&vertexBufferDesc, &subResData, &mD3dBuffer)
 	};

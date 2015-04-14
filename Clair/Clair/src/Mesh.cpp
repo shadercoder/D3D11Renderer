@@ -1,14 +1,14 @@
 #include "Mesh.h"
 #include <d3d11.h>
-#include <cassert>
 #include "Serialization.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "Clair/Debug.h"
 
 using namespace Clair;
 
-Mesh::Mesh(ID3D11Device* d3dDevice, const char* data) {
-	assert(data);
+Mesh::Mesh(const char* data) {
+	CLAIR_ASSERT(data, "Mesh data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
 	unsigned stride {0};
 	memcpy(&stride, data, sizeof(unsigned));
@@ -23,10 +23,8 @@ Mesh::Mesh(ID3D11Device* d3dDevice, const char* data) {
 	data += sizeof(unsigned);
 	const unsigned* const indexData {reinterpret_cast<const unsigned*>(data)};
 
-	mVertexBuffer = new VertexBuffer {d3dDevice, vertexData,
-										   numVertices * stride};
-	mIndexBuffer = new IndexBuffer {d3dDevice, indexData,
-										 numIndices * sizeof(unsigned)};
+	mVertexBuffer = new VertexBuffer {vertexData, numVertices * stride};
+	mIndexBuffer = new IndexBuffer {indexData, numIndices * sizeof(unsigned)};
 	mIndexBufferSize = numIndices;
 }
 
