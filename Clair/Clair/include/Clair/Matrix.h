@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <initializer_list>
+#include "Clair/Debug.h"
 
 namespace Clair {
 	template<typename T, size_t x, size_t y>
@@ -9,7 +11,9 @@ namespace Clair {
 					  "Clair::Matrix dimensions must be between 1x1 and 4x4");
 
 		Matrix();
-		Matrix(const T* data);
+		explicit Matrix(T fillValue);
+		/* implicit */ Matrix(const T* data);
+		Matrix(std::initializer_list<T>);
 		Matrix(const Matrix& other);
 		Matrix<T, x, y>& operator=(const Matrix<T, x, y>& other);
 		const T* operator[](int index) const;
@@ -29,6 +33,17 @@ namespace Clair {
 	template<typename T, size_t x, size_t y>
 	inline Matrix<T, x, y>::Matrix() {
 		std::fill(&m[0][0], &m[0][0] + x * y, T());
+	}
+
+	template<typename T, size_t x, size_t y>
+	inline Matrix<T, x, y>::Matrix(const T fillValue) {
+		std::fill(&m[0][0], &m[0][0] + x * y, fillValue);
+	}
+
+	template<typename T, size_t x, size_t y>
+	inline Matrix<T, x, y>::Matrix(std::initializer_list<T> list) {
+		CLAIR_ASSERT(list.size() == x * y, "Incorrect number of intializers");
+		memcpy(&m, list.begin(), x * y * sizeof(T));
 	}
 
 	template<typename T, size_t x, size_t y>

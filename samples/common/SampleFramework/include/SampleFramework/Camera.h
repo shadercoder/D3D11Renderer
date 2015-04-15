@@ -15,6 +15,7 @@ namespace SampleFramework {
 		static glm::vec3 msPosition;
 		static glm::vec3 msForward;
 		static glm::vec3 msRight;
+		static glm::vec3 msUp;
 		static glm::vec2 msSnapPos;
 		static bool msIsSnapping;
 		static float msPitch;

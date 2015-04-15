@@ -6,15 +6,11 @@
 #include "SampleFramework/LoadBinaryData.h"
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
+#include "../../data/materials/default.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
-
-class CB_default {
-public:
-	Clair::Float4 DiffuseColor;
-};
 
 bool BasicSample::initialize(const HWND hwnd) {
 	if (!Clair::Renderer::initialize(hwnd, Logger::logCallback)) {
@@ -39,10 +35,8 @@ bool BasicSample::initialize(const HWND hwnd) {
 			obj->setMatrix(value_ptr(translate(pos)));
 			auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0),
 												defaultMat);
-			CB_default* const cb = matInstance->
-				getConstantBufferPs<CB_default>();
-			const float col[] {fx / 5.0f, fy / 5.0f, 0.1f, 1.0f};
-			cb->DiffuseColor = col;
+			auto const cb = matInstance->getConstantBufferPs<Cb_Default_Ps>();
+			cb->DiffuseColor = Clair::Float4{fx / 5.0f, fy / 5.0f, 0.1f, 1.0f};
 		}
 	}
 	Camera::initialize({2.2f, 4.3f, -2.28f}, 0.625f, 0.320f);

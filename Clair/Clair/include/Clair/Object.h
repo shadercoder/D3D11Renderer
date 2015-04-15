@@ -11,7 +11,7 @@ namespace Clair {
 
 	class Node {
 	public:
-		Node() : mMatrix{Float4x4{}} {}
+		Node() : mMatrix{} {}
 		virtual ~Node() {}
 
 		Float4x4 getMatrix() const;

@@ -2,8 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ConstBufferDesc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ErrorCodes.h" />
+    <ClInclude Include="include\ConstBufferDesc.h" />
   </ItemGroup>
 </Project>

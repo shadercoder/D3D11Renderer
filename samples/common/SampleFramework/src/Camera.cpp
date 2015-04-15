@@ -8,6 +8,7 @@ mat4 Camera::msViewMatrix {};
 vec3 Camera::msPosition {0.0f};
 vec3 Camera::msForward {0.0f};
 vec3 Camera::msRight {0.0f};
+vec3 Camera::msUp {0.0f};
 vec2 Camera::msSnapPos {0.0f};
 bool Camera::msIsSnapping {false};
 float Camera::msPitch {0.0f};
@@ -27,10 +28,8 @@ void Camera::update(const float deltaTime) {
 	if (Input::getKey(SDL_SCANCODE_S)) msPosition -= msForward * speed;
 	if (Input::getKey(SDL_SCANCODE_D)) msPosition += msRight * speed;
 	if (Input::getKey(SDL_SCANCODE_A)) msPosition -= msRight * speed;
-	if (Input::getKey(SDL_SCANCODE_LCTRL))
-		msPosition += vec3(0.0f, -speed, 0.0f);
-	if (Input::getKey(SDL_SCANCODE_SPACE))
-		msPosition += vec3(0.0f, speed,  0.0f);
+	if (Input::getKey(SDL_SCANCODE_SPACE)) msPosition += msUp * speed;
+	if (Input::getKey(SDL_SCANCODE_LCTRL)) msPosition -= msUp * speed;
 
 	if (Input::getMouseButton(SDL_BUTTON_LEFT)) {
 		SDL_ShowCursor(0);
@@ -65,13 +64,13 @@ void Camera::updateMatrix() {
 	const float sinYaw   {sin(msYaw)};
  
 	msRight = vec3(cosYaw, 0, -sinYaw);
-	const vec3 yaxis = vec3(sinYaw * sinPitch, cosPitch, cosYaw * sinPitch);
+	msUp = vec3(sinYaw * sinPitch, cosPitch, cosYaw * sinPitch);
 	msForward = vec3(sinYaw * cosPitch, -sinPitch, cosPitch * cosYaw);
 
-	msViewMatrix = mat4(vec4(msRight.x, yaxis.x, msForward.x, 0),
-						vec4(msRight.y, yaxis.y, msForward.y, 0),
-						vec4(msRight.z, yaxis.z, msForward.z, 0),
-						vec4(-dot(msRight, msPosition), -dot(yaxis, msPosition),
+	msViewMatrix = mat4(vec4(msRight.x, msUp.x, msForward.x, 0),
+						vec4(msRight.y, msUp.y, msForward.y, 0),
+						vec4(msRight.z, msUp.z, msForward.z, 0),
+						vec4(-dot(msRight, msPosition), -dot(msUp, msPosition),
 							 -dot(msForward, msPosition), 1.0f));
 }
 
