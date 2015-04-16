@@ -5,6 +5,7 @@ namespace Clair {
 	class MaterialInstance {
 	public:
 		explicit MaterialInstance(const Material* material);
+		~MaterialInstance();
 
 		template<typename T>
 		T* getConstantBufferPs();

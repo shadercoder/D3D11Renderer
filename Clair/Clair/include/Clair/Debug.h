@@ -43,6 +43,21 @@ namespace Clair {
 	};
 
 
-	#define CLAIR_LOG(msg)\
-		Clair::Log::log(msg)
+	#define CLAIR_LOG(message)\
+		Clair::Log::log(message)
+	#define CLAIR_LOG_IF(condition, message)\
+		if ((condition)) {\
+			Clair::Log::log(message);\
+		}
+	#ifdef NDEBUG
+		#define CLAIR_DEBUG_LOG(message)
+		#define CLAIR_DEBUG_LOG_IF(condition, message)
+	#else
+		#define CLAIR_DEBUG_LOG(message)\
+			Clair::Log::log(message)
+		#define CLAIR_DEBUG_LOG_IF(condition, message)\
+			if ((condition)) {\
+				Clair::Log::log(message);\
+			}
+	#endif
 }

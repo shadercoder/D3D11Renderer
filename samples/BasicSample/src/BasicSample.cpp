@@ -25,22 +25,14 @@ bool BasicSample::initialize(const HWND hwnd) {
 	auto defaultMat = Clair::Renderer::createMaterial(defaultMatData.data());
 
 	mScene = Clair::Renderer::createScene();
-	for (int x {0}; x < 5; ++x) {
-		for (int y {0}; y < 5; ++y) {
-			const float fx = static_cast<float>(x);
-			const float fy = static_cast<float>(y);
-			const vec3 pos {fx * 2.5f, 0.0f, fy * 2.0f};
-			auto obj = mScene->createObject();
-			obj->setMesh(bunnyMesh);
-			obj->setMatrix(value_ptr(translate(pos)));
-			auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0),
-												defaultMat);
-			auto const cb = matInstance->
-								getConstantBufferPs<Cb_materials_default_Ps>();
-			cb->DiffuseColor = Clair::Float4{fx / 5.0f, fy / 5.0f, 0.1f, 1.0f};
-		}
-	}
-	Camera::initialize({2.2f, 4.3f, -2.28f}, 0.625f, 0.320f);
+	mBunny = mScene->createObject();
+	mBunny->setMesh(bunnyMesh);
+	mBunny->setMatrix(value_ptr(translate(vec3{0.0f})));
+	auto matInstance = mBunny->setMaterial(CLAIR_RENDER_PASS(0), defaultMat);
+	mConstBuffer = matInstance->getConstantBufferPs<Cb_materials_default_Ps>();
+	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
+
+	Camera::initialize({-0.27f, 1.64f, -1.79f}, 0.470f, 0.045f);
 	return true;
 }
 
@@ -56,6 +48,7 @@ void BasicSample::onResize(const int width, const int height,
 }
 
 void BasicSample::update() {
+	mConstBuffer->Time = getRunningTime();
 	Camera::update(getDeltaTime());
 }
 

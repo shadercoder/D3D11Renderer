@@ -12,6 +12,12 @@ public:
 					 const std::string& postfix);
 
 	bool isValid {false};
+	unsigned size {0};
+
+private:
+	static unsigned next16ByteBound(unsigned bytes);
 	std::vector<std::string> mVarNames {};
 	std::vector<std::string> mTypeNames {};
+	std::vector<unsigned> mSizes {};
+	unsigned mSize {0};
 };

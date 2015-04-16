@@ -40,24 +40,27 @@ static std::string gOutHeader {
 static bool gSilentMode {false};
 static std::ofstream gOutHeaderFile {};
 static std::string gMaterialName {};
+static ConstBufferDesc gVsCBufferDesc;
+static ConstBufferDesc gPsCBufferDesc;
 
 //int main(int , char* []) {
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc < 3) {
-		return MaterialToolError::ARGS;
+		//return MaterialToolError::ARGS;
 	}
-	gInFile = argv[1];
-	gOutFile = std::string(argv[2]) + ".cmat";
-	gOutHeader = std::string(argv[2]) + ".h";
-	gMaterialName = argv[3];
-	const auto commands = CommandLineUtils::getCommands(argc - 3, argv + 3);
-	for (const char c : commands) {
-		if		(c == 's') gSilentMode = true;
-	}
-
-	if (!gSilentMode) {
-		std::cout << "Converting " << argv[1] << '\n';
+	else {
+		gInFile = argv[1];
+		gOutFile = std::string(argv[2]) + ".cmat";
+		gOutHeader = std::string(argv[2]) + ".h";
+		gMaterialName = argv[3];
+		const auto commands = CommandLineUtils::getCommands(argc - 3, argv + 3);
+		for (const char c : commands) {
+			if		(c == 's') gSilentMode = true;
+		}
+		if (!gSilentMode) {
+			std::cout << "Converting " << argv[1] << '\n';
+		}
 	}
 
 	std::ifstream file(gInFile);
@@ -79,8 +82,7 @@ int main(int argc, char* argv[]) {
 	if (result != MaterialToolError::SUCCESS) {
 		return result;
 	}
-	ConstBufferDesc vsCBufferDesc;
-	result = reflectConstBuffer(gVs, vsCBufferDesc);
+	result = reflectConstBuffer(gVs, gVsCBufferDesc);
 	if (result != MaterialToolError::SUCCESS) {
 		return result;
 	}
@@ -92,8 +94,7 @@ int main(int argc, char* argv[]) {
 		}
 		return MaterialToolError::PS;
 	}
-	ConstBufferDesc psCBufferDesc;
-	result = reflectConstBuffer(gPs, psCBufferDesc);
+	result = reflectConstBuffer(gPs, gPsCBufferDesc);
 	if (result != MaterialToolError::SUCCESS) {
 		return result;
 	}
@@ -101,16 +102,6 @@ int main(int argc, char* argv[]) {
 	// finalize and clean up
 	if (!writeToFile(gOutFile)) {
 		return MaterialToolError::WRITE;
-	}
-	if (vsCBufferDesc.isValid || psCBufferDesc.isValid) {
-		gOutHeaderFile.open(gOutHeader);
-		if (!gOutHeaderFile.is_open()) {
-			return MaterialToolError::WRITE;
-		}
-		gOutHeaderFile << "#pragma once\n\n";
-		vsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Vs");
-		psCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Ps");
-		gOutHeaderFile.close();
 	}
 	gVs->Release();
 	gPs->Release();
@@ -143,11 +134,26 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 }
 
 bool writeToFile(const std::string& filename) {
+	// header
+	if (gVsCBufferDesc.isValid || gPsCBufferDesc.isValid) {
+		gOutHeaderFile.open(gOutHeader);
+		if (!gOutHeaderFile.is_open()) {
+			return false;
+		}
+		gOutHeaderFile << "#pragma once\n";
+		gVsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Vs");
+		gPsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Ps");
+		gOutHeaderFile.close();
+	}
+
+	// cmat
 	FILE* outputFile;
 	if (fopen_s(&outputFile, filename.c_str(), "wb") != 0) {
 		return false;
 	}
 	Clair::Serialization::writeVertexLayoutToFile(outputFile, gVertexLayout);
+	fwrite(&gVsCBufferDesc.size, sizeof(unsigned), 1, outputFile);
+	fwrite(&gPsCBufferDesc.size, sizeof(unsigned), 1, outputFile);
 	const size_t vsSize = gVs->GetBufferSize();
 	fwrite(&vsSize, sizeof(size_t), 1, outputFile);
 	fwrite(gVs->GetBufferPointer(), sizeof(char), vsSize, outputFile);

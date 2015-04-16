@@ -11,6 +11,10 @@ using namespace Clair;
 Material::Material(const char* data) {
 	CLAIR_ASSERT(data, "Material data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
+	memcpy(&mCBufferData.sizeVs, data, sizeof(unsigned));
+	data += sizeof(unsigned);
+	memcpy(&mCBufferData.sizePs, data, sizeof(unsigned));
+	data += sizeof(unsigned);
 	size_t vsSize {0};
 	memcpy(&vsSize, data, sizeof(size_t));
 	data += sizeof(size_t);
@@ -23,11 +27,11 @@ Material::Material(const char* data) {
 	mVertexShader = new VertexShader{vsData, vsSize};
 	mPixelShader = new PixelShader{psData, psSize};
 	mIsValid = mVertexShader->isValid() && mPixelShader->isValid();
-	mCBufferData.sizePs = 16;
 	if (mCBufferData.sizePs > 0) {
 		mCBufferPs = new ConstantBuffer{mCBufferData.sizePs};
 		mCBufferData.dataPs = new char[mCBufferData.sizePs]{};
 	}
+	CLAIR_LOG_IF(!mIsValid, "Invalid material created");
 }
 
 Material::~Material() {
