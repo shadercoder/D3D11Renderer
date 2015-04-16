@@ -4,6 +4,7 @@
 #include <fstream>
 #include "../../../../Clair/tools/MaterialTool/include/ErrorCodes.h"
 #include "../../../../Clair/tools/MeshTool/include/ErrorCodes.h"
+#include <algorithm>
 
 static std::string gInFile {"../../rawdata"};
 static std::string gOutFile {"../../data"};
@@ -18,6 +19,7 @@ static bool scanFolder(const std::string& folder);
 static void processFile(const std::string& currFile, const std::string& folder,
 						const WIN32_FIND_DATA& ffd);
 static void updateIndent();
+static std::string pathToName(const std::string& str);
 
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
@@ -75,18 +77,16 @@ static bool scanFolder(const std::string& folder) {
 		return false;
 	}
 	++gIndentLevel;
-	updateIndent();
 	do {
+		updateIndent();
 		const std::string currFile {ffd.cFileName};
 		if (currFile == "." || currFile == "..") {
 			continue;
 		}
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			printf(">  %s %s\n", gIndent.c_str(), ffd.cFileName);
-			//printf(">  %s %s (dir) - %d %d\n", indent.c_str(), ffd.cFileName,
-			//	   ffd.ftLastWriteTime.dwHighDateTime,
-			//	   ffd.ftLastWriteTime.dwLowDateTime);
-			std::string subPath {folder + (gIndentLevel > 0 ? "/" : "") + currFile};
+			std::string subPath {folder + (gIndentLevel > 0 ? "/" : "")
+								 + currFile};
 			if (!scanFolder(subPath)) {
 				++gNumFailed;
 			}
@@ -108,8 +108,7 @@ void processFile(const std::string& currFile, const std::string& folder,
 	}
 	const std::string extension {currFile.substr(subPos)};
 	bool isMesh {false};
-	if (extension == ".obj" ||
-		extension == ".dae") {
+	if (extension == ".obj") {
 		isMesh = true;
 	} else if (extension == ".hlsl") {
 		isMesh = false;
@@ -121,8 +120,8 @@ void processFile(const std::string& currFile, const std::string& folder,
 		currOutFile = currOutFile.substr(0, currOutFile.length() - 3);
 		currOutFile += "cmod";
 	} else {
-		currOutFile = currOutFile.substr(0, currOutFile.length() - 4);
-		currOutFile += "cmat";
+		currOutFile = currOutFile.substr(0, currOutFile.length() - 5);
+		//currOutFile += "cmat";
 	}
 
 	// Run the correct command line tool
@@ -144,13 +143,14 @@ void processFile(const std::string& currFile, const std::string& folder,
 							 "MaterialTool_d.exe "};
 		#endif
 		command += gInFile + folder + "/" + currFile + " ";
-		command += gOutFile + folder + "/" + currOutFile + " -s";
+		command += gOutFile + folder + "/" + currOutFile + ' ' +
+				   pathToName(folder + "/" + currFile) + " -s";
 	}
 	const int commandResult {std::system(command.c_str())};
 
 	// Check if it was successful
 	if (commandResult == 0) {
-		printf(">  %s %s -> %s\n", gIndent.c_str(), ffd.cFileName,
+		printf(">  %s %s -> SUCCES\n", gIndent.c_str(), ffd.cFileName,
 								   currOutFile.c_str());
 		gTimeStampFile << folder << '/' + currFile << "|"
 			 << std::to_string(ffd.ftLastWriteTime.dwHighDateTime) << "|"
@@ -181,4 +181,15 @@ static void updateIndent() {
 		}
 		gIndent += "|-";
 	}
+}
+
+static std::string pathToName(const std::string& str) {
+	std::string r = str.substr(1);
+	auto pos = r.find_last_of(".");
+	if (pos != std::string::npos) {
+		r = r.substr(0, pos);
+	}
+	std::replace(r.begin(), r.end(), '/', '_');
+	r.erase(std::remove(r.begin(), r.end(), ' '), r.end());
+	return r;
 }

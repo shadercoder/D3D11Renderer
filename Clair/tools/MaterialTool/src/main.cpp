@@ -1,3 +1,7 @@
+/* MaterialTool
+** Usage:
+** MaterialTool.exe (input_file) (output_location) (name) [options]
+*/
 #include <iostream>
 #include <stdio.h>
 #include <d3d11.h>
@@ -35,6 +39,7 @@ static std::string gOutHeader {
 	"../../../../samples/common/data/materials/default.h"};
 static bool gSilentMode {false};
 static std::ofstream gOutHeaderFile {};
+static std::string gMaterialName {};
 
 //int main(int , char* []) {
 int main(int argc, char* argv[]) {
@@ -43,15 +48,16 @@ int main(int argc, char* argv[]) {
 		return MaterialToolError::ARGS;
 	}
 	gInFile = argv[1];
-	gOutFile = argv[2];
-	gOutHeader = gOutFile.substr(0, gOutFile.find_last_of(".") + 1) + 'h';
-	const auto commands = CommandLineUtils::getCommands(argc - 2, argv + 2);
+	gOutFile = std::string(argv[2]) + ".cmat";
+	gOutHeader = std::string(argv[2]) + ".h";
+	gMaterialName = argv[3];
+	const auto commands = CommandLineUtils::getCommands(argc - 3, argv + 3);
 	for (const char c : commands) {
 		if		(c == 's') gSilentMode = true;
 	}
 
 	if (!gSilentMode) {
-		//std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
+		std::cout << "Converting " << argv[1] << '\n';
 	}
 
 	std::ifstream file(gInFile);
@@ -62,20 +68,11 @@ int main(int argc, char* argv[]) {
 	buffer << file.rdbuf();
 	const std::string source = buffer.str();
 
-	HRESULT hr {0};
-
-	gOutHeaderFile.open(gOutHeader);
-	if (!gOutHeaderFile.is_open()) {
-		return MaterialToolError::WRITE;
-	}
-
 	// VERTEX SHADER
-	hr = compileShader(source, "vs_5_0", "vsMain", &gVs);
-	if (FAILED(hr)) {
+	if (FAILED(compileShader(source, "vs_5_0", "vsMain", &gVs))) {
 		if (!gSilentMode) {
 			std::printf("FAILED!\n");
 		}
-		//getchar();
 		return MaterialToolError::VS;
 	}
 	int result = reflectVertexLayout(gVs);
@@ -87,16 +84,12 @@ int main(int argc, char* argv[]) {
 	if (result != MaterialToolError::SUCCESS) {
 		return result;
 	}
-	gOutHeaderFile << "#pragma once\n\n";
-	vsCBufferDesc.writeToFile(gOutHeaderFile, "Default", "Vs");
 
 	// PIXEL SHADER
-	hr = compileShader(source, "ps_5_0", "psMain", &gPs);
-	if (FAILED(hr)) {
+	if (FAILED(compileShader(source, "ps_5_0", "psMain", &gPs))) {
 		if (!gSilentMode) {
 			std::printf("FAILED!\n");
 		}
-		//getchar();
 		return MaterialToolError::PS;
 	}
 	ConstBufferDesc psCBufferDesc;
@@ -104,13 +97,21 @@ int main(int argc, char* argv[]) {
 	if (result != MaterialToolError::SUCCESS) {
 		return result;
 	}
-	psCBufferDesc.writeToFile(gOutHeaderFile, "Default", "Ps");
 
 	// finalize and clean up
 	if (!writeToFile(gOutFile)) {
 		return MaterialToolError::WRITE;
 	}
-	gOutHeaderFile.close();
+	if (vsCBufferDesc.isValid || psCBufferDesc.isValid) {
+		gOutHeaderFile.open(gOutHeader);
+		if (!gOutHeaderFile.is_open()) {
+			return MaterialToolError::WRITE;
+		}
+		gOutHeaderFile << "#pragma once\n\n";
+		vsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Vs");
+		psCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Ps");
+		gOutHeaderFile.close();
+	}
 	gVs->Release();
 	gPs->Release();
 	return MaterialToolError::SUCCESS;

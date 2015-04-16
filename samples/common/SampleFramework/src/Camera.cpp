@@ -29,7 +29,8 @@ void Camera::update(const float deltaTime) {
 	if (Input::getKey(SDL_SCANCODE_D)) msPosition += msRight * speed;
 	if (Input::getKey(SDL_SCANCODE_A)) msPosition -= msRight * speed;
 	if (Input::getKey(SDL_SCANCODE_SPACE)) msPosition += msUp * speed;
-	if (Input::getKey(SDL_SCANCODE_LCTRL)) msPosition -= msUp * speed;
+	if (Input::getKey(SDL_SCANCODE_LCTRL)
+		|| Input::getKey(SDL_SCANCODE_C)) msPosition -= msUp * speed;
 
 	if (Input::getMouseButton(SDL_BUTTON_LEFT)) {
 		SDL_ShowCursor(0);
@@ -44,7 +45,7 @@ void Camera::update(const float deltaTime) {
 				const float rotSpeed {0.005f};
 				msPitch += (cursor.y - msSnapPos.y) * rotSpeed;
 				msYaw += (cursor.x - msSnapPos.x) * rotSpeed;
-				const float maxPitch {90.0f / 180.0f * static_cast<float>(M_PI)};
+				const float maxPitch{90.0f / 180.0f * static_cast<float>(M_PI)};
 				msPitch = max(min(msPitch, maxPitch), -maxPitch);
 				SDL_WarpMouseInWindow(nullptr, static_cast<int>(msSnapPos.x),
 									  static_cast<int>(msSnapPos.y));

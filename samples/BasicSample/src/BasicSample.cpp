@@ -35,7 +35,8 @@ bool BasicSample::initialize(const HWND hwnd) {
 			obj->setMatrix(value_ptr(translate(pos)));
 			auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0),
 												defaultMat);
-			auto const cb = matInstance->getConstantBufferPs<Cb_Default_Ps>();
+			auto const cb = matInstance->
+								getConstantBufferPs<Cb_materials_default_Ps>();
 			cb->DiffuseColor = Clair::Float4{fx / 5.0f, fy / 5.0f, 0.1f, 1.0f};
 		}
 	}

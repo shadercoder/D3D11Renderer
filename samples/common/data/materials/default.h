@@ -1,6 +1,6 @@
 #pragma once
 
-class Cb_Default_Ps {
+class Cb_materials_default_Ps {
 public:
 	Clair::Float4 DiffuseColor;
 };
