@@ -346,6 +346,7 @@ void LowLevelRenderer::render(Scene* const scene) {
 	cb.view = cameraView;
 	cb.projection = cameraProjection;
 
+	//unsigned iteration {0};
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
@@ -357,16 +358,20 @@ void LowLevelRenderer::render(Scene* const scene) {
 		auto ps = material->getPixelShader()->getD3dShader();
 		// material const buffer start
 		auto matCb = material->getConstantBufferPs();
-		if (!matCb->isValid()) continue;
-		auto matCbData = it->getMaterial(gRenderPass)->
-								getConstBufferData()->getDataPs();
-		auto matD3d = matCb->getD3dBuffer();
-		d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
-											0, 0);
-		d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
-		// material const buffer end
-		d3dDeviceContext->VSSetShader(vs, nullptr, 0);
-		d3dDeviceContext->PSSetShader(ps, nullptr, 0);
+		{//if (iteration++ == 0) {
+			if (matCb) {
+				if (!matCb->isValid()) continue;
+				auto matCbData = it->getMaterial(gRenderPass)->
+										getConstBufferData()->getDataPs();
+				auto matD3d = matCb->getD3dBuffer();
+				d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
+													0, 0);
+				d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
+			}
+			// material const buffer end
+			d3dDeviceContext->VSSetShader(vs, nullptr, 0);
+			d3dDeviceContext->PSSetShader(ps, nullptr, 0);
+		}
 		cb.world = it->getMatrix();
 		d3dDeviceContext->UpdateSubresource(constantBuffer, 0, nullptr, &cb,
 											0, 0);

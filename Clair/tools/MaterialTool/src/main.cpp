@@ -135,7 +135,7 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 
 bool writeToFile(const std::string& filename) {
 	// header
-	if (gVsCBufferDesc.isValid || gPsCBufferDesc.isValid) {
+	//if (gVsCBufferDesc.isValid || gPsCBufferDesc.isValid) {
 		gOutHeaderFile.open(gOutHeader);
 		if (!gOutHeaderFile.is_open()) {
 			return false;
@@ -144,7 +144,7 @@ bool writeToFile(const std::string& filename) {
 		gVsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Vs");
 		gPsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Ps");
 		gOutHeaderFile.close();
-	}
+	//}
 
 	// cmat
 	FILE* outputFile;

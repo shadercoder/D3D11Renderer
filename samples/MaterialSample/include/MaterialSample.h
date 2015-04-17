@@ -14,6 +14,4 @@ public:
 
 private:
 	Clair::Scene* mScene {nullptr};
-	Clair::Object* mBunny {nullptr};
-	class Cb_materials_default_Ps* mConstBuffer {nullptr};
 };

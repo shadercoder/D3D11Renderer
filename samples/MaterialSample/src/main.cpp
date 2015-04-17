@@ -1,5 +1,5 @@
 #include "SampleFramework/SampleFramework.h"
-#include "BasicSample.h"
+#include "MaterialSample.h"
 
 #ifdef NDEBUG
 	#pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
@@ -9,7 +9,7 @@
 
 int main(int, char* []) {
 	MaterialSample* const sample {new MaterialSample{}};
-	if (!SampleFramework::Framework::run(sample, "Clair BasicSample",
+	if (!SampleFramework::Framework::run(sample, "Clair MaterialSample",
 										 960, 640,
 										 "../../common/data/")) {
 		delete sample;

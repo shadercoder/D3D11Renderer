@@ -5,6 +5,7 @@
 #include "SampleFramework/Input.h"
 #include "SampleFramework/Timer.h"
 #include "SampleFramework/SampleBase.h"
+#include "SampleFramework/Loader.h"
 
 using namespace SampleFramework;
 
@@ -24,6 +25,7 @@ static void setWindowSize(const int width, const int height) {
 static void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
+		if (event.window.windowID == 2) continue;
 		switch(event.type) {
 		case SDL_QUIT:
 			gIsRunning = false;
@@ -53,7 +55,8 @@ static void handleEvents() {
 }
 
 bool Framework::run(SampleBase* const sample, const std::string& caption,
-					const int width, const int height) {
+					const int width, const int height,
+					const std::string& dataPath) {
 	setWindowSize(width, height);
 	gSample = sample;
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -62,9 +65,12 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 		return false;
 	}
 	
-	gSDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_CENTERED,
-								  SDL_WINDOWPOS_CENTERED, gWidth, gHeight,
+	gSDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_UNDEFINED,
+								  SDL_WINDOWPOS_UNDEFINED, gWidth, gHeight,
 								  SDL_WINDOW_RESIZABLE);
+	//SDL_CreateWindow("Clair sample GUI", 100,
+	//							  100, gWidth/2, gHeight/2,
+	//							  SDL_WINDOW_RESIZABLE);
 	if (!gSDL_window) {
 		MessageBox(nullptr, (std::string("Couldn't initialize SDL2:\n") +
 				   SDL_GetError()).c_str(), "Fatal error",
@@ -75,6 +81,8 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 	SDL_SysWMinfo info;
 	SDL_VERSION(&info.version);
 	SDL_GetWindowWMInfo(gSDL_window, &info);
+
+	Loader::setSearchPath(dataPath);
 
 	if (!gSample->initialize(info.info.win.window)) {
 		MessageBox(nullptr, "Couldn't initialize Clair.",

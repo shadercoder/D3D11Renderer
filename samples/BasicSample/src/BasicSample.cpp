@@ -3,7 +3,7 @@
 #include "Clair/Object.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
-#include "SampleFramework/LoadBinaryData.h"
+#include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
 #include "../../data/materials/default.h"
@@ -12,16 +12,15 @@
 using namespace SampleFramework;
 using namespace glm;
 
-bool BasicSample::initialize(const HWND hwnd) {
+bool MaterialSample::initialize(const HWND hwnd) {
 	if (!Clair::Renderer::initialize(hwnd, Logger::logCallback)) {
 		return false;
 	}
 
-	auto bunnyMeshData = loadBinaryData("../../common/data/models/bunny.cmod");
+	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
 	auto bunnyMesh = Clair::Renderer::createMesh(bunnyMeshData.data());
 
-	auto defaultMatData =
-		loadBinaryData("../../common/data/materials/default.cmat");
+	auto defaultMatData = Loader::loadBinaryData("materials/default.cmat");
 	auto defaultMat = Clair::Renderer::createMaterial(defaultMatData.data());
 
 	mScene = Clair::Renderer::createScene();
@@ -36,23 +35,23 @@ bool BasicSample::initialize(const HWND hwnd) {
 	return true;
 }
 
-void BasicSample::terminate() {
+void MaterialSample::terminate() {
 	Clair::Renderer::terminate();
 }
 
-void BasicSample::onResize(const int width, const int height,
+void MaterialSample::onResize(const int width, const int height,
 						   const float aspect) {
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
 }
 
-void BasicSample::update() {
+void MaterialSample::update() {
 	mConstBuffer->Time = getRunningTime();
 	Camera::update(getDeltaTime());
 }
 
-void BasicSample::render() {
+void MaterialSample::render() {
 	Clair::Renderer::clear();
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);

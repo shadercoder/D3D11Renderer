@@ -1,6 +1,3 @@
-//Texture2D texAlbedo : register(t0);
-//SamplerState samplerLinear : register(s0);
-
 struct VsIn {
 	float3 Position : POSITION;
 	float3 Normal : NORMAL;
@@ -33,16 +30,16 @@ PsIn vsMain(VsIn vsIn) {
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
 cbuffer Material : register(b1) {
-	float4 DiffuseColor;
-	float Time;
+	float Reflectivity;
+	float Roughness;
+	float Metalness;
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 n = normalize(psIn.Normal);
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
 	float3 col = saturate(dot(normalize(l), n) * 1.0 / max(0.001, dot(l, l)));
-	col *= DiffuseColor.xyz;// * texAlbedo.Sample(samplerLinear, psIn.WorldPos.xz).rgb;
-	col += float3(0.0, 0.0, 1.0) * (sin(Time * 5.0) * 0.5 + 0.5) / 2.0;
+	col *= float3(Reflectivity, Roughness, Metalness);
 	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);
 }
