@@ -89,6 +89,7 @@
     <ClCompile Include="src\InputLayout.cpp" />
     <ClCompile Include="src\LowLevelRenderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
+    <ClCompile Include="src\MaterialConstBufferData.cpp" />
     <ClCompile Include="src\MaterialInstance.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Object.cpp" />

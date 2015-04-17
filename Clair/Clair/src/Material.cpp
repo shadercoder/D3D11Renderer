@@ -11,9 +11,14 @@ using namespace Clair;
 Material::Material(const char* data) {
 	CLAIR_ASSERT(data, "Material data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
-	memcpy(&mCBufferData.sizeVs, data, sizeof(unsigned));
+	unsigned dataSizeVs {0};
+	unsigned dataSizeGs {0};
+	unsigned dataSizePs {0};
+	memcpy(&dataSizeVs, data, sizeof(unsigned));
 	data += sizeof(unsigned);
-	memcpy(&mCBufferData.sizePs, data, sizeof(unsigned));
+	//memcpy(&dataSizeGs, data, sizeof(unsigned));
+	//data += sizeof(unsigned);
+	memcpy(&dataSizePs, data, sizeof(unsigned));
 	data += sizeof(unsigned);
 	size_t vsSize {0};
 	memcpy(&vsSize, data, sizeof(size_t));
@@ -27,16 +32,18 @@ Material::Material(const char* data) {
 	mVertexShader = new VertexShader{vsData, vsSize};
 	mPixelShader = new PixelShader{psData, psSize};
 	mIsValid = mVertexShader->isValid() && mPixelShader->isValid();
-	if (mCBufferData.sizePs > 0) {
-		mCBufferPs = new ConstantBuffer{mCBufferData.sizePs};
-		mCBufferData.dataPs = new char[mCBufferData.sizePs]{};
+	if (dataSizePs > 0) {
+		mCBufferPs = new ConstantBuffer{dataSizePs};
 	}
+	mCBufferData = new MaterialConstBufferData{
+		dataSizeVs, dataSizeGs, dataSizePs};
 	CLAIR_LOG_IF(!mIsValid, "Invalid material created");
 }
 
 Material::~Material() {
 	delete mVertexShader;
 	delete mPixelShader;
+	delete mCBufferData;
 	if (mCBufferVs) delete mCBufferVs;
 	if (mCBufferGs) delete mCBufferGs;
 	if (mCBufferPs) delete mCBufferPs;

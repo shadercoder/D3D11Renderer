@@ -359,7 +359,7 @@ void LowLevelRenderer::render(Scene* const scene) {
 		auto matCb = material->getConstantBufferPs();
 		if (!matCb->isValid()) continue;
 		auto matCbData = it->getMaterial(gRenderPass)->
-								getConstBufferData()->dataPs;
+								getConstBufferData()->getDataPs();
 		auto matD3d = matCb->getD3dBuffer();
 		d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
 											0, 0);

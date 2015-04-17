@@ -23,21 +23,21 @@ namespace Clair {
 		const MaterialConstBufferData* getConstBufferData() const;
 
 	private:
-		MaterialConstBufferData mCBufferData {};
 		VertexLayout mVertexLayout {};
 		VertexShader* mVertexShader {nullptr};
 		PixelShader* mPixelShader {nullptr};
 		ConstantBuffer* mCBufferVs {nullptr};
 		ConstantBuffer* mCBufferGs {nullptr};
 		ConstantBuffer* mCBufferPs {nullptr};
+		MaterialConstBufferData* mCBufferData {};
 		bool mIsValid {false};
 	};
 
 	template<typename T>
 	T* Material::getConstantBufferPs() {
-		CLAIR_ASSERT(sizeof(T) == mCBufferData.sizePs,
+		CLAIR_ASSERT(sizeof(T) == mCBufferData->getSizePs(),
 					 "CBuffer data interpreted as class with wrong size");
-		return reinterpret_cast<T*>(mCBufferData.dataPs);
+		return reinterpret_cast<T*>(mCBufferData->getDataPs());
 	}
 
 	inline bool Material::isValid() const {
@@ -56,7 +56,8 @@ namespace Clair {
 		return mCBufferPs;
 	}
 
-	inline const MaterialConstBufferData* Material::getConstBufferData() const {
-		return &mCBufferData;
+	inline const MaterialConstBufferData*
+	Material::getConstBufferData() const {
+		return mCBufferData;
 	}
 }
