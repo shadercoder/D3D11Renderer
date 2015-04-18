@@ -32,11 +32,11 @@ static ID3DBlob* gVs {nullptr};
 static ID3DBlob* gPs {nullptr};
 static Clair::VertexLayout gVertexLayout {};
 static std::string gInFile {
-	"../../../../samples/common/rawdata/materials/default.hlsl"};
+	"../../../../samples/common/rawdata/materials/pbrSimple.hlsl"};
 static std::string gOutFile {
-	"../../../../samples/common/data/materials/default.cmat"};
+	"../../../../samples/common/data/materials/pbrSimple.cmat"};
 static std::string gOutHeader {
-	"../../../../samples/common/data/materials/default.h"};
+	"../../../../samples/common/data/materials/pbrSimple.h"};
 static bool gSilentMode {false};
 static std::ofstream gOutHeaderFile {};
 static std::string gMaterialName {};
@@ -199,7 +199,8 @@ int reflectConstBuffer(ID3DBlob* const shader, ConstBufferDesc& outCBuffer) {
 			break;
 		}
 		D3D11_SHADER_BUFFER_DESC constBufferDesc {};
-		if (FAILED(constBuffer->GetDesc(&constBufferDesc))) {
+		HRESULT hr {};
+		if (FAILED(hr = constBuffer->GetDesc(&constBufferDesc))) {
 			break;
 		}
 		for (int j {0}; ; ++j) {

@@ -9,23 +9,25 @@
 #include "Mesh.h"
 #include "LowLevelRenderer.h"
 #include "Clair/Debug.h"
+#include "Clair/Texture.h"
 
 using namespace Clair;
 
 namespace {
-	std::vector<Clair::Scene*> scenes;
-	std::vector<Clair::Mesh*> meshes;
-	std::vector<Clair::Material*> materials;
+	std::vector<Scene*> scenes;
+	std::vector<Mesh*> meshes;
+	std::vector<Material*> materials;
+	std::vector<Texture*> textures;
 }
 
-bool Clair::Renderer::initialize(const HWND hwnd, LogCallback logCallback) {
+bool Renderer::initialize(const HWND hwnd, LogCallback logCallback) {
 	const bool result {LowLevelRenderer::initialize(hwnd)};
 	Log::msCallback = logCallback;
-	CLAIR_LOG("Clair initialized");
+	CLAIR_DEBUG_LOG("Clair initialized");
 	return result;
 }
 
-void Clair::Renderer::terminate() {
+void Renderer::terminate() {
 	for (const auto& it : scenes) {
 		delete it;
 	}
@@ -35,15 +37,18 @@ void Clair::Renderer::terminate() {
 	for (const auto& it : materials) {
 		delete it;
 	}
+	for (const auto& it : textures) {
+		delete it;
+	}
 	LowLevelRenderer::terminate();
-	CLAIR_LOG("Clair terminated");
+	CLAIR_DEBUG_LOG("Clair terminated");
 }
 
-void Clair::Renderer::clear() {
+void Renderer::clear() {
 	LowLevelRenderer::clear();
 }
 
-void Clair::Renderer::finalizeFrame() {
+void Renderer::finalizeFrame() {
 	LowLevelRenderer::finalizeFrame();
 }
 
@@ -51,19 +56,19 @@ void Renderer::setRenderPass(const RenderPass pass) {
 	LowLevelRenderer::setRenderPass(pass);
 }
 
-void Clair::Renderer::setViewport(const int x, const int y,
+void Renderer::setViewport(const int x, const int y,
 								  const int width, const int height) {
 	LowLevelRenderer::setViewport(x, y, width, height);
 }
 
-void Clair::Renderer::render(Scene* const scene) {
+void Renderer::render(Scene* const scene) {
 	if (!scene) return;
 
 	LowLevelRenderer::render(scene);
 }
 
-Clair::Scene* Clair::Renderer::createScene() {
-	Clair::Scene* const newScene {new Scene{}};
+Scene* Renderer::createScene() {
+	Scene* const newScene {new Scene{}};
 	scenes.push_back(newScene);
 	return newScene;
 }
@@ -80,6 +85,12 @@ Material* Renderer::createMaterial(const char* const data) {
 	Material* const material {new Material {data}};
 	materials.push_back(material);
 	return material;
+}
+
+Texture* Renderer::createTexture() {
+	Texture* const texture {new Texture{}};
+	textures.push_back(texture);
+	return texture;
 }
 
 void Renderer::setViewMatrix(const Float4x4& view) {

@@ -17,11 +17,15 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		return false;
 	}
 
+	auto test = Loader::loadImageData("textures/grid.png");
+
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::Renderer::createMesh(sphereMeshData.data());
 
 	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
 	auto material = Clair::Renderer::createMaterial(matData.data());
+
+	auto texture = Clair::Renderer::createTexture();
 
 	mScene = Clair::Renderer::createScene();
 	const int size = 5;
@@ -36,6 +40,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		obj->setMesh(sphereMesh);
 		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 3.0f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
+		matInst->setTexture(0, texture);
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
 		cbuf->Reflectivity = fx;
 		cbuf->Roughness = fy;

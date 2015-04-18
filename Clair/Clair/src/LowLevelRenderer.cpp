@@ -282,7 +282,7 @@ static float viewHeight = 480.0f;
 
 void LowLevelRenderer::setViewport(const int x, const int y,
 								   const int width, const int height) {
-	d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
+	d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// new render target view
 	releaseComObject(renderTargetView);
@@ -340,30 +340,36 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 
 void LowLevelRenderer::render(Scene* const scene) {
 	d3dDeviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
-	d3dDeviceContext->PSSetShaderResources(0, 1, &shaderResView);
+	d3dDeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 	ConstantBufferTemp cb;
 	cb.view = cameraView;
 	cb.projection = cameraProjection;
 
-	//unsigned iteration {0};
+	//int iteration {0};
 	for (const auto& it : scene->mObjects) {
 		const Mesh* const mesh {it->getMesh()};
 		if (!mesh) continue;
-		auto material = it->getMaterial(gRenderPass)->getMaterial();
+		const auto matInstance = it->getMaterial(gRenderPass);
+		const auto material = matInstance->getMaterial();
 		if (!material || !material->isValid()) {
 			continue;
 		}
-		auto vs = material->getVertexShader()->getD3dShader();
-		auto ps = material->getPixelShader()->getD3dShader();
+		const auto vs = material->getVertexShader()->getD3dShader();
+		const auto ps = material->getPixelShader()->getD3dShader();
 		// material const buffer start
-		auto matCb = material->getConstantBufferPs();
+		const auto matCb = material->getConstantBufferPs();
+		const auto texMap = matInstance->getTextureMap();
+		for (const auto& itTex : texMap) {
+			auto const resView = itTex.second->getD3DShaderResourceView();
+			d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
+		}
 		{//if (iteration++ == 0) {
 			if (matCb) {
 				if (!matCb->isValid()) continue;
-				auto matCbData = it->getMaterial(gRenderPass)->
+				const auto matCbData = it->getMaterial(gRenderPass)->
 										getConstBufferData()->getDataPs();
-				auto matD3d = matCb->getD3dBuffer();
+				const auto matD3d = matCb->getD3dBuffer();
 				d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
 													0, 0);
 				d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);

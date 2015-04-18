@@ -28,10 +28,10 @@ std::vector<char> Loader::loadBinaryData(const std::string& filename) {
 	return vec;
 }
 
-std::unique_ptr<char> Loader::loadImageData(const std::string& ) {
+std::unique_ptr<char> Loader::loadImageData(const std::string& filename) {
 	stbi_uc* imgData {nullptr};
 	FILE* file {nullptr};
-	fopen_s(&file, "../../common/data/textures/grid.jpg", "rb");
+	fopen_s(&file, (msSearchPath + filename).c_str(), "rb");
 	int imgx, imgy, comp;
 	imgData = stbi_load_from_file(file, &imgx, &imgy, &comp, 0);
 	fclose(file);

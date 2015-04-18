@@ -10,11 +10,11 @@ namespace Clair {
 
 	class Material {
 	public:
-		Material(const char* data);
+		explicit Material(const char* data);
 		~Material();
 
 		template<typename T>
-		T* getConstantBufferPs();
+		T* getConstantBufferPs() const;
 
 		bool isValid() const;
 		VertexShader* getVertexShader() const;
@@ -34,7 +34,7 @@ namespace Clair {
 	};
 
 	template<typename T>
-	T* Material::getConstantBufferPs() {
+	T* Material::getConstantBufferPs() const {
 		CLAIR_ASSERT(sizeof(T) == mCBufferData->getSizePs(),
 					 "CBuffer data interpreted as class with wrong size");
 		return reinterpret_cast<T*>(mCBufferData->getDataPs());

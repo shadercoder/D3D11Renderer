@@ -1,5 +1,5 @@
-//Texture2D texAlbedo : register(t0);
-//SamplerState samplerLinear : register(s0);
+Texture2D texAlbedo : register(t0);
+SamplerState samplerLinear : register(s0);
 
 struct VsIn {
 	float3 Position : POSITION;
