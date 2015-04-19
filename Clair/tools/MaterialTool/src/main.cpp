@@ -32,11 +32,11 @@ static ID3DBlob* gVs {nullptr};
 static ID3DBlob* gPs {nullptr};
 static Clair::VertexLayout gVertexLayout {};
 static std::string gInFile {
-	"../../../../samples/common/rawdata/materials/pbrSimple.hlsl"};
+	"../../../../samples/common/rawdata/materials/sky.hlsl"};
 static std::string gOutFile {
-	"../../../../samples/common/data/materials/pbrSimple.cmat"};
+	"../../../../samples/common/data/materials/sky.cmat"};
 static std::string gOutHeader {
-	"../../../../samples/common/data/materials/pbrSimple.h"};
+	"../../../../samples/common/data/materials/sky.h"};
 static bool gSilentMode {false};
 static std::ofstream gOutHeaderFile {};
 static std::string gMaterialName {};

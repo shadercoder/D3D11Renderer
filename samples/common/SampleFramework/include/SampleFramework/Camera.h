@@ -8,6 +8,7 @@ namespace SampleFramework {
 							   float pitch, float yaw);
 		static void update(float deltaTime);
 		static glm::mat4 getViewMatrix();
+		static glm::vec3 getPosition();
 
 	private:
 		static void updateMatrix();
@@ -21,4 +22,8 @@ namespace SampleFramework {
 		static float msPitch;
 		static float msYaw;
 	};
+
+	inline glm::vec3 Camera::getPosition() {
+		return msPosition;
+	}
 }

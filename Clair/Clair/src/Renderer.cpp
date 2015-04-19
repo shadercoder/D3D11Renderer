@@ -18,6 +18,7 @@ namespace {
 	std::vector<Mesh*> meshes;
 	std::vector<Material*> materials;
 	std::vector<Texture*> textures;
+	std::vector<MaterialInstance*> matInstances;
 }
 
 bool Renderer::initialize(const HWND hwnd, LogCallback logCallback) {
@@ -38,6 +39,9 @@ void Renderer::terminate() {
 		delete it;
 	}
 	for (const auto& it : textures) {
+		delete it;
+	}
+	for (const auto& it : matInstances) {
 		delete it;
 	}
 	LowLevelRenderer::terminate();
@@ -61,12 +65,6 @@ void Renderer::setViewport(const int x, const int y,
 	LowLevelRenderer::setViewport(x, y, width, height);
 }
 
-void Renderer::render(Scene* const scene) {
-	if (!scene) return;
-
-	LowLevelRenderer::render(scene);
-}
-
 Scene* Renderer::createScene() {
 	Scene* const newScene {new Scene{}};
 	scenes.push_back(newScene);
@@ -87,10 +85,19 @@ Material* Renderer::createMaterial(const char* const data) {
 	return material;
 }
 
-Texture* Renderer::createTexture() {
-	Texture* const texture {new Texture{}};
+Texture* Renderer::createTexture(const char* const data) {
+	CLAIR_ASSERT(data, "Material data is null");
+	Texture* const texture {new Texture{data}};
 	textures.push_back(texture);
 	return texture;
+}
+
+MaterialInstance*
+Renderer::createMaterialInstance(const Material* const material) {
+	CLAIR_ASSERT(material, "Material should not be null");
+	MaterialInstance* newInst {new MaterialInstance{material}};
+	matInstances.push_back(newInst);
+	return newInst;
 }
 
 void Renderer::setViewMatrix(const Float4x4& view) {
@@ -99,4 +106,18 @@ void Renderer::setViewMatrix(const Float4x4& view) {
 
 void Renderer::setProjectionMatrix(const Float4x4& projection) {
 	LowLevelRenderer::setProjectionMatrix(projection);
+}
+
+void Renderer::setCameraPosition(const Float3& position) {
+	LowLevelRenderer::setCameraPosition(position);
+}
+
+void Renderer::render(Scene* const scene) {
+	if (!scene) return;
+
+	LowLevelRenderer::render(scene);
+}
+
+void Renderer::renderScreenQuad(const MaterialInstance* const materialInstance) {
+	LowLevelRenderer::renderScreenQuad(materialInstance);
 }

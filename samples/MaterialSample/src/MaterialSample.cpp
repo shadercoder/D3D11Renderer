@@ -7,7 +7,7 @@
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
 #include "../../data/materials/pbrSimple.h"
-//#include "vld.h"
+#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
@@ -18,6 +18,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	}
 
 	auto test = Loader::loadImageData("textures/grid.png");
+	auto texture = Clair::Renderer::createTexture(test.get());
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::Renderer::createMesh(sphereMeshData.data());
@@ -25,7 +26,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
 	auto material = Clair::Renderer::createMaterial(matData.data());
 
-	auto texture = Clair::Renderer::createTexture();
+	auto skyMatData = Loader::loadBinaryData("materials/sky.cmat");
+	auto skyMaterial = Clair::Renderer::createMaterial(skyMatData.data());
 
 	mScene = Clair::Renderer::createScene();
 	const int size = 5;
@@ -46,6 +48,9 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		cbuf->Roughness = fy;
 		cbuf->Metalness = fz;
 	}}}
+
+	mSkyMaterialInstance = Clair::Renderer::createMaterialInstance(skyMaterial);
+	mSkyMaterialInstance->setTexture(0, texture);
 
 	Camera::initialize({-4.5f, 16.6f, -4.5f}, 0.705f, 0.770f);
 	return true;
@@ -69,6 +74,8 @@ void MaterialSample::update() {
 void MaterialSample::render() {
 	Clair::Renderer::clear();
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
+	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
+	//Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
 	Clair::Renderer::finalizeFrame();
 }

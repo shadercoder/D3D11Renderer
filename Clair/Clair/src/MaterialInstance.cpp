@@ -7,6 +7,7 @@ MaterialInstance::MaterialInstance(const Material* const material) {
 	mMaterial = material;
 	mCBufferData = new MaterialConstBufferData(0, 0, 0);
 	MaterialConstBufferData::copy(mCBufferData, material->getConstBufferData());
+	mIsValid = true;
 }
 
 MaterialInstance::~MaterialInstance() {

@@ -16,6 +16,7 @@
 #include "IndexBuffer.h"
 #include "InputLayout.h"
 #include "ConstantBuffer.h"
+#include "Clair/MaterialInstance.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -32,21 +33,37 @@ namespace {
 	ID3D11Texture2D* depthStencilBuffer {nullptr};
 	ID3D11RasterizerState* rasterizerState {nullptr};
 
-	ID3D11Buffer* constantBuffer = nullptr;
 	ID3D11SamplerState* samplerState = nullptr;
-	ID3D11Texture2D* texture = nullptr;
-	ID3D11ShaderResourceView* shaderResView = nullptr;
 
 	Float4x4 cameraView {};
 	Float4x4 cameraProjection {};
+	Float3 cameraPosition {};
 	RenderPass gRenderPass {};
-}
 
-struct ConstantBufferTemp {
-	Float4x4 world;
-	Float4x4 view;
-	Float4x4 projection;
-};
+	struct ConstantBufferTemp {
+		Float4x4 world;
+		Float4x4 view;
+		Float4x4 projection;
+		Float3 camPos;
+		float padding;
+	};
+	ID3D11Buffer* constantBuffer = nullptr;
+
+	Float3 gQuadVertices[] {
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 1.0f, 0.0f},
+		{1.0f, 1.0f, 0.0f},
+		{1.0f, 0.0f, 0.0f}
+	};
+	unsigned gQuadIndices[] {
+		0, 1, 2,
+		2, 3, 0
+	};
+	VertexLayout gQuadVertLayout {};
+	VertexBuffer* gQuadVertexBuffer {nullptr};
+	IndexBuffer* gQuadIndexBuffer {nullptr};
+	InputLayout* gQuadInputLayout {nullptr};
+}
 
 template<typename T>
 inline static void releaseComObject(T& comObject) {
@@ -198,56 +215,21 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	result = d3dDevice->CreateSamplerState(&samplerDesc, &samplerState);
 	if (FAILED(result)) return false;
 
-	D3D11_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	texDesc.Width = 256;
-	texDesc.Height = 256;
-	texDesc.MipLevels = 1;
-	texDesc.ArraySize = 1;
-	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	texDesc.SampleDesc.Count = 1;
-	texDesc.SampleDesc.Quality = 0;
-	texDesc.Usage = D3D11_USAGE_DEFAULT;
-	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags = 0;
-	texDesc.MiscFlags = 0;
-
-	float* texData = new float[256 * 256 * 4]();
-	for (unsigned y = 0; y < 256; ++y) {
-		for (unsigned x = 0; x < 256; ++x) {
-			texData[(x + y * 256) * 4 + 0] = static_cast<float>(x) / 255.0f;
-			texData[(x + y * 256) * 4 + 1] = static_cast<float>(y) / 255.0f;
-			texData[(x + y * 256) * 4 + 2] = static_cast<float>(rand()) /
-											 static_cast<float>(RAND_MAX);
-			texData[(x + y * 256) * 4 + 3] = 1.0f;
-		}
-	}
-
-	D3D11_SUBRESOURCE_DATA texInitData;
-	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	texInitData.pSysMem = texData;
-	texInitData.SysMemPitch = sizeof(float) * 256 * 4;
-
-	result = d3dDevice->CreateTexture2D(&texDesc, &texInitData , &texture);
-	if (FAILED(result)) {
-		delete[] texData;
-		return false;
-	}
-	result = d3dDevice->CreateShaderResourceView(texture, nullptr,
-												 &shaderResView);
-	if (FAILED(result)) {
-		delete[] texData;
-		return false;
-	}
-	delete[] texData;
+	// quad
+	gQuadVertLayout.push_back(VertexAttribute{"POSITION",
+							  VertexAttribute::Format::FLOAT3});
+	gQuadVertexBuffer = new VertexBuffer{reinterpret_cast<char*>(gQuadVertices),
+										 sizeof(Float3) * 4};
+	gQuadIndexBuffer = new IndexBuffer{gQuadIndices, sizeof(unsigned) * 6};
 
 	return true;
 }
 
 void LowLevelRenderer::terminate() {
 	if (swapChain) swapChain->SetFullscreenState(FALSE, NULL);
-	releaseComObject(shaderResView);
-	releaseComObject(texture);
+	if (gQuadInputLayout) delete gQuadInputLayout;
+	delete gQuadIndexBuffer;
+	delete gQuadVertexBuffer;
 	releaseComObject(samplerState);
 	releaseComObject(constantBuffer);
 	releaseComObject(rasterizerState);
@@ -345,6 +327,7 @@ void LowLevelRenderer::render(Scene* const scene) {
 	ConstantBufferTemp cb;
 	cb.view = cameraView;
 	cb.projection = cameraProjection;
+	cb.camPos = cameraPosition;
 
 	//int iteration {0};
 	for (const auto& it : scene->mObjects) {
@@ -407,4 +390,38 @@ void LowLevelRenderer::setProjectionMatrix(const Float4x4& projection) {
 
 void LowLevelRenderer::setRenderPass(const RenderPass pass) {
 	gRenderPass = pass;
+}
+
+void LowLevelRenderer::setCameraPosition(const Float3& position) {
+	cameraPosition = position;
+}
+
+void LowLevelRenderer::renderScreenQuad(
+	const MaterialInstance* const materialInstance) {
+	CLAIR_ASSERT(materialInstance, "Material instance should not be null");
+	const Material* const mat {materialInstance->getMaterial()};
+	if (!gQuadInputLayout || !gQuadInputLayout->isValid()) {
+		if (gQuadInputLayout) {
+			delete gQuadInputLayout;
+		}
+		gQuadInputLayout = new InputLayout{gQuadVertLayout,
+							mat->getVertexShader()};
+		CLAIR_DEBUG_LOG_IF(!gQuadInputLayout->isValid(),
+				"Couldn't create the input layout for the full screen quad");
+		//return;
+	}
+	d3dDeviceContext->VSSetShader(
+		mat->getVertexShader()->getD3dShader(), nullptr, 0);
+	d3dDeviceContext->PSSetShader(
+		mat->getPixelShader()->getD3dShader(), nullptr, 0);
+	const UINT stride {sizeof(Float3)};
+	const UINT offset {0};
+	d3dDeviceContext->IASetInputLayout(gQuadInputLayout->getD3dInputLayout());
+	ID3D11Buffer* const vertexBuffer {gQuadVertexBuffer->getD3dBuffer()};
+	d3dDeviceContext->IASetVertexBuffers(0, 1,
+										 &vertexBuffer,
+										 &stride, &offset);
+	d3dDeviceContext->IASetIndexBuffer(
+		gQuadIndexBuffer->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	d3dDeviceContext->DrawIndexed(6, 0, 0);
 }

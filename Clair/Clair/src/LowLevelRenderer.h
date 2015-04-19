@@ -8,6 +8,7 @@ typedef HWND__* HWND;
 
 namespace Clair {
 	class Scene;
+	class MaterialInstance;
 
 	class LowLevelRenderer {
 	public:
@@ -22,5 +23,7 @@ namespace Clair {
 		static void setViewMatrix(const Float4x4& view);
 		static void setProjectionMatrix(const Float4x4& projection);
 		static void setRenderPass(RenderPass pass);
+		static void setCameraPosition(const Float3& position);
+		static void renderScreenQuad(const MaterialInstance* materialInstance);
 	};
 }

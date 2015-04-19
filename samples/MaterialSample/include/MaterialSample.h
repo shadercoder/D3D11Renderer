@@ -2,6 +2,7 @@
 #include "SampleFramework/SampleBase.h"
 #include "Clair/Scene.h"
 #include "Clair/Matrix.h"
+#include <Clair/MaterialInstance.h>
 
 class MaterialSample : public SampleFramework::SampleBase {
 public:
@@ -14,4 +15,5 @@ public:
 
 private:
 	Clair::Scene* mScene {nullptr};
+	Clair::MaterialInstance* mSkyMaterialInstance;
 };
