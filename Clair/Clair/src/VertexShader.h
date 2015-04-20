@@ -16,7 +16,7 @@ namespace Clair {
 
 	private:
 		bool mIsValid {false};
-		const char* mByteCode {nullptr};
+		char* mByteCode {nullptr};
 		size_t mByteCodeSize {0};
 		ID3D11VertexShader* mD3dShader {nullptr};
 	};

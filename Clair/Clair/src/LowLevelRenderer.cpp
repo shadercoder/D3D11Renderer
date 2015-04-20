@@ -246,9 +246,11 @@ ID3D11Device* LowLevelRenderer::getD3dDevice() {
 }
 
 
-void LowLevelRenderer::clear() {
-	const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
-	d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+void LowLevelRenderer::clear(const bool clearCol) {
+	if (clearCol) {
+		const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
+		d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+	}
 	d3dDeviceContext->ClearDepthStencilView(
 										depthStencilView,
 										D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL,
@@ -414,6 +416,13 @@ void LowLevelRenderer::renderScreenQuad(
 		mat->getVertexShader()->getD3dShader(), nullptr, 0);
 	d3dDeviceContext->PSSetShader(
 		mat->getPixelShader()->getD3dShader(), nullptr, 0);
+
+	const auto matCbData = materialInstance->getConstBufferData()->getDataPs();
+	const auto matD3d = mat->getConstantBufferPs()->getD3dBuffer();
+	d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
+										0, 0);
+	d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
+
 	const UINT stride {sizeof(Float3)};
 	const UINT offset {0};
 	d3dDeviceContext->IASetInputLayout(gQuadInputLayout->getD3dInputLayout());

@@ -3,6 +3,7 @@
 #include "Clair/Scene.h"
 #include "Clair/Matrix.h"
 #include <Clair/MaterialInstance.h>
+#include "../../data/materials/sky.h"
 
 class MaterialSample : public SampleFramework::SampleBase {
 public:
@@ -15,5 +16,6 @@ public:
 
 private:
 	Clair::Scene* mScene {nullptr};
-	Clair::MaterialInstance* mSkyMaterialInstance;
+	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
+	Cb_materials_sky_Ps* mSkyConstBuffer {nullptr};
 };

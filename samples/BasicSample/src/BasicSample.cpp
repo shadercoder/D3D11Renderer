@@ -52,7 +52,7 @@ void MaterialSample::update() {
 }
 
 void MaterialSample::render() {
-	Clair::Renderer::clear();
+	Clair::Renderer::clear(true);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

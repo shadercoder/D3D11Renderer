@@ -6,7 +6,7 @@ struct ID3D11ShaderResourceView;
 namespace Clair {
 	class Texture {
 	public:
-		Texture(const char* data);
+		explicit Texture(const char* data);
 		~Texture();
 
 		bool isValid() const;

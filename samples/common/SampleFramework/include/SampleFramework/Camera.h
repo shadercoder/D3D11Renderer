@@ -9,6 +9,9 @@ namespace SampleFramework {
 		static void update(float deltaTime);
 		static glm::mat4 getViewMatrix();
 		static glm::vec3 getPosition();
+		static glm::vec3 getRight();
+		static glm::vec3 getUp();
+		static glm::vec3 getForward();
 
 	private:
 		static void updateMatrix();
@@ -25,5 +28,17 @@ namespace SampleFramework {
 
 	inline glm::vec3 Camera::getPosition() {
 		return msPosition;
+	}
+
+	inline glm::vec3 Camera::getRight() {
+		return msRight;
+	}
+
+	inline glm::vec3 Camera::getUp() {
+		return msUp;
+	}
+
+	inline glm::vec3 Camera::getForward() {
+		return msForward;
 	}
 }

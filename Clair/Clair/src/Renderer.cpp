@@ -48,8 +48,8 @@ void Renderer::terminate() {
 	CLAIR_DEBUG_LOG("Clair terminated");
 }
 
-void Renderer::clear() {
-	LowLevelRenderer::clear();
+void Renderer::clear(const bool clearCol) {
+	LowLevelRenderer::clear(clearCol);
 }
 
 void Renderer::finalizeFrame() {
@@ -86,7 +86,7 @@ Material* Renderer::createMaterial(const char* const data) {
 }
 
 Texture* Renderer::createTexture(const char* const data) {
-	CLAIR_ASSERT(data, "Material data is null");
+	CLAIR_ASSERT(data, "Texture data is null");
 	Texture* const texture {new Texture{data}};
 	textures.push_back(texture);
 	return texture;

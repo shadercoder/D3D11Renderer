@@ -45,13 +45,13 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
 	float3 viewVec = normalize(psIn.WPosition - CameraPos);
 	float3 refl = reflect(viewVec, n);
-	float3 albedo = float3(1.0, 0.0, 0.0);
-	//float3(Reflectivity, Roughness, Metalness);
-	float diff = saturate(dot(l, n) * 1.0 / max(0.001, dot(l, l)));
+	float3 albedo = float3(0.2, 1.0, 0.2);
+	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
+	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	float3 reflCol =
-		texAlbedo.Sample(samplerLinear, (refl.xz / refl.y) * 0.4).rgb;
+		texAlbedo.Sample(samplerLinear, (refl.xz / refl.y) * 0.1).rgb;
 	float3 col = albedo * diff;
 	col = pow(col, 1.0 / 2.2);
-	col = lerp(col, reflCol, Reflectivity);
+	col = lerp(col, lerp(reflCol, reflCol * albedo, Metalness), Reflectivity);
 	return float4(col, 1.0);
 }

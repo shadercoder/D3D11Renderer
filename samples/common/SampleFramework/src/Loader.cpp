@@ -35,8 +35,18 @@ std::unique_ptr<char> Loader::loadImageData(const std::string& filename) {
 	int imgx, imgy, comp;
 	imgData = stbi_load_from_file(file, &imgx, &imgy, &comp, 0);
 	fclose(file);
-	char* returnData = new char[imgx * imgy * comp];
-	memcpy(returnData, imgData, imgx * imgy * comp);
+	char* returnData {new char[imgx * imgy * comp]};
+	for (int x {0}; x < imgx; ++x) {
+		for (int y {0}; y < imgy; ++y) {
+			const int idx {x + y * imgx};
+			const int inverseIdx {x + (imgy - 1 - y) * imgx};
+			returnData[idx * 4  + 0] = imgData[inverseIdx * 4 + 0];
+			returnData[idx * 4  + 1] = imgData[inverseIdx * 4 + 1];
+			returnData[idx * 4  + 2] = imgData[inverseIdx * 4 + 2];
+			//returnData[idx + 0] = imgData[inverseIdx + 0];
+		}
+	}
+	//memcpy(returnData, imgData, imgx * imgy * comp);
 	stbi_image_free(imgData);
 	return std::unique_ptr<char>(returnData);
 }

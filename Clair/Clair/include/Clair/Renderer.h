@@ -19,7 +19,7 @@ namespace Clair {
 		static void terminate();
 
 		static void setViewport(int x, int y, int width, int height);
-		static void clear();
+		static void clear(bool clearCol);
 		static void finalizeFrame();
 
 		static void setRenderPass(RenderPass pass);

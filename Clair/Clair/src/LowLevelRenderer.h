@@ -16,7 +16,7 @@ namespace Clair {
 		static void terminate();
 
 		static ID3D11Device* getD3dDevice();
-		static void clear();
+		static void clear(bool clearCol);
 		static void finalizeFrame();
 		static void setViewport(int x, int y, int width, int height);
 		static void render(Scene* scene);
