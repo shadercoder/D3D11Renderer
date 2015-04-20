@@ -4,7 +4,7 @@
 namespace Clair {
 	class Serialization {
 	public:
-		static Clair::VertexLayout readVertexLayoutFromBytes(const char*& data) {
+		static Clair::VertexLayout readVertexLayoutFromBytes(const Byte*& data) {
 			Clair::VertexLayout vertexLayout{};
 			size_t layoutSize {0};
 			memcpy(&layoutSize, data, sizeof(size_t));

@@ -8,7 +8,7 @@
 
 using namespace Clair;
 
-Material::Material(const char* data) {
+Material::Material(const Byte* data) {
 	CLAIR_ASSERT(data, "Material data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
 	unsigned dataSizeVs {0};
@@ -23,12 +23,12 @@ Material::Material(const char* data) {
 	size_t vsSize {0};
 	memcpy(&vsSize, data, sizeof(size_t));
 	data += sizeof(size_t);
-	const char* const vsData = data;
-	data += sizeof(char) * vsSize;
+	const Byte* const vsData = data;
+	data += sizeof(Byte) * vsSize;
 	size_t psSize {0};
 	memcpy(&psSize, data, sizeof(size_t));
 	data += sizeof(size_t);
-	const char* const psData = data;
+	const Byte* const psData = data;
 	mVertexShader = new VertexShader{vsData, vsSize};
 	mPixelShader = new PixelShader{psData, psSize};
 	mIsValid = mVertexShader->isValid() && mPixelShader->isValid();

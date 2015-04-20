@@ -218,7 +218,7 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	// quad
 	gQuadVertLayout.push_back(VertexAttribute{"POSITION",
 							  VertexAttribute::Format::FLOAT3});
-	gQuadVertexBuffer = new VertexBuffer{reinterpret_cast<char*>(gQuadVertices),
+	gQuadVertexBuffer = new VertexBuffer{reinterpret_cast<Byte*>(gQuadVertices),
 										 sizeof(Float3) * 4};
 	gQuadIndexBuffer = new IndexBuffer{gQuadIndices, sizeof(unsigned) * 6};
 

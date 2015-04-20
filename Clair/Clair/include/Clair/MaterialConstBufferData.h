@@ -1,4 +1,5 @@
 #pragma once
+typedef unsigned char Byte;
 
 namespace Clair {
 	class MaterialConstBufferData {
@@ -11,12 +12,12 @@ namespace Clair {
 			MaterialConstBufferData* to,
 			const MaterialConstBufferData* from);
 
-		char* getDataVs();
-		char* getDataGs();
-		char* getDataPs();
-		const char* getDataVs() const;
-		const char* getDataGs() const;
-		const char* getDataPs() const;
+		Byte* getDataVs();
+		Byte* getDataGs();
+		Byte* getDataPs();
+		const Byte* getDataVs() const;
+		const Byte* getDataGs() const;
+		const Byte* getDataPs() const;
 		unsigned getSizeVs() const;
 		unsigned getSizeGs() const;
 		unsigned getSizePs() const;
@@ -26,35 +27,35 @@ namespace Clair {
 			unsigned sizeVs, unsigned sizeGs, unsigned sizePs);
 		void destroy();
 
-		char* mDataVs {nullptr};
-		char* mDataGs {nullptr};
-		char* mDataPs {nullptr};
+		Byte* mDataVs {nullptr};
+		Byte* mDataGs {nullptr};
+		Byte* mDataPs {nullptr};
 		unsigned mSizeVs {0};
 		unsigned mSizeGs {0};
 		unsigned mSizePs {0};
 	};
 
-	inline char* MaterialConstBufferData::getDataVs() {
+	inline Byte* MaterialConstBufferData::getDataVs() {
 		return mDataVs;
 	}
 
-	inline char* MaterialConstBufferData::getDataGs() {
+	inline Byte* MaterialConstBufferData::getDataGs() {
 		return mDataGs;
 	}
 
-	inline char* MaterialConstBufferData::getDataPs() {
+	inline Byte* MaterialConstBufferData::getDataPs() {
 		return mDataPs;
 	}
 
-	inline const char* MaterialConstBufferData::getDataVs() const {
+	inline const Byte* MaterialConstBufferData::getDataVs() const {
 		return mDataVs;
 	}
 
-	inline const char* MaterialConstBufferData::getDataGs() const {
+	inline const Byte* MaterialConstBufferData::getDataGs() const {
 		return mDataGs;
 	}
 
-	inline const char* MaterialConstBufferData::getDataPs() const {
+	inline const Byte* MaterialConstBufferData::getDataPs() const {
 		return mDataPs;
 	}
 

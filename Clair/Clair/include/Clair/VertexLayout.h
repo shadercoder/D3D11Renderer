@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 
+typedef unsigned char Byte;
+
 namespace Clair {
 	struct VertexAttribute {
 		enum class Format {

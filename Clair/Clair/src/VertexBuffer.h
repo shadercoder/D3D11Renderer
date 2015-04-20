@@ -1,11 +1,13 @@
 #pragma once
 
+typedef unsigned char Byte;
+
 struct ID3D11Buffer;
 
 namespace Clair {
 	class VertexBuffer {
 	public:
-		VertexBuffer(const char* bufferData,
+		VertexBuffer(const Byte* bufferData,
 					 unsigned bufferSize);
 		~VertexBuffer();
 

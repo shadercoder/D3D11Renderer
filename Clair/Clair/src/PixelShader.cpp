@@ -4,7 +4,7 @@
 
 using namespace Clair;
 
-PixelShader::PixelShader(const char* const byteCode,
+PixelShader::PixelShader(const Byte* const byteCode,
 						 const unsigned byteCodeSize) {
 	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
 	const HRESULT result {

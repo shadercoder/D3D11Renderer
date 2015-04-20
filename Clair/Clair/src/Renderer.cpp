@@ -71,21 +71,21 @@ Scene* Renderer::createScene() {
 	return newScene;
 }
 
-Mesh* Renderer::createMesh(const char* const data) {
+Mesh* Renderer::createMesh(const Byte* const data) {
 	CLAIR_ASSERT(data, "Mesh data is null");
 	Mesh* const mesh {new Mesh {data}};
 	meshes.push_back(mesh);
 	return mesh;
 }
 
-Material* Renderer::createMaterial(const char* const data) {
+Material* Renderer::createMaterial(const Byte* const data) {
 	CLAIR_ASSERT(data, "Material data is null");
 	Material* const material {new Material {data}};
 	materials.push_back(material);
 	return material;
 }
 
-Texture* Renderer::createTexture(const char* const data) {
+Texture* Renderer::createTexture(const Byte* const data) {
 	CLAIR_ASSERT(data, "Texture data is null");
 	Texture* const texture {new Texture{data}};
 	textures.push_back(texture);

@@ -9,7 +9,7 @@ namespace Clair {
 
 	class Mesh {
 	public:
-		Mesh(const char* data);
+		Mesh(const Byte* data);
 		~Mesh();
 
 		VertexLayout& getVertexLayout();

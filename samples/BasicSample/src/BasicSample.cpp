@@ -18,10 +18,10 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	}
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
-	auto bunnyMesh = Clair::Renderer::createMesh(bunnyMeshData.data());
+	auto bunnyMesh = Clair::Renderer::createMesh(bunnyMeshData.get());
 
 	auto defaultMatData = Loader::loadBinaryData("materials/default.cmat");
-	auto defaultMat = Clair::Renderer::createMaterial(defaultMatData.data());
+	auto defaultMat = Clair::Renderer::createMaterial(defaultMatData.get());
 
 	mScene = Clair::Renderer::createScene();
 	mBunny = mScene->createObject();

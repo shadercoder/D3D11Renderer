@@ -5,6 +5,7 @@
 
 struct HWND__;
 typedef HWND__* HWND;
+typedef unsigned char Byte;
 
 namespace Clair {
 	class Scene;
@@ -24,9 +25,9 @@ namespace Clair {
 
 		static void setRenderPass(RenderPass pass);
 		static Scene* createScene();
-		static Mesh* createMesh(const char* data);
-		static Material* createMaterial(const char* data);
-		static Texture* createTexture(const char* const data);
+		static Mesh* createMesh(const Byte* data);
+		static Material* createMaterial(const Byte* data);
+		static Texture* createTexture(const Byte* const data);
 		static MaterialInstance*
 			createMaterialInstance(const Material* material);
 		static void setViewMatrix(const Float4x4& view);

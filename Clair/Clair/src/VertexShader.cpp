@@ -3,10 +3,10 @@
 #include "LowLevelRenderer.h"
 
 using namespace Clair;
-VertexShader::VertexShader(const char* const byteCode,
+VertexShader::VertexShader(const Byte* const byteCode,
 						   const unsigned byteCodeSize)
 	: mByteCodeSize	{byteCodeSize} {
-	mByteCode = new char[byteCodeSize];
+	mByteCode = new Byte[byteCodeSize];
 	memcpy(mByteCode, byteCode, byteCodeSize);
 	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
 	const HRESULT result {

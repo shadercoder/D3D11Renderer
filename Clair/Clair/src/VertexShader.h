@@ -1,22 +1,24 @@
 #pragma once
 
+typedef unsigned char Byte;
+
 struct ID3D11VertexShader;
 
 namespace Clair {
 	class VertexShader {
 	public:
-		VertexShader(const char* byteCode,
+		VertexShader(const Byte* byteCode,
 					 unsigned byteCodeSize);
 		~VertexShader();
 
 		bool isValid() const;
-		const char* getByteCode() const;
+		const Byte* getByteCode() const;
 		size_t getByteCodeSize() const;
 		ID3D11VertexShader* getD3dShader() const;
 
 	private:
 		bool mIsValid {false};
-		char* mByteCode {nullptr};
+		Byte* mByteCode {nullptr};
 		size_t mByteCodeSize {0};
 		ID3D11VertexShader* mD3dShader {nullptr};
 	};
@@ -25,7 +27,7 @@ namespace Clair {
 		return mIsValid;
 	}
 
-	inline const char* VertexShader::getByteCode() const {
+	inline const Byte* VertexShader::getByteCode() const {
 		return mByteCode;
 	}
 

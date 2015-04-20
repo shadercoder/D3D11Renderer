@@ -1,12 +1,14 @@
 #pragma once
 
+typedef unsigned char Byte;
+
 struct ID3D11Texture2D;
 struct ID3D11ShaderResourceView;
 
 namespace Clair {
 	class Texture {
 	public:
-		explicit Texture(const char* data);
+		explicit Texture(const Byte* data);
 		~Texture();
 
 		bool isValid() const;

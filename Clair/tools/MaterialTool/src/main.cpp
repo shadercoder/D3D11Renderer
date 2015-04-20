@@ -156,10 +156,10 @@ bool writeToFile(const std::string& filename) {
 	fwrite(&gPsCBufferDesc.size, sizeof(unsigned), 1, outputFile);
 	const size_t vsSize = gVs->GetBufferSize();
 	fwrite(&vsSize, sizeof(size_t), 1, outputFile);
-	fwrite(gVs->GetBufferPointer(), sizeof(char), vsSize, outputFile);
+	fwrite(gVs->GetBufferPointer(), sizeof(Byte), vsSize, outputFile);
 	const size_t psSize = gPs->GetBufferSize();
 	fwrite(&psSize, sizeof(size_t), 1, outputFile);
-	fwrite(gPs->GetBufferPointer(), sizeof(char), psSize, outputFile);
+	fwrite(gPs->GetBufferPointer(), sizeof(Byte), psSize, outputFile);
 	fclose(outputFile);
 	return true;
 }

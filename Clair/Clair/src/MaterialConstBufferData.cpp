@@ -17,9 +17,9 @@ void MaterialConstBufferData::create(
 	mSizeVs = sizeVs;	
 	mSizeGs = sizeGs;	
 	mSizePs = sizePs;	
-	if (sizeVs != 0) mDataVs = new char[sizeVs];
-	if (sizeGs != 0) mDataGs = new char[sizeGs];
-	if (sizePs != 0) mDataPs = new char[sizePs];
+	if (sizeVs != 0) mDataVs = new Byte[sizeVs];
+	if (sizeGs != 0) mDataGs = new Byte[sizeGs];
+	if (sizePs != 0) mDataPs = new Byte[sizePs];
 }
 
 void MaterialConstBufferData::destroy() {

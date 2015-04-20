@@ -14,28 +14,30 @@ void Loader::setSearchPath(const std::string& path) {
 	}
 }
 
-std::vector<char> Loader::loadBinaryData(const std::string& filename) {
+std::unique_ptr<Byte> Loader::loadBinaryData(const std::string& filename) {
 	std::string actualFilename {msSearchPath + filename};
 	std::ifstream file(actualFilename.c_str(), std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		printf("Couldn't open file\n");
-		return std::vector<char>();
+		return nullptr;
 	}
 	const auto pos = file.tellg();
 	std::vector<char> vec(static_cast<unsigned>(pos));
 	file.seekg(0, std::ios::beg);
 	file.read(&vec[0], pos);
-	return vec;
+	std::unique_ptr<Byte> ret{new Byte[vec.size()]};
+	memcpy(ret.get(), &vec[0], vec.size());
+	return ret;
 }
 
-std::unique_ptr<char> Loader::loadImageData(const std::string& filename) {
+std::unique_ptr<Byte> Loader::loadImageData(const std::string& filename) {
 	stbi_uc* imgData {nullptr};
 	FILE* file {nullptr};
 	fopen_s(&file, (msSearchPath + filename).c_str(), "rb");
 	int imgx, imgy, comp;
 	imgData = stbi_load_from_file(file, &imgx, &imgy, &comp, 0);
 	fclose(file);
-	char* returnData {new char[imgx * imgy * comp]};
+	Byte* returnData {new Byte[imgx * imgy * comp]};
 	for (int x {0}; x < imgx; ++x) {
 		for (int y {0}; y < imgy; ++y) {
 			const int idx {x + y * imgx};
@@ -48,5 +50,5 @@ std::unique_ptr<char> Loader::loadImageData(const std::string& filename) {
 	}
 	//memcpy(returnData, imgData, imgx * imgy * comp);
 	stbi_image_free(imgData);
-	return std::unique_ptr<char>(returnData);
+	return std::unique_ptr<Byte>{returnData};
 }

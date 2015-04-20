@@ -21,13 +21,13 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto texture = Clair::Renderer::createTexture(test.get());
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
-	auto sphereMesh = Clair::Renderer::createMesh(sphereMeshData.data());
+	auto sphereMesh = Clair::Renderer::createMesh(sphereMeshData.get());
 
 	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
-	auto material = Clair::Renderer::createMaterial(matData.data());
+	auto material = Clair::Renderer::createMaterial(matData.get());
 
 	auto skyMatData = Loader::loadBinaryData("materials/sky.cmat");
-	auto skyMaterial = Clair::Renderer::createMaterial(skyMatData.data());
+	auto skyMaterial = Clair::Renderer::createMaterial(skyMatData.get());
 
 	mScene = Clair::Renderer::createScene();
 	const int size = 5;

@@ -7,7 +7,7 @@
 
 using namespace Clair;
 
-Mesh::Mesh(const char* data) {
+Mesh::Mesh(const Byte* data) {
 	CLAIR_ASSERT(data, "Mesh data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
 	unsigned stride {0};
@@ -16,8 +16,8 @@ Mesh::Mesh(const char* data) {
 	unsigned numVertices {0};
 	memcpy(&numVertices, data ,sizeof(unsigned));
 	data += sizeof(unsigned);
-	const char* const vertexData {data};
-	data += sizeof(char) * numVertices * stride;
+	const Byte* const vertexData {data};
+	data += sizeof(Byte) * numVertices * stride;
 	unsigned numIndices {0};
 	memcpy(&numIndices, data, sizeof(unsigned));
 	data += sizeof(unsigned);

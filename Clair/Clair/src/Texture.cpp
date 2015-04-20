@@ -4,7 +4,7 @@
 
 using namespace Clair;
 
-Texture::Texture(const char* const data) {
+Texture::Texture(const Byte* const data) {
 	auto const d3dDevice = LowLevelRenderer::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -22,7 +22,7 @@ Texture::Texture(const char* const data) {
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
 
-	char* texData = new char[size * size * 4]();
+	Byte* texData = new Byte[size * size * 4]();
 	for (unsigned y = 0; y < size; ++y) {
 		for (unsigned x = 0; x < size; ++x) {
 			const unsigned idx = (x + y * size) * 4;
@@ -35,7 +35,7 @@ Texture::Texture(const char* const data) {
 	D3D11_SUBRESOURCE_DATA texInitData;
 	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	texInitData.pSysMem = texData;
-	texInitData.SysMemPitch = sizeof(char) * 512 * 4;
+	texInitData.SysMemPitch = sizeof(Byte) * 512 * 4;
 
 	if (!FAILED(d3dDevice->CreateTexture2D(&texDesc, &texInitData,
 										   &mD3dTexture))) {

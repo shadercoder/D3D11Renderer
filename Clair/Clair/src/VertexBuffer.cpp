@@ -4,7 +4,7 @@
 
 using namespace Clair;
 
-VertexBuffer::VertexBuffer(const char* const bufferData,
+VertexBuffer::VertexBuffer(const Byte* const bufferData,
 						   const unsigned bufferSize) {
 	D3D11_BUFFER_DESC vertexBufferDesc {};
 	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));

@@ -1,11 +1,13 @@
 #pragma once
 
+typedef unsigned char Byte;
+
 struct ID3D11PixelShader;
 
 namespace Clair {
 	class PixelShader {
 	public:
-		PixelShader(const char* byteCode,
+		PixelShader(const Byte* byteCode,
 					unsigned byteCodeSize);
 		~PixelShader();
 

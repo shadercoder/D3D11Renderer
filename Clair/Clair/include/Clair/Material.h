@@ -10,7 +10,7 @@ namespace Clair {
 
 	class Material {
 	public:
-		explicit Material(const char* data);
+		explicit Material(const Byte* data);
 		~Material();
 
 		template<typename T>
