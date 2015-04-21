@@ -14,13 +14,15 @@ using namespace SampleFramework;
 using namespace glm;
 
 bool MaterialSample::initialize(const HWND hwnd) {
-	if (!Clair::initialize(hwnd, Logger::logCallback)) {
+	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
 
-	auto test = Loader::loadImageData("textures/avatar.png");
+	auto loadedTex = Loader::loadImageData("textures/avatar.png");
 	auto texture = Clair::ResourceManager::createTexture();
-	texture->initialize(512, 512, test.get());
+	texture->initialize(
+		loadedTex.width, loadedTex.height, loadedTex.data, true);
+	//texture->clearRenderTarget({1.0f, 0.1f, 0.2f, 1.0f});
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();
@@ -84,10 +86,11 @@ void MaterialSample::update() {
 }
 
 void MaterialSample::render() {
-	Clair::Renderer::clear(true);
+	Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
+	screen->clearRenderTarget({1.0f, 0.0f, 0.0f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
-	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
+	//Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
 	Clair::Renderer::clear(false);
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

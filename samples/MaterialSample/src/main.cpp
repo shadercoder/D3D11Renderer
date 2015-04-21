@@ -8,13 +8,10 @@
 #endif
 
 int main(int, char* []) {
-	SampleFramework::SampleBase* const sample {new MaterialSample{}};
-	if (!SampleFramework::Framework::run(sample, "Clair MaterialSample",
-										 960, 640,
-										 "../../common/data/")) {
-		delete sample;
-		return -1;
-	}
-	delete sample;
-	return 0;
+	return SampleFramework::Framework::run(
+		new MaterialSample{},
+		"Clair MaterialSample",
+		960, 640,
+		"../../common/data/"
+	);
 }

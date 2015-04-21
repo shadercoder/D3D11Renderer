@@ -8,68 +8,40 @@
 
 using namespace Clair;
 
-namespace {
-	std::vector<Scene*> scenes;
-	std::vector<Mesh*> meshes;
-	std::vector<Material*> materials;
-	std::vector<Texture*> textures;
-	std::vector<MaterialInstance*> matInstances;
+#define CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(T)\
+std::vector<T*> ResourceManager::ms##T##Vec;\
+\
+T* ResourceManager::create##T() {\
+	T* const newT {new T{}};\
+	CLAIR_DEBUG_LOG(#T" created successfully");\
+	ms##T##Vec.push_back(newT);\
+	return newT;\
 }
+
+CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Scene);
+CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Mesh);
+CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Material);
+CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Texture);
+CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(MaterialInstance);
 
 bool ResourceManager::initialize() {
 	return true;
 }
 
 void ResourceManager::terminate() {
-	for (const auto& it : scenes) {
+	for (const auto& it : msSceneVec) {
 		delete it;
 	}
-	for (const auto& it : meshes) {
+	for (const auto& it : msMeshVec) {
 		delete it;
 	}
-	for (const auto& it : materials) {
+	for (const auto& it : msMaterialVec) {
 		delete it;
 	}
-	for (const auto& it : textures) {
+	for (const auto& it : msTextureVec) {
 		delete it;
 	}
-	for (const auto& it : matInstances) {
+	for (const auto& it : msMaterialInstanceVec) {
 		delete it;
 	}
-}
-
-
-Scene* ResourceManager::createScene() {
-	Scene* const newScene {new Scene{}};
-	scenes.push_back(newScene);
-	CLAIR_DEBUG_LOG("Scene created successfully");
-	return newScene;
-}
-
-Mesh* ResourceManager::createMesh() {
-	Mesh* const mesh {new Mesh{}};
-	//CLAIR_DEBUG_LOG_IF(mesh->isValid(), "Mesh created successfully");
-	meshes.push_back(mesh);
-	return mesh;
-}
-
-Material* ResourceManager::createMaterial() {
-	Material* const material {new Material {}};
-	//CLAIR_DEBUG_LOG_IF(material->isValid(), "Material created successfully");
-	materials.push_back(material);
-	return material;
-}
-
-Texture* ResourceManager::createTexture() {
-	Texture* const texture {new Texture{}};
-	//CLAIR_DEBUG_LOG_IF(texture->isValid(), "Texture created successfully");
-	textures.push_back(texture);
-	return texture;
-}
-
-MaterialInstance* ResourceManager::createMaterialInstance() {
-	MaterialInstance* newInst {new MaterialInstance{}};
-	//CLAIR_DEBUG_LOG_IF(newInst->isValid(), "Texture created successfully");
-	matInstances.push_back(newInst);
-	return newInst;
 }

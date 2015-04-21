@@ -27,9 +27,7 @@ namespace {
 	ID3D11Device* d3dDevice {nullptr};
 	ID3D11DeviceContext* d3dDeviceContext {nullptr};
 	IDXGISwapChain* swapChain {nullptr};
-	ID3D11RenderTargetView* renderTargetView {nullptr};
 	ID3D11DepthStencilView* depthStencilView {nullptr};
-	ID3D11Texture2D* backBuffer {nullptr};
 	ID3D11Texture2D* depthStencilBuffer {nullptr};
 	ID3D11RasterizerState* rasterizerState {nullptr};
 
@@ -64,6 +62,8 @@ namespace {
 	IndexBuffer* gQuadIndexBuffer {nullptr};
 	InputLayout* gQuadInputLayout {nullptr};
 }
+
+Texture* LowLevelRenderer::msDefaultRenderTarget {nullptr};
 
 template<typename T>
 inline static void releaseComObject(T& comObject) {
@@ -118,13 +118,21 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 
 	if (FAILED(result)) return false;
 
+	//result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+	//							  reinterpret_cast<LPVOID*>(&backBuffer));
+	msDefaultRenderTarget = new Texture();
+	msDefaultRenderTarget->mIsValid = true;
+	msDefaultRenderTarget->mIsRenderTarget = true;
 	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
-								  reinterpret_cast<LPVOID*>(&backBuffer));
+				reinterpret_cast<LPVOID*>(&msDefaultRenderTarget->mD3dTexture));
+	
 	if (FAILED(result)) return false;
 
-	result = d3dDevice->CreateRenderTargetView(backBuffer, nullptr,
-											   &renderTargetView);
-	releaseComObject(backBuffer);
+	result = d3dDevice->CreateRenderTargetView(
+		msDefaultRenderTarget->mD3dTexture, nullptr,
+		&msDefaultRenderTarget->mD3dRenderTargetView);
+	releaseComObject(msDefaultRenderTarget->mD3dTexture);
+	if (FAILED(result)) return false;
 
 	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
 	ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -140,16 +148,16 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	depthStencilBufferDesc.CPUAccessFlags = 0;
 	depthStencilBufferDesc.MiscFlags = 0;
 
-	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
-							   &depthStencilBuffer);
+	result = d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
+										&depthStencilBuffer);
 	if (FAILED(result)) return false;
 
 	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
 											   &depthStencilView);
 	if (FAILED(result)) return false;
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
-										 depthStencilView);
+	d3dDeviceContext->OMSetRenderTargets(
+		1, &msDefaultRenderTarget->mD3dRenderTargetView, depthStencilView);
 
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -226,6 +234,7 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 }
 
 void LowLevelRenderer::terminate() {
+	delete msDefaultRenderTarget;
 	if (swapChain) swapChain->SetFullscreenState(FALSE, NULL);
 	if (gQuadInputLayout) delete gQuadInputLayout;
 	delete gQuadIndexBuffer;
@@ -235,7 +244,6 @@ void LowLevelRenderer::terminate() {
 	releaseComObject(rasterizerState);
 	releaseComObject(depthStencilBuffer);
 	releaseComObject(depthStencilView);
-	releaseComObject(renderTargetView);
 	releaseComObject(swapChain);
 	releaseComObject(d3dDeviceContext);
 	releaseComObject(d3dDevice);
@@ -248,8 +256,8 @@ ID3D11Device* LowLevelRenderer::getD3dDevice() {
 
 void LowLevelRenderer::clear(const bool clearCol) {
 	if (clearCol) {
-		const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
-		d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+		//const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
+		//d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
 	}
 	d3dDeviceContext->ClearDepthStencilView(
 										depthStencilView,
@@ -269,7 +277,7 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 	d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// new render target view
-	releaseComObject(renderTargetView);
+	releaseComObject(msDefaultRenderTarget->mD3dRenderTargetView);
 	HRESULT result {0};
 	result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
@@ -278,7 +286,7 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 								  reinterpret_cast<LPVOID*>(&buffer));
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 	result = d3dDevice->CreateRenderTargetView(buffer, nullptr,
-											   &renderTargetView);
+								&msDefaultRenderTarget->mD3dRenderTargetView);
 	releaseComObject(buffer);
 
 	// new depth/stencil buffer
@@ -306,8 +314,8 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 											   &depthStencilView);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
-										 depthStencilView);
+	d3dDeviceContext->OMSetRenderTargets(
+		1, &msDefaultRenderTarget->mD3dRenderTargetView, depthStencilView);
 
 	// new viewport
 	D3D11_VIEWPORT viewport = {0};
@@ -416,6 +424,7 @@ void LowLevelRenderer::renderScreenQuad(
 		mat->getVertexShader()->getD3dShader(), nullptr, 0);
 	d3dDeviceContext->PSSetShader(
 		mat->getPixelShader()->getD3dShader(), nullptr, 0);
+	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 
 	const auto matCbData = materialInstance->getConstBufferData()->getDataPs();
 	const auto matD3d = mat->getConstantBufferPs()->getD3dBuffer();

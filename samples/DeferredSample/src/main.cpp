@@ -8,13 +8,10 @@
 #endif
 
 int main(int, char* []) {
-	SampleFramework::SampleBase* const sample {new DeferredSample{}};
-	if (!SampleFramework::Framework::run(sample, "Clair DeferredSample",
-										 960, 640,
-										 "../../common/data/")) {
-		delete sample;
-		return -1;
-	}
-	delete sample;
-	return 0;
+	return SampleFramework::Framework::run(
+		new DeferredSample{},
+		"Clair DeferredSample",
+		960, 640,
+		"../../common/data/"
+	);
 }

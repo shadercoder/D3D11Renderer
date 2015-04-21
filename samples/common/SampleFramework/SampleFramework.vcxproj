@@ -24,6 +24,7 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Loader.cpp" />
+    <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\SampleFramework.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

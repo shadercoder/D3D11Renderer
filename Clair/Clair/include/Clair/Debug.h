@@ -39,7 +39,7 @@ namespace Clair {
 		static void setCallback(LogCallback callback);
 
 		static void log(const std::string& message) {
-			msCallback(message);
+			msCallback("CLAIR: " + message);
 		}
 
 	private:

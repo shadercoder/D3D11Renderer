@@ -1,6 +1,7 @@
 #pragma once
 #include "Clair/RenderPass.h"
 #include "Clair/Matrix.h"
+#include "Clair/Texture.h"
 
 struct ID3D11Device;
 struct HWND__;
@@ -25,5 +26,13 @@ namespace Clair {
 		static void setRenderPass(RenderPass pass);
 		static void setCameraPosition(const Float3& position);
 		static void renderScreenQuad(const MaterialInstance* materialInstance);
+		static Texture* getDefaultRenderTarget();
+
+	private:
+		static Texture* msDefaultRenderTarget;
 	};
+
+	inline Texture* LowLevelRenderer::getDefaultRenderTarget() {
+		return msDefaultRenderTarget;
+	}
 }

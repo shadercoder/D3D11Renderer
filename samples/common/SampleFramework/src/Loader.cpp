@@ -5,6 +5,18 @@
 
 using namespace SampleFramework;
 
+LoadedTexture::LoadedTexture(const int width,
+							 const int height,
+							 const Byte* const data) {
+	this->width = width;
+	this->height = height;
+	this->data = data;
+}
+
+LoadedTexture::~LoadedTexture() {
+	delete[] data;
+}
+
 std::string Loader::msSearchPath {};
 
 void Loader::setSearchPath(const std::string& path) {
@@ -30,7 +42,7 @@ std::unique_ptr<Byte> Loader::loadBinaryData(const std::string& filename) {
 	return ret;
 }
 
-std::unique_ptr<Byte> Loader::loadImageData(const std::string& filename) {
+LoadedTexture Loader::loadImageData(const std::string& filename) {
 	stbi_uc* imgData {nullptr};
 	FILE* file {nullptr};
 	fopen_s(&file, (msSearchPath + filename).c_str(), "rb");
@@ -48,7 +60,6 @@ std::unique_ptr<Byte> Loader::loadImageData(const std::string& filename) {
 			//returnData[idx + 0] = imgData[inverseIdx + 0];
 		}
 	}
-	//memcpy(returnData, imgData, imgx * imgy * comp);
 	stbi_image_free(imgData);
-	return std::unique_ptr<Byte>{returnData};
+	return LoadedTexture{imgx, imgy, returnData};
 }

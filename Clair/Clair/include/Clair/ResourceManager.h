@@ -2,23 +2,25 @@
 #include "Clair/RenderPass.h"
 #include "Clair/Matrix.h"
 #include "Clair/Debug.h"
+#include <vector>
 
 namespace Clair {
-	class Scene;
-	class Mesh;
-	class Material;
-	class Texture;
-	class MaterialInstance;
-
 	class ResourceManager {
 	public:
 		static bool initialize();
 		static void terminate();
+		
+		static class Scene* createScene();
+		static class Mesh* createMesh();
+		static class Material* createMaterial();
+		static class Texture* createTexture();
+		static class MaterialInstance* createMaterialInstance();
 
-		static Scene* createScene();
-		static Mesh* createMesh();
-		static Material* createMaterial();
-		static Texture* createTexture();
-		static MaterialInstance* createMaterialInstance();
+	private:
+		static std::vector<Scene*> msSceneVec;
+		static std::vector<Mesh*> msMeshVec;
+		static std::vector<Material*> msMaterialVec;
+		static std::vector<Texture*> msTextureVec;
+		static std::vector<MaterialInstance*> msMaterialInstanceVec;
 	};
 };

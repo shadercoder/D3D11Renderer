@@ -54,15 +54,17 @@ static void handleEvents() {
 	}
 }
 
-bool Framework::run(SampleBase* const sample, const std::string& caption,
+int Framework::run(SampleBase* const sample, const std::string& caption,
 					const int width, const int height,
 					const std::string& dataPath) {
+	Logger::reset(0.0f);
 	setWindowSize(width, height);
 	gSample = sample;
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		MessageBox(nullptr, "Couldn't initialize SDL2", "Fatal error",
 				   MB_OK | MB_ICONERROR);
-		return false;
+		delete sample;
+		return -1;
 	}
 	
 	gSDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_UNDEFINED,
@@ -76,8 +78,10 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 				   SDL_GetError()).c_str(), "Fatal error",
 				   MB_OK | MB_ICONERROR);
 		SDL_Quit();
-		return false;
+		delete sample;
+		return -1;
 	}
+	Logger::log("SampleFramework: Window created");
 	SDL_SysWMinfo info;
 	SDL_VERSION(&info.version);
 	SDL_GetWindowWMInfo(gSDL_window, &info);
@@ -89,8 +93,10 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 				   "Fatal error", MB_OK | MB_ICONERROR);
 		gSample->terminate();
 		SDL_Quit();
-		return false;
+		delete sample;
+		return -1;
 	}
+	Logger::log("SampleFramework: Sample initialized");
 
 	gSample->onResize(gWidth, gHeight, gAspect);
 
@@ -111,11 +117,15 @@ bool Framework::run(SampleBase* const sample, const std::string& caption,
 		runningTime += elapsedTime;
 		gSample->mDeltaTime = static_cast<float>(deltaTime);
 		gSample->mRunningTime = static_cast<float>(runningTime);
+		Logger::reset(runningTime);
 		timer.start();
 	}
 
 	gSample->terminate();
+	Logger::log("SampleFramework: Sample terminated");
 
 	SDL_Quit();
-	return true;
+	delete sample;
+	Logger::log("SampleFramework: Terminated");
+	return 0;
 }

@@ -14,7 +14,7 @@ using namespace SampleFramework;
 using namespace glm;
 
 bool BasicSample::initialize(const HWND hwnd) {
-	if (!Clair::initialize(hwnd, Logger::logCallback)) {
+	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
 
@@ -56,6 +56,8 @@ void BasicSample::update() {
 
 void BasicSample::render() {
 	Clair::Renderer::clear(true);
+	Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
+	screen->clearRenderTarget({0.2f, 0.4f, 0.6f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

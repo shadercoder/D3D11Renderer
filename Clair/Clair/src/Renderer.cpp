@@ -1,25 +1,10 @@
-#include <Windows.h>
 #include "Clair/Renderer.h"
-#include <stdio.h>
 #include "Clair/Scene.h"
 #include "Clair/Object.h"
-#include <vector>
 #include "Clair/Matrix.h"
-#include "Clair/Material.h"
-#include "Clair/Mesh.h"
 #include "LowLevelRenderer.h"
-#include "Clair/Debug.h"
-#include "Clair/Texture.h"
 
 using namespace Clair;
-
-namespace {
-	std::vector<Scene*> scenes;
-	std::vector<Mesh*> meshes;
-	std::vector<Material*> materials;
-	std::vector<Texture*> textures;
-	std::vector<MaterialInstance*> matInstances;
-}
 
 bool Renderer::initialize() {
 	return true;
@@ -65,4 +50,8 @@ void Renderer::render(Scene* const scene) {
 
 void Renderer::renderScreenQuad(const MaterialInstance* const materialInstance) {
 	LowLevelRenderer::renderScreenQuad(materialInstance);
+}
+
+Texture* Renderer::getDefaultRenderTarget() {
+	return LowLevelRenderer::getDefaultRenderTarget();
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Clair/RenderPass.h"
 #include "Clair/Matrix.h"
+#include "Clair/Texture.h"
 
 namespace Clair {
 	class Scene;
@@ -21,5 +22,6 @@ namespace Clair {
 		static void setCameraPosition(const Float3& position);
 		static void render(Scene* scene);
 		static void renderScreenQuad(const MaterialInstance* materialInstance);
+		static Texture* getDefaultRenderTarget();
 	};
 };
