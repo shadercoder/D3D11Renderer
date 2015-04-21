@@ -5,7 +5,7 @@
 #include "Clair/Matrix.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-#include "Mesh.h"
+#include "Clair/Mesh.h"
 #include "Clair/Scene.h"
 #include "Clair/Object.h"
 #include "Clair/Material.h"

@@ -120,7 +120,7 @@
     <ClInclude Include="include\Clair\Scene.h" />
     <ClInclude Include="include\Clair\VertexLayout.h" />
     <ClInclude Include="src\LowLevelRenderer.h" />
-    <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="include\Clair\Mesh.h" />
     <ClInclude Include="src\PixelShader.h" />
     <ClInclude Include="src\Serialization.h" />
     <ClInclude Include="src\VertexBuffer.h" />

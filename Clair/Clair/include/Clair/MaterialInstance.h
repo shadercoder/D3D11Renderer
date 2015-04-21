@@ -7,11 +7,7 @@ namespace Clair {
 	typedef std::map<unsigned, const Texture*> TextureMap;
 	class MaterialInstance {
 	public:
-		explicit MaterialInstance(const Material* material);
-		~MaterialInstance();
-
-		template<typename T>
-		T* getConstantBufferPs() const;
+		void initialize(const Material* material);
 
 		void setTexture(unsigned index, const Texture* texture);
 
@@ -19,8 +15,14 @@ namespace Clair {
 		const Material* getMaterial() const;
 		const MaterialConstBufferData* getConstBufferData() const;
 		const TextureMap& getTextureMap() const;
+		template<typename T>
+		T* getConstantBufferPs() const;
 
 	private:
+		MaterialInstance() = default;
+		~MaterialInstance();
+		friend class ResourceManager;
+		friend class Object;
 		bool mIsValid {false};
 		const Material* mMaterial {nullptr};
 		MaterialConstBufferData* mCBufferData;

@@ -3,8 +3,6 @@
 #include "Clair/Matrix.h"
 #include "Clair/Debug.h"
 
-typedef unsigned char Byte;
-
 namespace Clair {
 	class Scene;
 	class Mesh;
@@ -18,10 +16,9 @@ namespace Clair {
 		static void terminate();
 
 		static Scene* createScene();
-		static Mesh* createMesh(const Byte* data);
-		static Material* createMaterial(const Byte* data);
+		static Mesh* createMesh();
+		static Material* createMaterial();
 		static Texture* createTexture();
-		static MaterialInstance*
-		createMaterialInstance(const Material* material);
+		static MaterialInstance* createMaterialInstance();
 	};
 };

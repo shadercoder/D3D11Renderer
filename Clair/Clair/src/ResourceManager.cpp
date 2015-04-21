@@ -4,7 +4,7 @@
 #include "Clair/Matrix.h"
 #include "Clair/Material.h"
 #include "Clair/Texture.h"
-#include "Mesh.h"
+#include "Clair/Mesh.h"
 
 using namespace Clair;
 
@@ -46,18 +46,16 @@ Scene* ResourceManager::createScene() {
 	return newScene;
 }
 
-Mesh* ResourceManager::createMesh(const Byte* const data) {
-	CLAIR_ASSERT(data, "Mesh data is null");
-	Mesh* const mesh {new Mesh {data}};
-	CLAIR_DEBUG_LOG_IF(mesh->isValid(), "Mesh created successfully");
+Mesh* ResourceManager::createMesh() {
+	Mesh* const mesh {new Mesh{}};
+	//CLAIR_DEBUG_LOG_IF(mesh->isValid(), "Mesh created successfully");
 	meshes.push_back(mesh);
 	return mesh;
 }
 
-Material* ResourceManager::createMaterial(const Byte* const data) {
-	CLAIR_ASSERT(data, "Material data is null");
-	Material* const material {new Material {data}};
-	CLAIR_DEBUG_LOG_IF(material->isValid(), "Material created successfully");
+Material* ResourceManager::createMaterial() {
+	Material* const material {new Material {}};
+	//CLAIR_DEBUG_LOG_IF(material->isValid(), "Material created successfully");
 	materials.push_back(material);
 	return material;
 }
@@ -69,11 +67,9 @@ Texture* ResourceManager::createTexture() {
 	return texture;
 }
 
-MaterialInstance*
-ResourceManager::createMaterialInstance(const Material* const material) {
-	CLAIR_ASSERT(material, "Material should not be null");
-	MaterialInstance* newInst {new MaterialInstance{material}};
-	CLAIR_DEBUG_LOG_IF(newInst->isValid(), "Texture created successfully");
+MaterialInstance* ResourceManager::createMaterialInstance() {
+	MaterialInstance* newInst {new MaterialInstance{}};
+	//CLAIR_DEBUG_LOG_IF(newInst->isValid(), "Texture created successfully");
 	matInstances.push_back(newInst);
 	return newInst;
 }

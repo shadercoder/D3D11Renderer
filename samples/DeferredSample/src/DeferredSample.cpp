@@ -1,12 +1,13 @@
 #include "DeferredSample.h"
 #include "Clair/Object.h"
+#include <Clair/Clair.h>
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
+#include "Clair/Mesh.h"
 #include "../../data/materials/default.h"
-#include <Clair/Clair.h>
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -18,11 +19,12 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	}
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
-	auto bunnyMesh = Clair::ResourceManager::createMesh(bunnyMeshData.get());
+	auto bunnyMesh = Clair::ResourceManager::createMesh();
+	bunnyMesh->initialize(bunnyMeshData.get());
 
 	auto defaultMatData = Loader::loadBinaryData("materials/default.cmat");
-	auto defaultMat =
-		Clair::ResourceManager::createMaterial(defaultMatData.get());
+	auto defaultMat = Clair::ResourceManager::createMaterial();
+	defaultMat->initialize(defaultMatData.get());
 
 	mScene = Clair::ResourceManager::createScene();
 	mBunny = mScene->createObject();

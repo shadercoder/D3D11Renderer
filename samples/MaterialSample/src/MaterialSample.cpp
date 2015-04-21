@@ -5,6 +5,7 @@
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
+#include "Clair/Mesh.h"
 #include "../../data/materials/pbrSimple.h"
 #include <Clair/Clair.h>
 //#include "vld.h"
@@ -22,14 +23,16 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texture->initialize(512, 512, test.get());
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
-	auto sphereMesh = Clair::ResourceManager::createMesh(sphereMeshData.get());
+	auto sphereMesh = Clair::ResourceManager::createMesh();
+	sphereMesh->initialize(sphereMeshData.get());
 
 	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
-	auto material = Clair::ResourceManager::createMaterial(matData.get());
+	auto material = Clair::ResourceManager::createMaterial();
+	material->initialize(matData.get());
 
 	auto skyMatData = Loader::loadBinaryData("materials/sky.cmat");
-	auto skyMaterial =
-		Clair::ResourceManager::createMaterial(skyMatData.get());
+	auto skyMaterial = Clair::ResourceManager::createMaterial();
+	skyMaterial->initialize(skyMatData.get());
 
 	mScene = Clair::ResourceManager::createScene();
 	const int size = 5;
@@ -51,8 +54,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		cbuf->Metalness = fz;
 	}}}
 
-	mSkyMaterialInstance =
-		Clair::ResourceManager::createMaterialInstance(skyMaterial);
+	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
+	mSkyMaterialInstance->initialize(skyMaterial);
 	mSkyMaterialInstance->setTexture(0, texture);
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();

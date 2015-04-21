@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Clair/Mesh.h"
 #include <d3d11.h>
 #include "Serialization.h"
 #include "VertexBuffer.h"
@@ -7,7 +7,7 @@
 
 using namespace Clair;
 
-Mesh::Mesh(const Byte* data) {
+void Mesh::initialize(const Byte* data) {
 	CLAIR_ASSERT(data, "Mesh data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
 	unsigned stride {0};

@@ -10,19 +10,20 @@ namespace Clair {
 
 	class Material {
 	public:
-		explicit Material(const Byte* data);
-		~Material();
-
-		template<typename T>
-		T* getConstantBufferPs() const;
+		void initialize(const Byte* data);
 
 		bool isValid() const;
 		VertexShader* getVertexShader() const;
 		PixelShader* getPixelShader() const;
 		ConstantBuffer* getConstantBufferPs() const;
 		const MaterialConstBufferData* getConstBufferData() const;
+		template<typename T>
+		T* getConstantBufferPs() const;
 
 	private:
+		Material() = default;
+		~Material();
+		friend class ResourceManager;
 		VertexLayout mVertexLayout {};
 		VertexShader* mVertexShader {nullptr};
 		PixelShader* mPixelShader {nullptr};

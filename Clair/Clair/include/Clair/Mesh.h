@@ -9,8 +9,7 @@ namespace Clair {
 
 	class Mesh {
 	public:
-		explicit Mesh(const Byte* data);
-		~Mesh();
+		void initialize(const Byte* data);
 
 		bool isValid() const;
 		VertexLayout& getVertexLayout();
@@ -19,6 +18,9 @@ namespace Clair {
 		unsigned getIndexBufferSize() const;
 
 	private:
+		Mesh() = default;
+		~Mesh();
+		friend class ResourceManager;
 		VertexLayout mVertexLayout {};
 		VertexBuffer* mVertexBuffer {nullptr};
 		IndexBuffer* mIndexBuffer {nullptr};

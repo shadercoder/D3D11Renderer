@@ -8,7 +8,7 @@
 
 using namespace Clair;
 
-Material::Material(const Byte* data) {
+void Material::initialize(const Byte* data) {
 	CLAIR_ASSERT(data, "Material data is null");
 	mVertexLayout = Serialization::readVertexLayoutFromBytes(data);
 	unsigned dataSizeVs {0};

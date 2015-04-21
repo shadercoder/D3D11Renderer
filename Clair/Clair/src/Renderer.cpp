@@ -6,7 +6,7 @@
 #include <vector>
 #include "Clair/Matrix.h"
 #include "Clair/Material.h"
-#include "Mesh.h"
+#include "Clair/Mesh.h"
 #include "LowLevelRenderer.h"
 #include "Clair/Debug.h"
 #include "Clair/Texture.h"

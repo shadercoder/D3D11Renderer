@@ -1,7 +1,7 @@
 #include "Clair/Object.h"
 #include "Clair/Material.h"
 #include "LowLevelRenderer.h"
-#include "Mesh.h"
+#include "Clair/Mesh.h"
 #include "InputLayout.h"
 
 using namespace Clair;
@@ -23,7 +23,8 @@ void Object::setMesh(Mesh* const mesh) {
 MaterialInstance* Object::setMaterial(const RenderPass pass,
 									  Material* const material) {
 	CLAIR_ASSERT(material, "Material is null");
-	MaterialInstance* const instance {new MaterialInstance{material}};
+	MaterialInstance* const instance {new MaterialInstance{}};
+	instance->initialize(material);
 	if (mMatInstances.count(pass) != 0) {
 		delete mMatInstances[pass];
 	}

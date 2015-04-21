@@ -2,7 +2,7 @@
 
 using namespace Clair;
 
-MaterialInstance::MaterialInstance(const Material* const material) {
+void MaterialInstance::initialize(const Material* const material) {
 	CLAIR_ASSERT(material, "Material is null");
 	mMaterial = material;
 	mCBufferData = new MaterialConstBufferData(0, 0, 0);
