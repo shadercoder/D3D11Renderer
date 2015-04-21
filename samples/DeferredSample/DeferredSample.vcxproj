@@ -10,19 +10,27 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\DeferredSample.cpp" />
+    <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\DeferredSample.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{02F6B314-A5AA-487C-84A6-7F2063B93446}</ProjectGuid>
-    <RootNamespace>Clair</RootNamespace>
+    <ProjectGuid>{D5E3369D-D6A7-4902-B74E-0F8C30C230E9}</ProjectGuid>
+    <RootNamespace>DeferredSample</RootNamespace>
+    <ProjectName>DeferredSample</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -42,25 +50,35 @@
     <OutDir>bin\</OutDir>
     <IntDir>build\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
+    <CustomBuildBeforeTargets>PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\</OutDir>
     <IntDir>build\$(Configuration)\</IntDir>
+    <CustomBuildBeforeTargets>PreBuildEvent</CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\..\Clair\Clair\include;F:\lib\Visual Leak Detector\include;..\..\lib\include;..\common\SampleFramework\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\Clair\Clair\bin\;..\..\lib;..\common\SampleFramework\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SampleFramework_d.lib;SDL2_d.lib;SDL2main_d.lib;Clair_d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
-    <Lib>
-      <TreatLibWarningAsErrors>true</TreatLibWarningAsErrors>
-    </Lib>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)\..\common\AssetBuildTool\bin\AssetBuildTool_d.exe $(ProjectDir)\..\common\rawdata\ $(ProjectDir)\..\common\data\</Command>
+      <Outputs>nonExistingFileNameSoItAlwaysExecutes</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -69,7 +87,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\..\Clair\Clair\include;F:\lib\Visual Leak Detector\include;..\..\lib\include;..\common\SampleFramework\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <PreprocessorDefinitions>NDEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -77,55 +95,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\..\Clair\Clair\bin\;..\..\lib;..\common\SampleFramework\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SampleFramework.lib;SDL2.lib;SDL2main.lib;Clair.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
-    <Lib>
-      <TreatLibWarningAsErrors>true</TreatLibWarningAsErrors>
-    </Lib>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)\..\common\AssetBuildTool\bin\AssetBuildTool.exe $(ProjectDir)\..\common\rawdata\ $(ProjectDir)\..\common\data\</Command>
+      <Outputs>nonExistingFileNameSoItAlwaysExecutes</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="src\Clair.cpp" />
-    <ClCompile Include="src\ConstantBuffer.cpp" />
-    <ClCompile Include="src\Debug.cpp" />
-    <ClCompile Include="src\IndexBuffer.cpp" />
-    <ClCompile Include="src\InputLayout.cpp" />
-    <ClCompile Include="src\LowLevelRenderer.cpp" />
-    <ClCompile Include="src\Material.cpp" />
-    <ClCompile Include="src\MaterialConstBufferData.cpp" />
-    <ClCompile Include="src\MaterialInstance.cpp" />
-    <ClCompile Include="src\Mesh.cpp" />
-    <ClCompile Include="src\Object.cpp" />
-    <ClCompile Include="src\PixelShader.cpp" />
-    <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\ResourceManager.cpp" />
-    <ClCompile Include="src\Scene.cpp" />
-    <ClCompile Include="src\Texture.cpp" />
-    <ClCompile Include="src\VertexBuffer.cpp" />
-    <ClCompile Include="src\VertexShader.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\Clair\Clair.h" />
-    <ClInclude Include="include\Clair\Debug.h" />
-    <ClInclude Include="include\Clair\MaterialConstBufferData.h" />
-    <ClInclude Include="include\Clair\MaterialInstance.h" />
-    <ClInclude Include="include\Clair\ResourceManager.h" />
-    <ClInclude Include="include\Clair\Texture.h" />
-    <ClInclude Include="src\ConstantBuffer.h" />
-    <ClInclude Include="include\Clair\RenderPass.h" />
-    <ClInclude Include="src\IndexBuffer.h" />
-    <ClInclude Include="src\InputLayout.h" />
-    <ClInclude Include="include\Clair\Material.h" />
-    <ClInclude Include="include\Clair\Matrix.h" />
-    <ClInclude Include="include\Clair\Object.h" />
-    <ClInclude Include="include\Clair\Renderer.h" />
-    <ClInclude Include="include\Clair\Scene.h" />
-    <ClInclude Include="include\Clair\VertexLayout.h" />
-    <ClInclude Include="src\LowLevelRenderer.h" />
-    <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\PixelShader.h" />
-    <ClInclude Include="src\Serialization.h" />
-    <ClInclude Include="src\VertexBuffer.h" />
-    <ClInclude Include="src\VertexShader.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

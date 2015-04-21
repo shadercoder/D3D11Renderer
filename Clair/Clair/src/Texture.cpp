@@ -4,13 +4,23 @@
 
 using namespace Clair;
 
-Texture::Texture(const Byte* const data) {
+Texture::~Texture() {
+	if (mD3dTexture) {
+		mD3dTexture->Release();
+	}
+	if (mD3dShaderResView) {
+		mD3dShaderResView->Release();
+	}
+}
+
+void Texture::initialize(const int width, const int height,
+						 const Byte* data) {
+	CLAIR_ASSERT(width > 0 && height > 0 && data, "Invalid texture parameters");
 	auto const d3dDevice = LowLevelRenderer::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	const int size = 512;
-	texDesc.Width = size;
-	texDesc.Height = size;
+	texDesc.Width = static_cast<UINT>(width);
+	texDesc.Height = static_cast<UINT>(height);
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = 1;
 	//texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -22,10 +32,10 @@ Texture::Texture(const Byte* const data) {
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
 
-	Byte* texData = new Byte[size * size * 4]();
-	for (unsigned y = 0; y < size; ++y) {
-		for (unsigned x = 0; x < size; ++x) {
-			const unsigned idx = (x + y * size) * 4;
+	Byte* texData = new Byte[width * height * 4]();
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			const int idx = (x + y * width) * 4;
 			texData[idx + 0] = data[idx + 0];
 			texData[idx + 1] = data[idx + 1];
 			texData[idx + 2] = data[idx + 2];
@@ -35,7 +45,7 @@ Texture::Texture(const Byte* const data) {
 	D3D11_SUBRESOURCE_DATA texInitData;
 	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	texInitData.pSysMem = texData;
-	texInitData.SysMemPitch = sizeof(Byte) * 512 * 4;
+	texInitData.SysMemPitch = sizeof(Byte) * width * 4;
 
 	if (!FAILED(d3dDevice->CreateTexture2D(&texDesc, &texInitData,
 										   &mD3dTexture))) {
@@ -45,14 +55,5 @@ Texture::Texture(const Byte* const data) {
 	if (!FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture, nullptr,
 												   &mD3dShaderResView))) {
 		mIsValid = true;
-	}
-}
-
-Texture::~Texture() {
-	if (mD3dTexture) {
-		mD3dTexture->Release();
-	}
-	if (mD3dShaderResView) {
-		mD3dShaderResView->Release();
 	}
 }

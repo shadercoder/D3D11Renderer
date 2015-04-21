@@ -3,7 +3,7 @@
 #include "Clair/Scene.h"
 #include "Clair/Matrix.h"
 
-class BasicSample : public SampleFramework::SampleBase {
+class DeferredSample : public SampleFramework::SampleBase {
 public:
 	bool initialize(HWND hwnd) override;
 	void terminate() override;

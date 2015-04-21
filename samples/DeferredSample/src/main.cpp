@@ -1,5 +1,5 @@
 #include "SampleFramework/SampleFramework.h"
-#include "BasicSample.h"
+#include "DeferredSample.h"
 
 #ifdef NDEBUG
 	#pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
@@ -8,8 +8,8 @@
 #endif
 
 int main(int, char* []) {
-	SampleFramework::SampleBase* const sample {new BasicSample{}};
-	if (!SampleFramework::Framework::run(sample, "Clair BasicSample",
+	SampleFramework::SampleBase* const sample {new DeferredSample{}};
+	if (!SampleFramework::Framework::run(sample, "Clair DeferredSample",
 										 960, 640,
 										 "../../common/data/")) {
 		delete sample;

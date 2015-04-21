@@ -26,9 +26,13 @@ Mesh::Mesh(const Byte* data) {
 	mVertexBuffer = new VertexBuffer {vertexData, numVertices * stride};
 	mIndexBuffer = new IndexBuffer {indexData, numIndices * sizeof(unsigned)};
 	mIndexBufferSize = numIndices;
+	if (mVertexBuffer->isValid() && mIndexBuffer->isValid()) {
+		mIsValid = true;
+	}
 }
 
 Mesh::~Mesh() {
 	delete mIndexBuffer;
 	delete mVertexBuffer;
 }
+

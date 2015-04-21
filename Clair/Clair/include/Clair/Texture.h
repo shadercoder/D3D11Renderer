@@ -8,14 +8,17 @@ struct ID3D11ShaderResourceView;
 namespace Clair {
 	class Texture {
 	public:
-		explicit Texture(const Byte* data);
-		~Texture();
+		void initialize(int width, int height, const Byte* data);
 
 		bool isValid() const;
 		const ID3D11Texture2D* getD3dTexture() const;
 		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
 
 	private:
+		Texture() = default;
+		~Texture();
+		friend class ResourceManager;
+
 		bool mIsValid {false};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};

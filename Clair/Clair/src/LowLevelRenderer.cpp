@@ -98,8 +98,8 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapDesc.SampleDesc.Count = 8;
-	swapDesc.SampleDesc.Quality = 8;
+	swapDesc.SampleDesc.Count = 1;
+	swapDesc.SampleDesc.Quality = 0;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapDesc.BufferCount = 1;
 	swapDesc.OutputWindow = hwnd;
@@ -133,8 +133,8 @@ bool LowLevelRenderer::initialize(const HWND hwnd) {
 	depthStencilBufferDesc.MipLevels = 1;
 	depthStencilBufferDesc.ArraySize = 1;
 	depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilBufferDesc.SampleDesc.Count = 8;
-	depthStencilBufferDesc.SampleDesc.Quality = 8;
+	depthStencilBufferDesc.SampleDesc.Count = 1;
+	depthStencilBufferDesc.SampleDesc.Quality = 0;
 	depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilBufferDesc.CPUAccessFlags = 0;
@@ -270,13 +270,13 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 
 	// new render target view
 	releaseComObject(renderTargetView);
-	HRESULT result = 0;
+	HRESULT result {0};
 	result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-	if (FAILED(result)) return;
-	ID3D11Texture2D* buffer = nullptr;
+	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
+	ID3D11Texture2D* buffer {nullptr};
 	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
 								  reinterpret_cast<LPVOID*>(&buffer));
-	if (FAILED(result)) return;
+	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 	result = d3dDevice->CreateRenderTargetView(buffer, nullptr,
 											   &renderTargetView);
 	releaseComObject(buffer);
@@ -289,8 +289,8 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 	depthStencilBufferDesc.MipLevels = 1;
 	depthStencilBufferDesc.ArraySize = 1;
 	depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilBufferDesc.SampleDesc.Count = 8;
-	depthStencilBufferDesc.SampleDesc.Quality = 8;
+	depthStencilBufferDesc.SampleDesc.Count = 1;
+	depthStencilBufferDesc.SampleDesc.Quality = 0;
 	depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilBufferDesc.CPUAccessFlags = 0;
@@ -299,12 +299,12 @@ void LowLevelRenderer::setViewport(const int x, const int y,
 	releaseComObject(depthStencilBuffer);
 	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
 							   &depthStencilBuffer);
-	if (FAILED(result)) return;
+	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 
 	releaseComObject(depthStencilView);
 	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
 											   &depthStencilView);
-	if (FAILED(result)) return;
+	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 
 	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
 										 depthStencilView);

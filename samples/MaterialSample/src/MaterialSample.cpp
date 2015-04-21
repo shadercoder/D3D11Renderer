@@ -1,5 +1,4 @@
 #include "MaterialSample.h"
-#include "Clair/Renderer.h"
 #include "Clair/Object.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
@@ -7,29 +6,32 @@
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
 #include "../../data/materials/pbrSimple.h"
+#include <Clair/Clair.h>
 //#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
 
 bool MaterialSample::initialize(const HWND hwnd) {
-	if (!Clair::Renderer::initialize(hwnd, Logger::logCallback)) {
+	if (!Clair::initialize(hwnd, Logger::logCallback)) {
 		return false;
 	}
 
 	auto test = Loader::loadImageData("textures/avatar.png");
-	auto texture = Clair::Renderer::createTexture(test.get());
+	auto texture = Clair::ResourceManager::createTexture();
+	texture->initialize(512, 512, test.get());
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
-	auto sphereMesh = Clair::Renderer::createMesh(sphereMeshData.get());
+	auto sphereMesh = Clair::ResourceManager::createMesh(sphereMeshData.get());
 
 	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
-	auto material = Clair::Renderer::createMaterial(matData.get());
+	auto material = Clair::ResourceManager::createMaterial(matData.get());
 
 	auto skyMatData = Loader::loadBinaryData("materials/sky.cmat");
-	auto skyMaterial = Clair::Renderer::createMaterial(skyMatData.get());
+	auto skyMaterial =
+		Clair::ResourceManager::createMaterial(skyMatData.get());
 
-	mScene = Clair::Renderer::createScene();
+	mScene = Clair::ResourceManager::createScene();
 	const int size = 5;
 	const float fsize = static_cast<float>(size);
 	for (int x = 0; x < size; ++x) {
@@ -49,7 +51,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		cbuf->Metalness = fz;
 	}}}
 
-	mSkyMaterialInstance = Clair::Renderer::createMaterialInstance(skyMaterial);
+	mSkyMaterialInstance =
+		Clair::ResourceManager::createMaterialInstance(skyMaterial);
 	mSkyMaterialInstance->setTexture(0, texture);
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
@@ -59,7 +62,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 }
 
 void MaterialSample::terminate() {
-	Clair::Renderer::terminate();
+	Clair::terminate();
 }
 
 void MaterialSample::onResize(const int width, const int height,

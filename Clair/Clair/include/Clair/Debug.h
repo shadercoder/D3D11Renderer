@@ -3,6 +3,9 @@
 #include <sstream>
 #include <functional>
 
+struct HWND__;
+typedef HWND__* HWND;
+
 namespace Clair {
 	#ifdef NDEBUG
 		#define CLAIR_ASSERT(condition, message)
@@ -33,15 +36,15 @@ namespace Clair {
 
 	class Log {
 	public:
+		static void setCallback(LogCallback callback);
+
 		static void log(const std::string& message) {
 			msCallback(message);
 		}
 
 	private:
-		friend class Renderer;
 		static LogCallback msCallback;
 	};
-
 
 	#define CLAIR_LOG(message)\
 		Clair::Log::log(message)

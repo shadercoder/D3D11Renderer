@@ -1,4 +1,4 @@
-#include "BasicSample.h"
+#include "DeferredSample.h"
 #include "Clair/Object.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
@@ -12,7 +12,7 @@
 using namespace SampleFramework;
 using namespace glm;
 
-bool BasicSample::initialize(const HWND hwnd) {
+bool DeferredSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::logCallback)) {
 		return false;
 	}
@@ -36,23 +36,23 @@ bool BasicSample::initialize(const HWND hwnd) {
 	return true;
 }
 
-void BasicSample::terminate() {
+void DeferredSample::terminate() {
 	Clair::terminate();
 }
 
-void BasicSample::onResize(const int width, const int height,
+void DeferredSample::onResize(const int width, const int height,
 						   const float aspect) {
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
 }
 
-void BasicSample::update() {
+void DeferredSample::update() {
 	mConstBuffer->Time = getRunningTime();
 	Camera::update(getDeltaTime());
 }
 
-void BasicSample::render() {
+void DeferredSample::render() {
 	Clair::Renderer::clear(true);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);

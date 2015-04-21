@@ -9,9 +9,10 @@ namespace Clair {
 
 	class Mesh {
 	public:
-		Mesh(const Byte* data);
+		explicit Mesh(const Byte* data);
 		~Mesh();
 
+		bool isValid() const;
 		VertexLayout& getVertexLayout();
 		VertexBuffer* getVertexBuffer() const;
 		IndexBuffer* getIndexBuffer() const;
@@ -22,7 +23,12 @@ namespace Clair {
 		VertexBuffer* mVertexBuffer {nullptr};
 		IndexBuffer* mIndexBuffer {nullptr};
 		unsigned mIndexBufferSize {0};
+		bool mIsValid {false};
 	};
+
+	inline bool Mesh::isValid() const {
+		return mIsValid;
+	}
 
 	inline VertexLayout& Mesh::getVertexLayout() {
 		return mVertexLayout;

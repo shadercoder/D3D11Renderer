@@ -8,7 +8,7 @@
 #endif
 
 int main(int, char* []) {
-	MaterialSample* const sample {new MaterialSample{}};
+	SampleFramework::SampleBase* const sample {new MaterialSample{}};
 	if (!SampleFramework::Framework::run(sample, "Clair MaterialSample",
 										 960, 640,
 										 "../../common/data/")) {

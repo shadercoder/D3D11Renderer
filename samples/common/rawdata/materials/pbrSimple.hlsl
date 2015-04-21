@@ -50,8 +50,9 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	float3 reflCol =
 		texAlbedo.Sample(samplerLinear, (refl.xz / refl.y) * 0.1).rgb;
+	reflCol = pow(reflCol, 2.2);
 	float3 col = albedo * diff;
-	col = pow(col, 1.0 / 2.2);
 	col = lerp(col, lerp(reflCol, reflCol * albedo, Metalness), Reflectivity);
+	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);
 }
