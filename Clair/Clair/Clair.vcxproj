@@ -88,7 +88,7 @@
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\InputLayout.cpp" />
-    <ClCompile Include="src\LowLevelRenderer.cpp" />
+    <ClCompile Include="src\D3dDevice.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\MaterialConstBufferData.cpp" />
     <ClCompile Include="src\MaterialInstance.cpp" />
@@ -119,7 +119,7 @@
     <ClInclude Include="include\Clair\Renderer.h" />
     <ClInclude Include="include\Clair\Scene.h" />
     <ClInclude Include="include\Clair\VertexLayout.h" />
-    <ClInclude Include="src\LowLevelRenderer.h" />
+    <ClInclude Include="src\D3dDevice.h" />
     <ClInclude Include="include\Clair\Mesh.h" />
     <ClInclude Include="src\PixelShader.h" />
     <ClInclude Include="src\Serialization.h" />

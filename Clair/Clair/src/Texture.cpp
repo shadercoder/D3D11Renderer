@@ -1,6 +1,5 @@
 #include "Clair/Texture.h"
-#include "LowLevelRenderer.h"
-#include <d3d11.h>
+#include "D3dDevice.h"
 
 using namespace Clair;
 
@@ -20,7 +19,7 @@ void Texture::initialize(const int width, const int height,
 						 const Byte* data, const bool isRenderTarget) {
 	CLAIR_ASSERT(data, "Texture data should not be null");
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
-	auto const d3dDevice = LowLevelRenderer::getD3dDevice();
+	auto const d3dDevice = D3dDevice::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 	texDesc.Width = static_cast<UINT>(width);
@@ -71,7 +70,7 @@ void Texture::initialize(const int width, const int height,
 void Texture::clearRenderTarget(const Float4& color) {
 	CLAIR_ASSERT(mIsRenderTarget, "Texture needs to be a render target");
 	ID3D11DeviceContext* d3dContext {nullptr};
-	LowLevelRenderer::getD3dDevice()->GetImmediateContext(&d3dContext);
+	D3dDevice::getD3dDevice()->GetImmediateContext(&d3dContext);
 	d3dContext->Release();
 	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &color[0][0]);
 }

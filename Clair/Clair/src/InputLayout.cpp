@@ -1,7 +1,6 @@
 #include "InputLayout.h"
-#include <d3d11.h>
 #include "VertexShader.h"
-#include "LowLevelRenderer.h"
+#include "D3dDevice.h"
 #include "Clair/Debug.h"
 
 using namespace Clair;
@@ -27,7 +26,7 @@ InputLayout::InputLayout(const VertexLayout& vertexLayout,
 		layoutDesc.push_back({it.name.c_str(), 0, format, 0, offset,
 							  D3D11_INPUT_PER_VERTEX_DATA, 0});
 	}
-	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
+	ID3D11Device* const d3dDevice = D3dDevice::getD3dDevice();
 	const HRESULT result {
 		d3dDevice->CreateInputLayout(layoutDesc.data(), layoutDesc.size(),
 										  vertexShader->getByteCode(),

@@ -57,7 +57,7 @@ void DeferredSample::update() {
 void DeferredSample::render() {
 	Clair::Renderer::clear(true);
 	Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
-	screen->clearRenderTarget({0.2f, 0.4f, 0.6f, 1.0f});
+	screen->clearRenderTarget({1.0f, 0.5f, 0.1f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

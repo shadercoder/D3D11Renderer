@@ -1,6 +1,5 @@
 #include "IndexBuffer.h"
-#include <d3d11.h>
-#include "LowLevelRenderer.h"
+#include "D3dDevice.h"
 
 using namespace Clair;
 
@@ -19,7 +18,7 @@ IndexBuffer::IndexBuffer(const unsigned* const bufferData,
 	ZeroMemory(&indexInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	indexInitData.pSysMem = bufferData;
 
-	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
+	ID3D11Device* const d3dDevice = D3dDevice::getD3dDevice();
 	const HRESULT result {
 		d3dDevice->CreateBuffer(&indexBufferDesc, &indexInitData,
 								&mD3dBuffer)

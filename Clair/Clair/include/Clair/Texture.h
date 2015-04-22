@@ -23,7 +23,7 @@ namespace Clair {
 		Texture() = default;
 		~Texture();
 		friend class ResourceManager;
-		friend class LowLevelRenderer;
+		friend class Renderer;
 
 		bool mIsValid {false};
 		bool mIsRenderTarget {false};

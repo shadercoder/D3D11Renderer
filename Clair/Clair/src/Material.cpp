@@ -1,10 +1,8 @@
 #include "Clair/Material.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
-#include <d3d11.h>
 #include "Serialization.h"
 #include "ConstantBuffer.h"
-#include "LowLevelRenderer.h"
 
 using namespace Clair;
 

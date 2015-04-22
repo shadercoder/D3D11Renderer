@@ -1,14 +1,14 @@
 #include "VertexShader.h"
-#include <d3d11.h>
-#include "LowLevelRenderer.h"
+#include "D3dDevice.h"
 
 using namespace Clair;
+
 VertexShader::VertexShader(const Byte* const byteCode,
 						   const unsigned byteCodeSize)
 	: mByteCodeSize	{byteCodeSize} {
 	mByteCode = new Byte[byteCodeSize];
 	memcpy(mByteCode, byteCode, byteCodeSize);
-	ID3D11Device* const d3dDevice = LowLevelRenderer::getD3dDevice();
+	ID3D11Device* const d3dDevice = D3dDevice::getD3dDevice();
 	const HRESULT result {
 		d3dDevice->CreateVertexShader(byteCode, byteCodeSize,
 									  nullptr, &mD3dShader)

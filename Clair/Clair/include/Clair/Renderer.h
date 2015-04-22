@@ -3,13 +3,16 @@
 #include "Clair/Matrix.h"
 #include "Clair/Texture.h"
 
+struct HWND__;
+typedef HWND__* HWND;
+
 namespace Clair {
 	class Scene;
 	class MaterialInstance;
 
 	class Renderer {
 	public:
-		static bool initialize();
+		static bool initialize(HWND hwnd);
 		static void terminate();
 
 		static void setViewport(int x, int y, int width, int height);
@@ -23,5 +26,12 @@ namespace Clair {
 		static void render(Scene* scene);
 		static void renderScreenQuad(const MaterialInstance* materialInstance);
 		static Texture* getDefaultRenderTarget();
+
+	private:
+		static Texture* msDefaultRenderTarget;
 	};
-};
+
+	inline Texture* Renderer::getDefaultRenderTarget() {
+		return msDefaultRenderTarget;
+	}
+}

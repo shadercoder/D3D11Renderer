@@ -1,6 +1,5 @@
 #include "Clair/Object.h"
 #include "Clair/Material.h"
-#include "LowLevelRenderer.h"
 #include "Clair/Mesh.h"
 #include "InputLayout.h"
 

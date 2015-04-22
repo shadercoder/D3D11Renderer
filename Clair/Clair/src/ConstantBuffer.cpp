@@ -1,6 +1,5 @@
 #include "ConstantBuffer.h"
-#include <d3d11.h>
-#include "LowLevelRenderer.h"
+#include "D3dDevice.h"
 
 using namespace Clair;
 
@@ -20,7 +19,7 @@ ConstantBuffer::ConstantBuffer(const size_t size) {
 	constInitData.pSysMem = testInitData;
 
 	const HRESULT result {
-		LowLevelRenderer::getD3dDevice()->CreateBuffer(&constBufferDesc,
+		D3dDevice::getD3dDevice()->CreateBuffer(&constBufferDesc,
 													   &constInitData,
 													   &mD3dBuffer)};
 	if (!FAILED(result)) {
