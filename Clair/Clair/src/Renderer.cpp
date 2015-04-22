@@ -12,11 +12,11 @@
 #include "Clair/RenderPass.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "InputLayout.h"
 #include "ConstantBuffer.h"
 #include "Clair/MaterialInstance.h"
+#include "Clair/RenderTargetGroup.h"
+#include "Clair/ResourceManager.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -27,8 +27,6 @@ namespace {
 	ID3D11Device* d3dDevice {nullptr};
 	ID3D11DeviceContext* d3dDeviceContext {nullptr};
 	IDXGISwapChain* swapChain {nullptr};
-	ID3D11DepthStencilView* depthStencilView {nullptr};
-	ID3D11Texture2D* depthStencilBuffer {nullptr};
 	ID3D11RasterizerState* rasterizerState {nullptr};
 
 	ID3D11SamplerState* samplerState = nullptr;
@@ -61,9 +59,12 @@ namespace {
 	VertexBuffer* gQuadVertexBuffer {nullptr};
 	IndexBuffer* gQuadIndexBuffer {nullptr};
 	InputLayout* gQuadInputLayout {nullptr};
+
+	RenderTarget* msDefaultRenderTarget {nullptr};
+	DepthStencilTarget* msDefaultDepthStencilTarget {nullptr};
 }
 
-Texture* Renderer::msDefaultRenderTarget {nullptr};
+RenderTargetGroup* Renderer::msDefaultRenderTargetGroup {nullptr};
 
 template<typename T>
 inline static void releaseComObject(T& comObject) {
@@ -74,9 +75,6 @@ inline static void releaseComObject(T& comObject) {
 }
 
 bool Renderer::initialize(const HWND hwnd) {
-	if (!D3dDevice::initialize(hwnd)) {
-		return false;
-	}
 	d3dDevice = D3dDevice::getD3dDevice();
 	d3dDeviceContext = D3dDevice::getD3dDeviceContext();
 	swapChain = D3dDevice::getSwapChain();
@@ -86,23 +84,24 @@ bool Renderer::initialize(const HWND hwnd) {
 	const UINT clientWidth = clientRect.right - clientRect.left;
 	const UINT clientHeight = clientRect.bottom - clientRect.top;
 
-	//result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
-	//							  reinterpret_cast<LPVOID*>(&backBuffer));
 	HRESULT result {};
-	msDefaultRenderTarget = new Texture();
-	msDefaultRenderTarget->mIsValid = true;
-	msDefaultRenderTarget->mIsRenderTarget = true;
+
+	// creating default render target and depth/stencil target
+	auto defaultRenderTex = ResourceManager::createTexture();
+	defaultRenderTex->mIsValid = true;
+	defaultRenderTex->mType = Texture::Type::RENDER_TARGET;
+	msDefaultRenderTarget = ResourceManager::createRenderTarget();
 	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
-				reinterpret_cast<LPVOID*>(&msDefaultRenderTarget->mD3dTexture));
+				reinterpret_cast<LPVOID*>(&defaultRenderTex->mD3dTexture));
+	if (FAILED(result)) return false;
+	msDefaultRenderTarget->initialize(defaultRenderTex);
+	releaseComObject(defaultRenderTex->mD3dTexture);
 	
-	if (FAILED(result)) return false;
 
-	result = d3dDevice->CreateRenderTargetView(
-		msDefaultRenderTarget->mD3dTexture, nullptr,
-		&msDefaultRenderTarget->mD3dRenderTargetView);
-	releaseComObject(msDefaultRenderTarget->mD3dTexture);
-	if (FAILED(result)) return false;
-
+	auto defaultDepthStencilTex = ResourceManager::createTexture();
+	defaultDepthStencilTex->mIsValid = true;
+	defaultDepthStencilTex->mType = Texture::Type::DEPTH_STENCIL_TARGET;
+	msDefaultDepthStencilTarget = ResourceManager::createDepthStencilTarget();
 	D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
 	ZeroMemory(&depthStencilBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
 	depthStencilBufferDesc.Width = clientWidth;
@@ -116,18 +115,20 @@ bool Renderer::initialize(const HWND hwnd) {
 	depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilBufferDesc.CPUAccessFlags = 0;
 	depthStencilBufferDesc.MiscFlags = 0;
-
-	result = d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
-										&depthStencilBuffer);
+	result = d3dDevice->CreateTexture2D(
+		&depthStencilBufferDesc, nullptr,
+		&defaultDepthStencilTex->mD3dTexture);
 	if (FAILED(result)) return false;
+	msDefaultDepthStencilTarget->initialize(defaultDepthStencilTex);
 
-	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
-											   &depthStencilView);
-	if (FAILED(result)) return false;
+	msDefaultRenderTargetGroup = new RenderTargetGroup{1};
+	msDefaultRenderTargetGroup->setRenderTarget(0, msDefaultRenderTarget);
+	msDefaultRenderTargetGroup->
+		setDepthStencilTarget(msDefaultDepthStencilTarget);
 
-	d3dDeviceContext->OMSetRenderTargets(
-		1, &msDefaultRenderTarget->mD3dRenderTargetView, depthStencilView);
+	setRenderTargetGroup(nullptr);
 
+	// other stuff
 	D3D11_RASTERIZER_DESC rasterizerDesc;
 	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
@@ -203,28 +204,18 @@ bool Renderer::initialize(const HWND hwnd) {
 }
 
 void Renderer::terminate() {
-	delete msDefaultRenderTarget;
-	if (swapChain) swapChain->SetFullscreenState(FALSE, NULL);
+	//releaseComObject(msDefaultDepthStencilTarget->mTexture->mD3dTexture);
+	//releaseComObject(msDefaultDepthStencilTarget->mTexture->mD3dShaderResView);
+	delete msDefaultRenderTargetGroup;
+	if (swapChain) swapChain->SetFullscreenState(FALSE, nullptr);
 	if (gQuadInputLayout) delete gQuadInputLayout;
 	delete gQuadIndexBuffer;
 	delete gQuadVertexBuffer;
 	releaseComObject(samplerState);
 	releaseComObject(constantBuffer);
 	releaseComObject(rasterizerState);
-	releaseComObject(depthStencilBuffer);
-	releaseComObject(depthStencilView);
-	D3dDevice::terminate();
-}
-
-void Renderer::clear(const bool clearCol) {
-	if (clearCol) {
-		//const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
-		//d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
-	}
-	d3dDeviceContext->ClearDepthStencilView(
-										depthStencilView,
-										D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL,
-										1.0f, 0);
+	//releaseComObject(msDefaultRenderTarget);
+	//releaseComObject(msDefaultDepthStencilTarget);
 }
 
 void Renderer::finalizeFrame() {
@@ -266,18 +257,18 @@ void Renderer::setViewport(const int x, const int y,
 	depthStencilBufferDesc.CPUAccessFlags = 0;
 	depthStencilBufferDesc.MiscFlags = 0;
 
-	releaseComObject(depthStencilBuffer);
+	releaseComObject(msDefaultDepthStencilTarget->mTexture->mD3dTexture);
 	d3dDevice->CreateTexture2D(&depthStencilBufferDesc, nullptr,
-							   &depthStencilBuffer);
+		&msDefaultDepthStencilTarget->mTexture->mD3dTexture);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 
-	releaseComObject(depthStencilView);
-	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
-											   &depthStencilView);
+	releaseComObject(msDefaultDepthStencilTarget->mTexture->mD3dShaderResView);
+	result = d3dDevice->CreateDepthStencilView(
+		msDefaultDepthStencilTarget->mTexture->mD3dTexture, nullptr,
+		&msDefaultDepthStencilTarget->mD3dDepthStencilTargetView);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 
-	d3dDeviceContext->OMSetRenderTargets(
-		1, &msDefaultRenderTarget->mD3dRenderTargetView, depthStencilView);
+	setRenderTargetGroup(nullptr);
 
 	// new viewport
 	D3D11_VIEWPORT viewport = {0};
@@ -367,6 +358,22 @@ void Renderer::setRenderPass(const RenderPass pass) {
 
 void Renderer::setCameraPosition(const Float3& position) {
 	cameraPosition = position;
+}
+
+void Renderer::setRenderTargetGroup(const RenderTargetGroup* const group) {
+	auto renderTargetView = msDefaultRenderTarget->mD3dRenderTargetView;
+	auto depthStencilView =
+		msDefaultDepthStencilTarget->mD3dDepthStencilTargetView;
+
+	if (group) {
+		renderTargetView = group->getRenderTarget(0)->mD3dRenderTargetView;
+		depthStencilView =
+			group->getDepthStencilTarget()->mD3dDepthStencilTargetView;
+	}
+
+	d3dDeviceContext->OMSetRenderTargets(
+		1, &renderTargetView,
+		depthStencilView);
 }
 
 void Renderer::renderScreenQuad(

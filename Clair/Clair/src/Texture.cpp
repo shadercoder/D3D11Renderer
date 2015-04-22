@@ -1,5 +1,6 @@
 #include "Clair/Texture.h"
 #include "D3dDevice.h"
+#include "Clair/Debug.h"
 
 using namespace Clair;
 
@@ -10,15 +11,13 @@ Texture::~Texture() {
 	if (mD3dShaderResView) {
 		mD3dShaderResView->Release();
 	}
-	if (mD3dRenderTargetView) {
-		mD3dRenderTargetView->Release();
-	}
 }
 
 void Texture::initialize(const int width, const int height,
-						 const Byte* data, const bool isRenderTarget) {
+						 const Byte* data, const Type type) {
 	CLAIR_ASSERT(data, "Texture data should not be null");
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
+	mType = type;
 	auto const d3dDevice = D3dDevice::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -32,8 +31,10 @@ void Texture::initialize(const int width, const int height,
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
 	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	if (isRenderTarget) {
+	if (type == Type::RENDER_TARGET) {
 		texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+	} else if (type == Type::DEPTH_STENCIL_TARGET) {
+		texDesc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
 	}
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
@@ -58,19 +59,4 @@ void Texture::initialize(const int width, const int height,
 	delete[] texData;
 	mIsValid = !FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture, nullptr,
 														   &mD3dShaderResView));
-	if (isRenderTarget) {
-		mIsRenderTarget = true;
-		HRESULT result {};
-		result = d3dDevice->CreateRenderTargetView(mD3dTexture, nullptr,
-												   &mD3dRenderTargetView);
-		mIsValid = !FAILED(result);
-	}
-}
-
-void Texture::clearRenderTarget(const Float4& color) {
-	CLAIR_ASSERT(mIsRenderTarget, "Texture needs to be a render target");
-	ID3D11DeviceContext* d3dContext {nullptr};
-	D3dDevice::getD3dDevice()->GetImmediateContext(&d3dContext);
-	d3dContext->Release();
-	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &color[0][0]);
 }

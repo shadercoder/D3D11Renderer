@@ -1,21 +1,23 @@
 #pragma once
-#include "Clair/Matrix.h"
 
 typedef unsigned char Byte;
 
 struct ID3D11Texture2D;
 struct ID3D11ShaderResourceView;
-struct ID3D11RenderTargetView;
 
 namespace Clair {
 	class Texture {
 	public:
+		enum class Type {
+			DEFAULT,
+			RENDER_TARGET,
+			DEPTH_STENCIL_TARGET
+		};
 		void initialize(int width, int height,
-						const Byte* data, bool isRenderTarget = false);
-		void clearRenderTarget(const Float4& color);
+						const Byte* data, Type option = Type::DEFAULT);
 
 		bool isValid() const;
-		bool isRenderTarget() const;
+		Type getType() const;
 		const ID3D11Texture2D* getD3dTexture() const;
 		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
 
@@ -24,11 +26,12 @@ namespace Clair {
 		~Texture();
 		friend class ResourceManager;
 		friend class Renderer;
+		friend class RenderTarget;
+		friend class DepthStencilTarget;
 
 		bool mIsValid {false};
-		bool mIsRenderTarget {false};
+		Type mType {Type::DEFAULT};
 		ID3D11Texture2D* mD3dTexture {nullptr};
-		ID3D11RenderTargetView* mD3dRenderTargetView {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
 	};
 
@@ -36,8 +39,8 @@ namespace Clair {
 		return mIsValid;
 	}
 
-	inline bool Texture::isRenderTarget() const {
-		return mIsRenderTarget;
+	inline Texture::Type Texture::getType() const {
+		return mType;
 	}
 
 	inline const ID3D11Texture2D* Texture::getD3dTexture() const {
