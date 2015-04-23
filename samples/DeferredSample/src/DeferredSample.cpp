@@ -10,7 +10,7 @@
 #include "Clair/RenderTargetGroup.h"
 //#include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/default.h"
-#include "vld.h"
+//#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
