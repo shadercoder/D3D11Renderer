@@ -5,11 +5,6 @@
 #include <vector>
 
 namespace Clair {
-	class Mesh;
-	class Material;
-	class RenderTarget;
-	class DepthStencilTarget;
-
 	class ResourceManager {
 	public:
 		static bool initialize();
@@ -20,8 +15,6 @@ namespace Clair {
 		static class Material* createMaterial();
 		static class Texture* createTexture();
 		static class MaterialInstance* createMaterialInstance();
-		static class RenderTarget* createRenderTarget();
-		static class DepthStencilTarget* createDepthStencilTarget();
 
 	private:
 		static std::vector<Scene*> msSceneVec;
@@ -29,7 +22,5 @@ namespace Clair {
 		static std::vector<Material*> msMaterialVec;
 		static std::vector<Texture*> msTextureVec;
 		static std::vector<MaterialInstance*> msMaterialInstanceVec;
-		static std::vector<RenderTarget*> msRenderTargetVec;
-		static std::vector<DepthStencilTarget*> msDepthStencilTargetVec;
 	};
 };

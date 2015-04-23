@@ -17,14 +17,13 @@ namespace Clair {
 		static void terminate();
 
 		static void setViewport(int x, int y, int width, int height);
+		static void clear(bool clearCol);
 		static void finalizeFrame();
 
 		static void setRenderPass(RenderPass pass);
 		static void setViewMatrix(const Float4x4& view);
 		static void setProjectionMatrix(const Float4x4& projection);
 		static void setCameraPosition(const Float3& position);
-		// if nullptr, sets default render target group
-		static void setRenderTargetGroup(const RenderTargetGroup* group);
 		static void render(Scene* scene);
 		static void renderScreenQuad(const MaterialInstance* materialInstance);
 		static RenderTargetGroup* getDefaultRenderTargetGroup();

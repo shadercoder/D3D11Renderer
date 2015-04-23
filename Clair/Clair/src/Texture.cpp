@@ -5,6 +5,7 @@
 using namespace Clair;
 
 Texture::~Texture() {
+	if (!mIsValid) return;
 	if (mD3dTexture) {
 		mD3dTexture->Release();
 	}

@@ -28,6 +28,7 @@ void DepthStencilTarget::clearDepth(float value) {
 }
 
 DepthStencilTarget::~DepthStencilTarget() {
+	if (!mIsValid) return;
 	if (mD3dDepthStencilTargetView) {
 		mD3dDepthStencilTargetView->Release();
 	}

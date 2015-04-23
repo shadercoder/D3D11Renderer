@@ -19,6 +19,7 @@ void RenderTarget::initialize(Texture* const texture) {
 }
 
 RenderTarget::~RenderTarget() {
+	if (!mIsValid) return;
 	if (mD3dRenderTargetView) {
 		mD3dRenderTargetView->Release();
 	}
