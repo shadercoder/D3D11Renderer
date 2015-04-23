@@ -24,7 +24,6 @@ void DepthStencilTarget::clearDepth(float value) {
 										mD3dDepthStencilTargetView,
 										D3D11_CLEAR_DEPTH,
 										value, 0);
-	d3dDeviceContext->Release();
 }
 
 DepthStencilTarget::~DepthStencilTarget() {

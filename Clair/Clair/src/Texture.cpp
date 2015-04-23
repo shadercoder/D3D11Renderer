@@ -16,7 +16,7 @@ Texture::~Texture() {
 
 void Texture::initialize(const int width, const int height,
 						 const Byte* data, const Type type) {
-	CLAIR_ASSERT(data, "Texture data should not be null");
+	//CLAIR_ASSERT(data, "Texture data should not be null");
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
 	mType = type;
 	auto const d3dDevice = D3dDevice::getD3dDevice();
@@ -31,23 +31,27 @@ void Texture::initialize(const int width, const int height,
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
-	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	if (type == Type::RENDER_TARGET) {
-		texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
 	} else if (type == Type::DEPTH_STENCIL_TARGET) {
-		texDesc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+		texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		texDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	} else {
+		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	}
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
 
 	Byte* texData = new Byte[width * height * 4]();
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			const int idx = (x + y * width) * 4;
-			texData[idx + 0] = data[idx + 0];
-			texData[idx + 1] = data[idx + 1];
-			texData[idx + 2] = data[idx + 2];
-			texData[idx + 3] = 127;
+	if (data) {
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				const int idx = (x + y * width) * 4;
+				texData[idx + 0] = data[idx + 0];
+				texData[idx + 1] = data[idx + 1];
+				texData[idx + 2] = data[idx + 2];
+				texData[idx + 3] = 127;
+			}
 		}
 	}
 	D3D11_SUBRESOURCE_DATA texInitData;
@@ -58,6 +62,8 @@ void Texture::initialize(const int width, const int height,
 	mIsValid = !FAILED(d3dDevice->CreateTexture2D(&texDesc, &texInitData,
 												  &mD3dTexture));
 	delete[] texData;
-	mIsValid = !FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture, nullptr,
-														   &mD3dShaderResView));
+	if (type != Type::DEPTH_STENCIL_TARGET) {
+		mIsValid = !FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture,
+			nullptr, &mD3dShaderResView));
+	}
 }

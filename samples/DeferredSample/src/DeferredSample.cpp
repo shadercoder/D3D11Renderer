@@ -8,16 +8,43 @@
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
 #include "Clair/RenderTargetGroup.h"
+//#include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/default.h"
-//#include "vld.h"
+#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
+
+Clair::RenderTarget* mRenderTarget {nullptr};
+Clair::DepthStencilTarget* mDepthTarget {nullptr};
+Clair::RenderTargetGroup* mRenderTargetGroup {nullptr};
 
 bool DeferredSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
+	auto loadedTex = Loader::loadImageData("textures/avatar.png");
+	auto texture = Clair::ResourceManager::createTexture();
+	texture->initialize(
+		loadedTex.width, loadedTex.height, loadedTex.data,
+		Clair::Texture::Type::RENDER_TARGET);
+	auto depthTex = Clair::ResourceManager::createTexture();
+	depthTex->initialize(512, 512, nullptr,
+		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
+	mRenderTarget = Clair::ResourceManager::createRenderTarget();
+	mRenderTarget->initialize(texture);
+	mDepthTarget = Clair::ResourceManager::createDepthStencilTarget();
+	mDepthTarget->initialize(depthTex);
+	mRenderTargetGroup = new Clair::RenderTargetGroup{1};
+	mRenderTargetGroup->setRenderTarget(0, mRenderTarget);
+	mRenderTargetGroup->setDepthStencilTarget(mDepthTarget);
+
+	auto drawTexMatData = Loader::loadBinaryData("materials/drawTexture.cmat");
+	auto drawTexMat = Clair::ResourceManager::createMaterial();
+	drawTexMat->initialize(drawTexMatData.get());
+	mDrawTexture = Clair::ResourceManager::createMaterialInstance();
+	mDrawTexture->initialize(drawTexMat);
+	mDrawTexture->setTexture(0, texture);
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
@@ -40,6 +67,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 }
 
 void DeferredSample::terminate() {
+	delete mRenderTargetGroup;
 	Clair::terminate();
 }
 
@@ -56,10 +84,19 @@ void DeferredSample::update() {
 }
 
 void DeferredSample::render() {
-	Clair::Renderer::clear(true);
-	//auto screen = Clair::Renderer::getDefaultRenderTargetGroup();
-	//screen->getRenderTarget(0)->clear({1.0f, 0.0f, 0.0f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
+	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
+
+	Clair::Renderer::clear(true);
+
+	Clair::Renderer::setRenderTargetGroup(mRenderTargetGroup);
+	mRenderTarget->clear({1.0f, 0.0f, 0.0f, 1.0f});
+	mDepthTarget->clearDepth(1.0f);
 	Clair::Renderer::render(mScene);
+
+	Clair::Renderer::setRenderTargetGroup(nullptr);
+	Clair::Renderer::clear(false);
+	Clair::Renderer::renderScreenQuad(mDrawTexture);
+
 	Clair::Renderer::finalizeFrame();
 }

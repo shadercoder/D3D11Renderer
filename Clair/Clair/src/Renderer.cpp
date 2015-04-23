@@ -238,8 +238,8 @@ void Renderer::terminate() {
 
 void Renderer::clear(const bool clearCol) {
 	if (clearCol) {
-		//const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
-		//d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
+		const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
+		d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
 	}
 	d3dDeviceContext->ClearDepthStencilView(
 										depthStencilView,
@@ -249,6 +249,17 @@ void Renderer::clear(const bool clearCol) {
 
 void Renderer::finalizeFrame() {
 	swapChain->Present(0, 0);
+}
+
+void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
+	if (!targets) {
+		d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
+											 depthStencilView);
+	} else {
+		auto tar = targets->getRenderTarget(0)->mD3dRenderTargetView;
+		d3dDeviceContext->OMSetRenderTargets(1, &tar,
+			targets->getDepthStencilTarget()->mD3dDepthStencilTargetView);
+	}
 }
 
 static float viewWidth = 640.0f;
@@ -371,6 +382,8 @@ void Renderer::render(Scene* const scene) {
 			mesh->getIndexBuffer()->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->getIndexBufferSize(), 0, 0);
 	}
+	ID3D11ShaderResourceView* bla[] {nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 1, bla);
 }
 
 void Renderer::setViewMatrix(const Float4x4& view) {
@@ -410,11 +423,18 @@ void Renderer::renderScreenQuad(
 	d3dDeviceContext->PSSetSamplers(0, 1, &samplerState);
 
 	const auto matCbData = materialInstance->getConstBufferData()->getDataPs();
-	const auto matD3d = mat->getConstantBufferPs()->getD3dBuffer();
-	d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
-										0, 0);
-	d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
-
+	const auto matCb = mat->getConstantBufferPs();
+	if (matCb && matCb->isValid()) {
+		const auto matD3d = matCb->getD3dBuffer();
+		d3dDeviceContext->UpdateSubresource(matD3d, 0, nullptr, matCbData,
+											0, 0);
+		d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
+	}
+	const auto texMap = materialInstance->getTextureMap();
+	for (const auto& itTex : texMap) {
+		auto const resView = itTex.second->getD3DShaderResourceView();
+		d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
+	}
 	const UINT stride {sizeof(Float3)};
 	const UINT offset {0};
 	d3dDeviceContext->IASetInputLayout(gQuadInputLayout->getD3dInputLayout());
@@ -425,4 +445,6 @@ void Renderer::renderScreenQuad(
 	d3dDeviceContext->IASetIndexBuffer(
 		gQuadIndexBuffer->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	d3dDeviceContext->DrawIndexed(6, 0, 0);
+	ID3D11ShaderResourceView* bla[] {nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 1, bla);
 }

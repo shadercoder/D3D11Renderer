@@ -21,7 +21,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto loadedTex = Loader::loadImageData("textures/avatar.png");
 	auto texture = Clair::ResourceManager::createTexture();
 	texture->initialize(
-		loadedTex.width, loadedTex.height, loadedTex.data, true);
+		loadedTex.width, loadedTex.height,
+		loadedTex.data, Clair::Texture::Type::DEFAULT);
 	//texture->clearRenderTarget({1.0f, 0.1f, 0.2f, 1.0f});
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
@@ -86,11 +87,11 @@ void MaterialSample::update() {
 }
 
 void MaterialSample::render() {
-	Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
-	screen->clearRenderTarget({1.0f, 0.0f, 0.0f, 1.0f});
+	//Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
+	//screen->clearRenderTarget({1.0f, 0.0f, 0.0f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
-	//Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
+	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
 	Clair::Renderer::clear(false);
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

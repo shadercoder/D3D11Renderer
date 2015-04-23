@@ -20,6 +20,7 @@ namespace Clair {
 		static void clear(bool clearCol);
 		static void finalizeFrame();
 
+		static void setRenderTargetGroup(const RenderTargetGroup* targets);
 		static void setRenderPass(RenderPass pass);
 		static void setViewMatrix(const Float4x4& view);
 		static void setProjectionMatrix(const Float4x4& projection);
