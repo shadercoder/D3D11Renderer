@@ -18,7 +18,6 @@ private:
 							Clair::Texture*& outTexture) const;
 
 	Clair::Scene* mScene {nullptr};
-	Clair::Object* mBunny {nullptr};
 	Clair::MaterialInstance* mDeferredCompositeMat {nullptr};
 	class Cb_materials_deferredGeometry_Ps* mConstBuffer {nullptr};
 
@@ -26,6 +25,8 @@ private:
 	Clair::Texture* mGBufAlbedoTex {nullptr};
 	Clair::RenderTarget* mGBufNormal {nullptr};
 	Clair::Texture* mGBufNormalTex {nullptr};
+	Clair::RenderTarget* mGBufPosition {nullptr};
+	Clair::Texture* mGBufPositionTex {nullptr};
 	Clair::DepthStencilTarget* mGBufDepthStencil {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 };
