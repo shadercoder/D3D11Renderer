@@ -1,8 +1,8 @@
 #pragma once
 #include "SampleFramework/SampleBase.h"
 #include "Clair/Scene.h"
-#include "Clair/Matrix.h"
 #include "Clair/MaterialInstance.h"
+#include <Clair/RenderTargetGroup.h>
 
 class DeferredSample : public SampleFramework::SampleBase {
 public:
@@ -14,8 +14,18 @@ public:
 	void render() override;
 
 private:
+	void createRenderTarget(Clair::RenderTarget*& outRenderTarget,
+							Clair::Texture*& outTexture) const;
+
 	Clair::Scene* mScene {nullptr};
 	Clair::Object* mBunny {nullptr};
-	Clair::MaterialInstance* mDrawTexture {nullptr};
-	class Cb_materials_default_Ps* mConstBuffer {nullptr};
+	Clair::MaterialInstance* mDeferredCompositeMat {nullptr};
+	class Cb_materials_deferredGeometry_Ps* mConstBuffer {nullptr};
+
+	Clair::RenderTarget* mGBufAlbedo {nullptr};
+	Clair::Texture* mGBufAlbedoTex {nullptr};
+	Clair::RenderTarget* mGBufNormal {nullptr};
+	Clair::Texture* mGBufNormalTex {nullptr};
+	Clair::DepthStencilTarget* mGBufDepthStencil {nullptr};
+	Clair::RenderTargetGroup* mGBuffer {nullptr};
 };

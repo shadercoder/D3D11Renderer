@@ -256,8 +256,9 @@ void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
 		d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
 											 depthStencilView);
 	} else {
-		auto tar = targets->getRenderTarget(0)->mD3dRenderTargetView;
-		d3dDeviceContext->OMSetRenderTargets(1, &tar,
+		auto targetArray = targets->getD3dRenderTargetArray();
+		auto numTargets = targets->getNumRenderTargets();
+		d3dDeviceContext->OMSetRenderTargets(numTargets, targetArray,
 			targets->getDepthStencilTarget()->mD3dDepthStencilTargetView);
 	}
 }
@@ -382,8 +383,8 @@ void Renderer::render(Scene* const scene) {
 			mesh->getIndexBuffer()->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->getIndexBufferSize(), 0, 0);
 	}
-	ID3D11ShaderResourceView* bla[] {nullptr};
-	d3dDeviceContext->PSSetShaderResources(0, 1, bla);
+	ID3D11ShaderResourceView* bla[] {nullptr, nullptr, nullptr, nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 4, bla);
 }
 
 void Renderer::setViewMatrix(const Float4x4& view) {
@@ -445,6 +446,6 @@ void Renderer::renderScreenQuad(
 	d3dDeviceContext->IASetIndexBuffer(
 		gQuadIndexBuffer->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	d3dDeviceContext->DrawIndexed(6, 0, 0);
-	ID3D11ShaderResourceView* bla[] {nullptr};
-	d3dDeviceContext->PSSetShaderResources(0, 1, bla);
+	ID3D11ShaderResourceView* bla[] {nullptr, nullptr, nullptr, nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 4, bla);
 }

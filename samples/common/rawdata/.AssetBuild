@@ -1,5 +1,7 @@
 /materials/default.hlsl|30440679|856966016
-/materials/drawTexture.hlsl|30440924|530144088
+/materials/deferredComposite.hlsl|30441087|1387744478
+/materials/deferredGeometry.hlsl|30441080|2254622266
+/materials/drawTexture.hlsl|30441083|4119662285
 /materials/normals.hlsl|30440679|856966016
 /materials/pbrSimple.hlsl|30440679|856966016
 /materials/sky.hlsl|30440679|856966016

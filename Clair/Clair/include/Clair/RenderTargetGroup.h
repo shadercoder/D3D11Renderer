@@ -14,10 +14,12 @@ namespace Clair {
 		int getNumRenderTargets() const;
 		RenderTarget* getRenderTarget(int index) const;
 		DepthStencilTarget* getDepthStencilTarget() const;
+		ID3D11RenderTargetView** getD3dRenderTargetArray() const;
 
 	private:
 		RenderTarget** mRenderTargets {nullptr};
 		DepthStencilTarget* mDepthStencilTarget {nullptr};
+		ID3D11RenderTargetView** mD3dRenderTargetArray {nullptr};
 		int mNumRenderTargets {0};
 	};
 
@@ -32,6 +34,7 @@ namespace Clair {
 		CLAIR_DEBUG_LOG_IF(mRenderTargets[index],
 			"Overwriting existing render target in RenderTargetGroup");
 		mRenderTargets[index] = renderTarget;
+		mD3dRenderTargetArray[index] = renderTarget->getD3dRenderTargetView();
 	}
 
 	inline void RenderTargetGroup::setDepthStencilTarget(
@@ -53,5 +56,10 @@ namespace Clair {
 	inline DepthStencilTarget*
 	RenderTargetGroup::getDepthStencilTarget() const {
 		return mDepthStencilTarget;
+	}
+
+	inline ID3D11RenderTargetView**
+	RenderTargetGroup::getD3dRenderTargetArray() const {
+		return mD3dRenderTargetArray;
 	}
 }

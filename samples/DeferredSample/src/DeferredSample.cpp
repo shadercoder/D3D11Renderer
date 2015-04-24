@@ -7,59 +7,65 @@
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
-#include "Clair/RenderTargetGroup.h"
 //#include "../../data/materials/pbrSimple.h"
-#include "../../data/materials/default.h"
+#include "../../data/materials/deferredGeometry.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
 using namespace glm;
 
-Clair::RenderTarget* mRenderTarget {nullptr};
-Clair::DepthStencilTarget* mDepthTarget {nullptr};
-Clair::RenderTargetGroup* mRenderTargetGroup {nullptr};
+void DeferredSample::createRenderTarget(Clair::RenderTarget*& outRenderTarget,
+										Clair::Texture*& outTexture) const {
+	outTexture = Clair::ResourceManager::createTexture();
+	outTexture->initialize(960, 640, nullptr,
+		Clair::Texture::Type::RENDER_TARGET);
+	outRenderTarget = Clair::ResourceManager::createRenderTarget();
+	outRenderTarget->initialize(outTexture);
+}
 
 bool DeferredSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
-	auto loadedTex = Loader::loadImageData("textures/avatar.png");
-	auto texture = Clair::ResourceManager::createTexture();
-	texture->initialize(
-		loadedTex.width, loadedTex.height, loadedTex.data,
-		Clair::Texture::Type::RENDER_TARGET);
+	// Create render targets
+	createRenderTarget(mGBufAlbedo, mGBufAlbedoTex);
+	createRenderTarget(mGBufNormal, mGBufNormalTex);
 	auto depthTex = Clair::ResourceManager::createTexture();
-	depthTex->initialize(512, 512, nullptr,
+	depthTex->initialize(960, 640, nullptr,
 		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
-	mRenderTarget = Clair::ResourceManager::createRenderTarget();
-	mRenderTarget->initialize(texture);
-	mDepthTarget = Clair::ResourceManager::createDepthStencilTarget();
-	mDepthTarget->initialize(depthTex);
-	mRenderTargetGroup = new Clair::RenderTargetGroup{1};
-	mRenderTargetGroup->setRenderTarget(0, mRenderTarget);
-	mRenderTargetGroup->setDepthStencilTarget(mDepthTarget);
+	mGBufDepthStencil = Clair::ResourceManager::createDepthStencilTarget();
+	mGBufDepthStencil->initialize(depthTex);
 
-	auto drawTexMatData = Loader::loadBinaryData("materials/drawTexture.cmat");
-	auto drawTexMat = Clair::ResourceManager::createMaterial();
-	drawTexMat->initialize(drawTexMatData.get());
-	mDrawTexture = Clair::ResourceManager::createMaterialInstance();
-	mDrawTexture->initialize(drawTexMat);
-	mDrawTexture->setTexture(0, texture);
+	// Group them into a GBuffer
+	mGBuffer = new Clair::RenderTargetGroup{2};
+	mGBuffer->setRenderTarget(0, mGBufAlbedo);
+	mGBuffer->setRenderTarget(1, mGBufNormal);
+	mGBuffer->setDepthStencilTarget(mGBufDepthStencil);
+
+	auto compTexData = Loader::loadBinaryData("materials/deferredComposite.cmat");
+	auto compTex = Clair::ResourceManager::createMaterial();
+	compTex->initialize(compTexData.get());
+	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
+	mDeferredCompositeMat->initialize(compTex);
+	mDeferredCompositeMat->setTexture(0, mGBufAlbedoTex);
+	mDeferredCompositeMat->setTexture(1, mGBufNormalTex);
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
 	bunnyMesh->initialize(bunnyMeshData.get());
 
-	auto defaultMatData = Loader::loadBinaryData("materials/default.cmat");
-	auto defaultMat = Clair::ResourceManager::createMaterial();
-	defaultMat->initialize(defaultMatData.get());
+	auto geometryMatData =
+		Loader::loadBinaryData("materials/deferredGeometry.cmat");
+	auto geometryMat = Clair::ResourceManager::createMaterial();
+	geometryMat->initialize(geometryMatData.get());
 
 	mScene = Clair::ResourceManager::createScene();
 	mBunny = mScene->createObject();
 	mBunny->setMesh(bunnyMesh);
 	mBunny->setMatrix(value_ptr(translate(vec3{0.0f})));
-	auto matInstance = mBunny->setMaterial(CLAIR_RENDER_PASS(0), defaultMat);
-	mConstBuffer = matInstance->getConstantBufferPs<Cb_materials_default_Ps>();
+	auto matInstance = mBunny->setMaterial(CLAIR_RENDER_PASS(0), geometryMat);
+	mConstBuffer =
+		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
 	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
 
 	Camera::initialize({-0.27f, 1.64f, -1.79f}, 0.470f, 0.045f);
@@ -67,7 +73,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 }
 
 void DeferredSample::terminate() {
-	delete mRenderTargetGroup;
+	delete mGBuffer;
 	Clair::terminate();
 }
 
@@ -79,24 +85,23 @@ void DeferredSample::onResize(const int width, const int height,
 }
 
 void DeferredSample::update() {
-	mConstBuffer->Time = getRunningTime();
 	Camera::update(getDeltaTime());
 }
 
 void DeferredSample::render() {
+	// Render to G-buffer
+	Clair::Renderer::setRenderTargetGroup(mGBuffer);
+	mGBufAlbedo->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufNormal->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufDepthStencil->clearDepth(1.0f);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
-
-	Clair::Renderer::clear(true);
-
-	Clair::Renderer::setRenderTargetGroup(mRenderTargetGroup);
-	mRenderTarget->clear({1.0f, 0.0f, 0.0f, 1.0f});
-	mDepthTarget->clearDepth(1.0f);
 	Clair::Renderer::render(mScene);
 
+	// Composite
 	Clair::Renderer::setRenderTargetGroup(nullptr);
-	Clair::Renderer::clear(false);
-	Clair::Renderer::renderScreenQuad(mDrawTexture);
+	Clair::Renderer::clear(true);
+	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
 
 	Clair::Renderer::finalizeFrame();
 }

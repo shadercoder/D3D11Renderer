@@ -12,6 +12,8 @@ namespace Clair {
 		void RenderTarget::clear(const Float4& color);
 	
 		bool isValid() const;
+		ID3D11RenderTargetView* getD3dRenderTargetView() const;
+
 	private:
 		RenderTarget() = default;
 		~RenderTarget();
@@ -24,5 +26,10 @@ namespace Clair {
 
 	inline bool RenderTarget::isValid() const {
 		return mIsValid;
+	}
+
+	inline ID3D11RenderTargetView*
+	RenderTarget::getD3dRenderTargetView() const {
+		return mD3dRenderTargetView;
 	}
 }

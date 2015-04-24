@@ -33,3 +33,4 @@ void RenderTarget::clear(const Float4& color) {
 	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &color[0][0]);
 	//d3dContext->Release();
 }
+
