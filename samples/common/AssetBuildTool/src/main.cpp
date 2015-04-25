@@ -5,13 +5,14 @@
 #include "../../../../Clair/tools/MaterialTool/include/ErrorCodes.h"
 #include "../../../../Clair/tools/MeshTool/include/ErrorCodes.h"
 #include <algorithm>
+#include "AssetDatabase.h"
 
-static std::string gInFile {"../../rawdata"};
-static std::string gOutFile {"../../data"};
+static std::string gInFileName {"../../rawdata"};
+static std::string gOutFileName {"../../data"};
 static int gNumSucceeded {0};
 static int gNumFailed {0};
 static int gNumUpToDate {0};
-static std::ofstream gTimeStampFile {};
+static std::ofstream gOutDatabase {};
 static int gIndentLevel {0};
 static std::string gIndent {""};
 
@@ -26,23 +27,14 @@ int main(int argc, char* argv[]) {
 	if (argc != 3) {
 		return -1;
 	} else {
-		gInFile = argv[1];
-		gOutFile = argv[2];
+		gInFileName = argv[1];
+		gOutFileName = argv[2];
 	}
 	printf("\n");
 	printf(">------ AssetBuildTool started ------\n");
 
 	// Check for timestamp file
-	const std::string timeStampFileName {gInFile + "\\.AssetBuild"};
-	std::ifstream timeStampFileCheck {timeStampFileName};
-	if (!timeStampFileCheck.is_open()) {
-		printf(">  Unable to find .AssetBuild file, doing full rebuild\n");
-	} else {
-		timeStampFileCheck.close();
-		printf(">  Reading .AssetBuild file\n");
-	}
-	gTimeStampFile.open(timeStampFileName);
-	if (!gTimeStampFile.is_open()) {
+	if (!AssetDatabase::initialize(gInFileName + "\\.AssetBuild")) {
 		return -1;
 	}
 	printf(">  Converting files:\n");
@@ -53,7 +45,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Finish
-	gTimeStampFile.close();
+	AssetDatabase::terminate();
 	printf("========== AssetBuildTool: "
 		   "%i succeeded, %i failed, %i up-to-date ==========\n",
 		   gNumSucceeded, gNumFailed, gNumUpToDate);
@@ -71,7 +63,7 @@ int main(int argc, char* argv[]) {
 static bool scanFolder(const std::string& folder) {
 	WIN32_FIND_DATA ffd {};
 	HANDLE hFile {INVALID_HANDLE_VALUE};
-	const std::string currFolder {gInFile + folder + ".\\*"};
+	const std::string currFolder {gInFileName + folder + ".\\*"};
 	hFile = FindFirstFile(currFolder.c_str(), &ffd);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		return false;
@@ -101,6 +93,14 @@ static bool scanFolder(const std::string& folder) {
 
 void processFile(const std::string& currFile, const std::string& folder,
 				 const WIN32_FIND_DATA& ffd) {
+	// Check if file is up to date
+	if (AssetDatabase::isFileUpToDate(
+		folder + '/' + currFile, ffd.ftLastWriteTime)) {
+		AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
+		++gNumUpToDate;
+		return;
+	}
+
 	// Check file type by extension
 	const auto subPos = currFile.find_last_of(".");
 	if (subPos == std::string::npos) {
@@ -133,8 +133,8 @@ void processFile(const std::string& currFile, const std::string& folder,
 		#else
 							 "MeshTool_d.exe "};
 		#endif
-		command += gInFile + folder + "/" + currFile + " ";
-		command += gOutFile + folder + "/" + currOutFile + " -sb";
+		command += gInFileName + folder + "/" + currFile + " ";
+		command += gOutFileName + folder + "/" + currOutFile + " -sb";
 	} else {
 		command = std::string{"..\\..\\Clair\\tools\\MaterialTool\\bin\\"
 		#ifdef NDEBUG
@@ -142,9 +142,10 @@ void processFile(const std::string& currFile, const std::string& folder,
 		#else
 							 "MaterialTool_d.exe "};
 		#endif
-		command += gInFile + folder + "/" + currFile + " ";
-		command += gOutFile + folder + "/" + currOutFile + ' ' +
-				   pathToName(folder + "/" + currFile) + " -s";
+		command += gInFileName + folder + "/" + currFile + ' ';
+		command += gOutFileName + folder + "/" + currOutFile + ' ';
+		command += gInFileName + ".materialLog" + ' ';
+		command += pathToName(folder + "/" + currFile) + " -s";
 	}
 	const int commandResult {std::system(command.c_str())};
 
@@ -152,10 +153,7 @@ void processFile(const std::string& currFile, const std::string& folder,
 	if (commandResult == 0) {
 		printf(">  %s %s -> SUCCES\n", gIndent.c_str(), ffd.cFileName,
 								   currOutFile.c_str());
-		gTimeStampFile << folder << '/' + currFile << "|"
-			 << std::to_string(ffd.ftLastWriteTime.dwHighDateTime) << "|"
-			 << std::to_string(ffd.ftLastWriteTime.dwLowDateTime)
-			 << '\n';
+		AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
 		++gNumSucceeded;
 	} else {
 		if (isMesh) {
@@ -163,9 +161,20 @@ void processFile(const std::string& currFile, const std::string& folder,
 				   ffd.cFileName,
 				   MeshToolError::ERROR_STRING[commandResult].c_str());
 		} else {
-			printf(">  %s %s -> FAILED (MaterialTool: %s)\n", gIndent.c_str(),
+			// get errors from log
+			std::ifstream matLogFile(gInFileName + ".materialLog");
+			std::string matLog {};
+			std::string line {};
+			if (matLogFile.is_open()) {
+				while (std::getline(matLogFile, line)) {
+					matLog += /*">  " +*/ line + '\n';
+				}
+			}
+			matLogFile.close();
+			printf(">  %s %s -> FAILED (MaterialTool: %s)\n%s", gIndent.c_str(),
 				   ffd.cFileName,
-				   MaterialToolError::ERROR_STRING[commandResult].c_str());
+				   MaterialToolError::ERROR_STRING[commandResult].c_str(),
+				   matLog.c_str());
 		}
 		++gNumFailed;
 	}

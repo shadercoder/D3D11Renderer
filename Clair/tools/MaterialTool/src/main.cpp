@@ -1,6 +1,6 @@
 /* MaterialTool
 ** Usage:
-** MaterialTool.exe (input_file) (output_location) (name) [options]
+** MaterialTool.exe (input_file) (output_location) (log_location) (name) [options]
 */
 #include <iostream>
 #include <stdio.h>
@@ -31,30 +31,34 @@ static int reflectConstBuffer(ID3DBlob* shader, ConstBufferDesc& outCBuffer);
 static ID3DBlob* gVs {nullptr};
 static ID3DBlob* gPs {nullptr};
 static Clair::VertexLayout gVertexLayout {};
-static std::string gInFile {
+static std::string gInFileName {
 	"../../../../samples/common/rawdata/materials/sky.hlsl"};
-static std::string gOutFile {
+static std::string gOutFileName {
 	"../../../../samples/common/data/materials/sky.cmat"};
-static std::string gOutHeader {
+static std::string gOutHeaderName {
 	"../../../../samples/common/data/materials/sky.h"};
+static std::string gLogFileName {
+	"../../../../samples/common/data/log.txt"};
 static bool gSilentMode {false};
 static std::ofstream gOutHeaderFile {};
-static std::string gMaterialName {};
+static std::string gMaterialName {"material"};
 static ConstBufferDesc gVsCBufferDesc;
 static ConstBufferDesc gPsCBufferDesc;
+static std::ofstream gLogFile {};
 
 //int main(int , char* []) {
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
-	if (argc < 3) {
-		//return MaterialToolError::ARGS;
+	if (argc < 4) {
+		return MaterialToolError::ARGS;
 	}
 	else {
-		gInFile = argv[1];
-		gOutFile = std::string(argv[2]) + ".cmat";
-		gOutHeader = std::string(argv[2]) + ".h";
-		gMaterialName = argv[3];
-		const auto commands = CommandLineUtils::getCommands(argc - 3, argv + 3);
+		gInFileName = argv[1];
+		gOutFileName = std::string(argv[2]) + ".cmat";
+		gOutHeaderName = std::string(argv[2]) + ".h";
+		gLogFileName = std::string(argv[3]);
+		gMaterialName = argv[4];
+		const auto commands = CommandLineUtils::getCommands(argc - 4, argv + 4);
 		for (const char c : commands) {
 			if		(c == 's') gSilentMode = true;
 		}
@@ -63,7 +67,12 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	std::ifstream file(gInFile);
+	gLogFile.open(gLogFileName);
+	if (!gLogFile.is_open()) {
+		return MaterialToolError::WRITE;
+	}
+
+	std::ifstream file(gInFileName);
 	if (file.fail()) {
 		return MaterialToolError::READ;
 	}
@@ -100,11 +109,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	// finalize and clean up
-	if (!writeToFile(gOutFile)) {
+	if (!writeToFile(gOutFileName)) {
 		return MaterialToolError::WRITE;
 	}
 	gVs->Release();
 	gPs->Release();
+	gLogFile.close();
 	return MaterialToolError::SUCCESS;
 }
 
@@ -123,6 +133,7 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 	if (FAILED(hr)) {
 		if (errorBlob) {
 			OutputDebugStringA( (char*)errorBlob->GetBufferPointer() );
+			gLogFile << (char*)errorBlob->GetBufferPointer();
 			errorBlob->Release();
 		}
 		if (shaderBlob)
@@ -136,7 +147,7 @@ HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 bool writeToFile(const std::string& filename) {
 	// header
 	//if (gVsCBufferDesc.isValid || gPsCBufferDesc.isValid) {
-		gOutHeaderFile.open(gOutHeader);
+		gOutHeaderFile.open(gOutHeaderName);
 		if (!gOutHeaderFile.is_open()) {
 			return false;
 		}

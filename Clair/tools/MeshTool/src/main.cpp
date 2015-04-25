@@ -10,8 +10,8 @@
 
 using namespace Assimp;
 
-static std::string gInFile {"../../../samples/common/rawdata/materials/default.hlsl"};
-static std::string gOutFile {"../../../samples/common/data/test/bla.cmat"};
+static std::string gInFileName {"../../../samples/common/rawdata/materials/default.hlsl"};
+static std::string gOutFileName {"../../../samples/common/data/test/bla.cmat"};
 static bool gSilentMode {false};
 static bool gBlenderObjMode {false};
 
@@ -21,8 +21,8 @@ int main(int argc, char* argv[]) {
 	if (argc < 3) {
 		return MeshToolError::ARGS;
 	}
-	gInFile = argv[1];
-	gOutFile = argv[2];
+	gInFileName = argv[1];
+	gOutFileName = argv[2];
 	const auto commands = CommandLineUtils::getCommands(argc - 2, argv + 2);
 	for (const char c : commands) {
 		if		(c == 's') gSilentMode = true;
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	if (!gSilentMode) {
 		std::cout << "Converting " << argv[1] << "\nto " << argv[2] << '\n';
 	}
-	const int result {convertMesh(gInFile, gOutFile)};
+	const int result {convertMesh(gInFileName, gOutFileName)};
 	return result;
 }
 
