@@ -43,6 +43,6 @@ PsOut psMain(PsIn psIn) {
 	PsOut psOut;
 	psOut.Albedo = float4(DiffuseColor.xyz, 1.0);
 	psOut.Normal = float4(normalize(psIn.Normal), 1.0);
-	psOut.Position = float4(psIn.WorldPos / 10.0, 1.0);
+	psOut.Position = float4(psIn.WorldPos, 1.0);
 	return psOut;
 }

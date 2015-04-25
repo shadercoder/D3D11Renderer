@@ -26,7 +26,7 @@ PsIn vsMain(VsIn vsIn) {
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
 float3 calcLighting(float3 albedo, float3 normal, float3 position) {
-	const float3 amb = (1.0, 1.0, 1.0) * 0.1;
+	const float3 amb = (1.0, 1.0, 1.0) * 0.0;
 	float3 col = float3(0, 0, 0);
 	//const int numLights = 16;
 	//for (int i = 0; i < numLights; ++i) {
@@ -37,11 +37,11 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 	//	float diff = saturate(dot(normalize(l), normal) * 1.0 / max(0.001, dot(l, l)));
 	//	col += diff * lcol;
 	//}
-	float3 lpos = float3(-1.0, 4.0, -2.0);
+	float3 lpos = float3(-1.0, 1.0, -2.0);
 	float3 lcol = float3(1.0, 1.0, 1.0);
-	float3 l = lpos - position * 10.0;
+	float3 l = lpos - position;
 	//l = normalize(float3(-1.0, -1.0, -1.0));
-	float bright = 20.0f;
+	float bright = 2.0f;
 	float diff = saturate(dot(normalize(l), normal) * bright / max(0.001, dot(l, l)));
 	col = pow(diff, 1.0 / 2.2) * lcol * albedo + amb;
 	return col;

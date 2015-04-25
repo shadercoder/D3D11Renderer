@@ -26,8 +26,8 @@ void Texture::initialize(const int width, const int height,
 	texDesc.Height = static_cast<UINT>(height);
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = 1;
-	//texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	//texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -42,7 +42,7 @@ void Texture::initialize(const int width, const int height,
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
 
-	Byte* texData = new Byte[width * height * 4]();
+	Byte* texData = new Byte[width * height * 4 * 4]();
 	if (data) {
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x) {
@@ -57,7 +57,7 @@ void Texture::initialize(const int width, const int height,
 	D3D11_SUBRESOURCE_DATA texInitData;
 	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	texInitData.pSysMem = texData;
-	texInitData.SysMemPitch = sizeof(Byte) * width * 4;
+	texInitData.SysMemPitch = sizeof(Byte) * width * 4 * 4;
 
 	mIsValid = !FAILED(d3dDevice->CreateTexture2D(&texDesc, &texInitData,
 												  &mD3dTexture));
