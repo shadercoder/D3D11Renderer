@@ -1,6 +1,6 @@
 #include "DeferredSample.h"
 #include "Clair/Object.h"
-#include <Clair/Clair.h>
+#include "Clair/Clair.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
@@ -9,7 +9,6 @@
 #include "SampleFramework/Input.h"
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
-//#include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/deferredGeometry.h"
 #include "../../data/materials/deferredComposite.h"
 //#include "vld.h"

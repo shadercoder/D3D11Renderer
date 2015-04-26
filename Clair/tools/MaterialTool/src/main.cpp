@@ -15,6 +15,9 @@
 #include "../../common/CommandLineUtils.h"
 #include "ConstBufferDesc.h"
 
+#include <direct.h>
+#define GetCurrentDir _getcwd
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -118,17 +121,52 @@ int main(int argc, char* argv[]) {
 	return MaterialToolError::SUCCESS;
 }
 
+		//char cCurrentPath[FILENAME_MAX]; 
+		//if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+		//	return errno;
+		//}
+		//printf("Error: The current working directory is %s", cCurrentPath);
+class CustomIncludeInterface : public ID3DInclude {
+public:
+	STDMETHOD(Open)(THIS_ D3D_INCLUDE_TYPE /*IncludeType*/,
+		LPCSTR pFileName, LPCVOID /*pParentData*/, LPCVOID *ppData,
+		UINT *pBytes) override {
+		std::ifstream f(pFileName);
+		if (!f.is_open()) {
+			std::cout << "Error: Couldn't open "  << pFileName << '\n';
+			return S_OK;
+		}
+		mString = std::string(
+			std::istreambuf_iterator<char>(f),
+			std::istreambuf_iterator<char>()
+		);
+		*ppData = mString.c_str();
+		*pBytes = mString.size();
+		return S_OK;
+	}
+
+	STDMETHOD(Close)(THIS_ LPCVOID /*pData*/) override {
+		return S_OK;
+	}
+
+private:
+	std::string mString;
+};
+
 HRESULT compileShader(const std::string& sourceCode, const std::string& target,
 					  const std::string& entryPoint, ID3DBlob** blob) {
 	HRESULT hr {0};
 	*blob = nullptr;
 
-	const UINT flags {0};//D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_DEBUG};
+	const UINT flags {D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_DEBUG};
 
 	ID3DBlob* shaderBlob {nullptr};
 	ID3DBlob* errorBlob {nullptr};
-	hr = D3DCompile(sourceCode.c_str(), sourceCode.length(), nullptr, nullptr,
-					nullptr, entryPoint.c_str(), target.c_str(), flags, 0,
+	CustomIncludeInterface incInterface {};
+	hr = D3DCompile(sourceCode.c_str(), sourceCode.length(),
+					gInFileName.c_str(), nullptr,
+					static_cast<ID3DInclude*>(&incInterface),
+					entryPoint.c_str(), target.c_str(), flags, 0,
 					&shaderBlob, &errorBlob);
 	if (FAILED(hr)) {
 		if (errorBlob) {

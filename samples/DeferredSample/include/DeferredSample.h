@@ -2,12 +2,12 @@
 #include "SampleFramework/SampleBase.h"
 #include "Clair/Scene.h"
 #include "Clair/MaterialInstance.h"
-#include <Clair/RenderTargetGroup.h>
+#include "Clair/RenderTargetGroup.h"
+#include "../../data/materials/NumLights.h"
 #include <array>
 
 class DeferredSample : public SampleFramework::SampleBase {
 public:
-	static const int NUM_LIGHTS = 128;
 	bool initialize(HWND hwnd) override;
 	void terminate() override;
 

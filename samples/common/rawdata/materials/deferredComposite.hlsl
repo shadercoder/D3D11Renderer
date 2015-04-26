@@ -1,3 +1,5 @@
+#include "../common/data/materials/NumLights.h"
+
 Texture2D texAlbedo : register(t0);
 Texture2D texNormal : register(t1);
 Texture2D texPosition : register(t2);
@@ -18,14 +20,14 @@ struct PsIn {
 PsIn vsMain(VsIn vsIn) {
 	PsIn psIn;
 	psIn.Position = float4(vsIn.Position.xy * 2.0 - 1.0, 0.0, 1.0);
-	psIn.Uvs = vsIn.Position.xy * 2.0 - 1.0;
+	psIn.Uvs = vsIn.Position.xy;// * 2.0 - 1.0;
 	return psIn;
 }
 
 // -----------------------------------------------------------------------------
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
-static const int NUM_LIGHTS = 128;
+//static const int NUM_LIGHTS = 128;
 
 cbuffer Buf : register(b1) {
 	float4 LightDiffuseColors[NUM_LIGHTS];
@@ -51,19 +53,20 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 albedo = texAlbedo.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
 	float3 normal = texNormal.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
 	float3 position = texPosition.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
-	col = albedo;
-	if (psIn.Uvs.x > 0) {
-		if (psIn.Uvs.y > 0) {
-			col = calcLighting(albedo, normal, position);
-		} else {
-			col = normal;
-		}
-	} else {
-		if (psIn.Uvs.y > 0) {
-			col = position;
-		} else {
-			col = albedo;
-		}
-	}
+	col = calcLighting(albedo, normal, position);
+	//col = albedo;
+	//if (psIn.Uvs.x > 0) {
+	//	if (psIn.Uvs.y > 0) {
+	//		col = calcLighting(albedo, normal, position);
+	//	} else {
+	//		col = normal;
+	//	}
+	//} else {
+	//	if (psIn.Uvs.y > 0) {
+	//		col = position;
+	//	} else {
+	//		col = albedo;
+	//	}
+	//}
 	return float4(col, 1.0);
 }
