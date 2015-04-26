@@ -32,11 +32,11 @@ static ID3DBlob* gVs {nullptr};
 static ID3DBlob* gPs {nullptr};
 static Clair::VertexLayout gVertexLayout {};
 static std::string gInFileName {
-	"../../../../samples/common/rawdata/materials/sky.hlsl"};
+	"../../../../samples/common/rawdata/materials/deferredComposite.hlsl"};
 static std::string gOutFileName {
-	"../../../../samples/common/data/materials/sky.cmat"};
+	"../../../../samples/common/data/materials/deferredComposite.cmat"};
 static std::string gOutHeaderName {
-	"../../../../samples/common/data/materials/sky.h"};
+	"../../../../samples/common/data/materials/deferredComposite.h"};
 static std::string gLogFileName {
 	"../../../../samples/common/data/log.txt"};
 static bool gSilentMode {false};
@@ -50,7 +50,7 @@ static std::ofstream gLogFile {};
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc < 4) {
-		return MaterialToolError::ARGS;
+		//return MaterialToolError::ARGS;
 	}
 	else {
 		gInFileName = argv[1];
@@ -152,8 +152,8 @@ bool writeToFile(const std::string& filename) {
 			return false;
 		}
 		gOutHeaderFile << "#pragma once\n";
-		gVsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Vs");
-		gPsCBufferDesc.writeToFile(gOutHeaderFile, gMaterialName, "Ps");
+		gOutHeaderFile << gVsCBufferDesc.writeToString(gMaterialName, "Vs");
+		gOutHeaderFile << gPsCBufferDesc.writeToString(gMaterialName, "Ps");
 		gOutHeaderFile.close();
 	//}
 
@@ -231,11 +231,12 @@ int reflectConstBuffer(ID3DBlob* const shader, ConstBufferDesc& outCBuffer) {
 					if (FAILED(var->GetDesc(&varDesc))) {
 						return MaterialToolError::REFLECT;
 					}
+					auto type = var->GetType();
 					D3D11_SHADER_TYPE_DESC typeDesc;
-					if (FAILED(var->GetType()->GetDesc(&typeDesc))) {
+					if (FAILED(type->GetDesc(&typeDesc))) {
 						return MaterialToolError::REFLECT;
 					}
-					outCBuffer.addVariable(varDesc, typeDesc);
+					outCBuffer.addVariable(varDesc, typeDesc, type);
 				}
 			}
 		}

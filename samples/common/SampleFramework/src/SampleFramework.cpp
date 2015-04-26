@@ -6,6 +6,7 @@
 #include "SampleFramework/Timer.h"
 #include "SampleFramework/SampleBase.h"
 #include "SampleFramework/Loader.h"
+#include "SampleFramework/Random.h"
 
 using namespace SampleFramework;
 
@@ -88,6 +89,7 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 
 	Loader::setSearchPath(dataPath);
 
+	Random::initialize();
 	if (!gSample->initialize(info.info.win.window)) {
 		MessageBox(nullptr, "Couldn't initialize Clair.",
 				   "Fatal error", MB_OK | MB_ICONERROR);

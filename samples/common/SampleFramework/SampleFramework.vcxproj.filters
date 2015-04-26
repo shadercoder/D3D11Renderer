@@ -9,6 +9,7 @@
     <ClInclude Include="include\SampleFramework\Logger.h" />
     <ClInclude Include="include\SampleFramework\Loader.h" />
     <ClInclude Include="include\SampleFramework\Timer.h" />
+    <ClInclude Include="include\SampleFramework\Random.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
@@ -16,5 +17,6 @@
     <ClCompile Include="src\SampleFramework.cpp" />
     <ClCompile Include="src\Loader.cpp" />
     <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\Random.cpp" />
   </ItemGroup>
 </Project>

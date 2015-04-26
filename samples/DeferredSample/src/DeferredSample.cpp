@@ -5,10 +5,13 @@
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
+#include "SampleFramework/Random.h"
+#include "SampleFramework/Input.h"
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
 //#include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/deferredGeometry.h"
+#include "../../data/materials/deferredComposite.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -21,6 +24,18 @@ void DeferredSample::createRenderTarget(Clair::RenderTarget*& outRenderTarget,
 		Clair::Texture::Type::RENDER_TARGET);
 	outRenderTarget = Clair::ResourceManager::createRenderTarget();
 	outRenderTarget->initialize(outTexture);
+}
+
+void DeferredSample::resetLights() {
+	for (auto& light : mLights) {
+		light.color = {Random::randomFloat(), Random::randomFloat(),
+					   Random::randomFloat()};
+		light.intensity = Random::randomFloat(0.2f, 1.0f) / 15.0f;
+		light.height = Random::randomFloat(0.1f, 2.0f);
+		light.rotationRadius = Random::randomFloat(0.5f, 4.5f);
+		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
+		light.offset = Random::randomFloat(0.0f, 2.0f * glm::pi<float>());
+	}
 }
 
 bool DeferredSample::initialize(const HWND hwnd) {
@@ -52,6 +67,9 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mDeferredCompositeMat->setTexture(0, mGBufAlbedoTex);
 	mDeferredCompositeMat->setTexture(1, mGBufNormalTex);
 	mDeferredCompositeMat->setTexture(2, mGBufPositionTex);
+	mCompositeCBuffer = mDeferredCompositeMat->
+		getConstantBufferPs<Cb_materials_deferredComposite_Ps>();
+	resetLights();
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
@@ -70,16 +88,16 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	bunny->setMesh(bunnyMesh);
 	bunny->setMatrix(value_ptr(translate(vec3{0.0f})));
 	auto matInstance = bunny->setMaterial(CLAIR_RENDER_PASS(0), geometryMat);
-	mConstBuffer =
+	mGeometryCBuffer =
 		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
+	mGeometryCBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
 	auto plane = mScene->createObject();
 	plane->setMesh(planeMesh);
-	plane->setMatrix(value_ptr(translate(vec3{0.0f})));
+	plane->setMatrix(value_ptr(scale(vec3{2.0f})));
 	auto planeMatInstance = plane->setMaterial(CLAIR_RENDER_PASS(0), geometryMat);
-	mConstBuffer =
+	mGeometryCBuffer =
 		planeMatInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.5f, 0.5f, 1.0f};
+	mGeometryCBuffer->DiffuseColor = Clair::Float4{0.8f, 0.5f, 0.5f, 1.0f};
 
 	Camera::initialize({-0.27f, 1.64f, -1.79f}, 0.470f, 0.045f);
 	return true;
@@ -99,6 +117,23 @@ void DeferredSample::onResize(const int width, const int height,
 
 void DeferredSample::update() {
 	Camera::update(getDeltaTime());
+
+	if (Input::getKeyDown(SDL_SCANCODE_F)) {
+		resetLights();
+	}
+
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto col = mLights[i].color;
+		mCompositeCBuffer->LightDiffuseColors[i] = {
+			col[0][0], col[0][1], col[0][2], mLights[i].intensity };
+		const float p {
+			getRunningTime() * mLights[i].rotationSpeed + mLights[i].offset};
+		mCompositeCBuffer->LightPositions[i] = {
+			cosf(p) * mLights[i].rotationRadius,
+			mLights[i].height,
+			sinf(p) * mLights[i].rotationRadius,
+			0.0f};
+	}
 }
 
 void DeferredSample::render() {

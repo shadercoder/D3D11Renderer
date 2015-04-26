@@ -15,6 +15,7 @@
     <ClInclude Include="include\SampleFramework\GlmMath.h" />
     <ClInclude Include="include\SampleFramework\Input.h" />
     <ClInclude Include="include\SampleFramework\Loader.h" />
+    <ClInclude Include="include\SampleFramework\Random.h" />
     <ClInclude Include="include\SampleFramework\SampleBase.h" />
     <ClInclude Include="include\SampleFramework\SampleFramework.h" />
     <ClInclude Include="include\SampleFramework\Timer.h" />
@@ -25,6 +26,7 @@
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Loader.cpp" />
     <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\SampleFramework.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

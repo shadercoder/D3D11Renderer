@@ -25,26 +25,25 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
+static const int NUM_LIGHTS = 128;
+
+cbuffer Buf : register(b1) {
+	float4 LightDiffuseColors[NUM_LIGHTS];
+	float4 LightPositions[NUM_LIGHTS];
+};
+
 float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 	const float3 amb = (1.0, 1.0, 1.0) * 0.0;
 	float3 col = float3(0, 0, 0);
-	//const int numLights = 16;
-	//for (int i = 0; i < numLights; ++i) {
-	//	float3 lpos = float3(cos(3.14 * 2.0 / float(numLights)) * 5.0, 1.0,
-	//						 sin(3.14 * 2.0 / float(numLights)) * 5.0);
-	//	float3 lcol = lpos;
-	//	float3 l = lpos - position;
-	//	float diff = saturate(dot(normalize(l), normal) * 1.0 / max(0.001, dot(l, l)));
-	//	col += diff * lcol;
-	//}
-	float3 lpos = float3(-1.0, 1.0, -2.0);
-	float3 lcol = float3(1.0, 1.0, 1.0);
-	float3 l = lpos - position;
-	//l = normalize(float3(-1.0, -1.0, -1.0));
-	float bright = 2.0f;
-	float diff = saturate(dot(normalize(l), normal) * bright / max(0.001, dot(l, l)));
-	col = pow(diff, 1.0 / 2.2) * lcol * albedo + amb;
-	return col;
+	for (int i = 0; i < NUM_LIGHTS; ++i) {
+		float3 lcol = LightDiffuseColors[i].rgb;
+		float3 lpos = LightPositions[i].xyz;
+		float3 l = lpos - position;
+		float bright = LightDiffuseColors[i].a;
+		float diff = saturate(dot(normalize(l), normal) * bright / max(0.001, dot(l, l)));
+		col += diff * lcol;
+	}
+	return pow(col * albedo + amb, 1.0 / 2.2);
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
