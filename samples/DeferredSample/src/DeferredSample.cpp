@@ -40,7 +40,7 @@ void DeferredSample::resetLights() {
 	for (auto& light : mLights) {
 		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
 					   Random::randomFloat()};
-		light.intensity = Random::randomFloat(0.2f, 1.0f) / 15.0f;
+		light.intensity = Random::randomFloat(0.2f, 1.0f) / 10.0f;
 		light.height = Random::randomFloat(0.1f, 2.0f);
 		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
 		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
@@ -164,7 +164,7 @@ void DeferredSample::update() {
 		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
 		mGeometryCBuffer =
 			matInst->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-		col *= mLights[i].intensity * 100.0;
+		col *= mLights[i].intensity * 800.0;
 		mGeometryCBuffer->DiffuseColor = {col.r, col.g, col.b, 0.0};
 	}
 	//CLAIR_LOG(std::to_string(1.0f / getDeltaTime()));
