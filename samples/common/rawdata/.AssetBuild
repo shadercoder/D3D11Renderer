@@ -1,10 +1,11 @@
 /materials/default.hlsl|30441329|766989476
-/materials/deferredComposite.hlsl|30441556|3247417299
+/materials/deferredComposite.hlsl|30441685|4229457600
 /materials/deferredGeometry.hlsl|30441261|1690133059
 /materials/drawTexture.hlsl|30441083|4119662285
 /materials/normals.hlsl|30440679|856966016
 /materials/pbrSimple.hlsl|30440679|856966016
 /materials/sky.hlsl|30440679|856966016
 /models/bunny.obj|30440679|856966016
+/models/cube.obj|30441679|2049949893
 /models/plane.obj|30440679|856966016
 /models/sphere.obj|30440679|856966016

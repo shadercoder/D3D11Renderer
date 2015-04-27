@@ -27,7 +27,6 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
-//static const int NUM_LIGHTS = 128;
 
 cbuffer Buf : register(b1) {
 	float4 LightDiffuseColors[NUM_LIGHTS];
@@ -50,23 +49,26 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
+	//psIn.Uvs = psIn.Uvs * 2.0 - 1.0;
 	float3 albedo = texAlbedo.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
 	float3 normal = texNormal.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
 	float3 position = texPosition.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
 	col = calcLighting(albedo, normal, position);
-	//col = albedo;
-	//if (psIn.Uvs.x > 0) {
-	//	if (psIn.Uvs.y > 0) {
-	//		col = calcLighting(albedo, normal, position);
-	//	} else {
-	//		col = normal;
-	//	}
-	//} else {
-	//	if (psIn.Uvs.y > 0) {
-	//		col = position;
-	//	} else {
-	//		col = albedo;
-	//	}
-	//}
+	/*col = albedo;
+	if (psIn.Uvs.x > 0) {
+		if (psIn.Uvs.y > 0) {
+			col = calcLighting(albedo, normal, position);
+		} else {
+			col = normal;
+		}
+	} else {
+		if (psIn.Uvs.y > 0) {
+			col = position;
+		} else {
+			col = albedo;
+		}
+	}*/
+	//col *= 0.01;
+	//col *= float3(psIn.Uvs, 0.0);
 	return float4(col, 1.0);
 }

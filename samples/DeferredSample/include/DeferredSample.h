@@ -1,10 +1,13 @@
 #pragma once
 #include "SampleFramework/SampleBase.h"
+#include <array>
 #include "Clair/Scene.h"
 #include "Clair/MaterialInstance.h"
 #include "Clair/RenderTargetGroup.h"
+#include "Clair/Mesh.h"
+#include "SampleFramework/GlmMath.h"
 #include "../../data/materials/NumLights.h"
-#include <array>
+
 
 class DeferredSample : public SampleFramework::SampleBase {
 public:
@@ -18,12 +21,17 @@ public:
 private:
 	void createRenderTarget(Clair::RenderTarget*& outRenderTarget,
 							Clair::Texture*& outTexture) const;
+	void createObject(Clair::Mesh* mesh, const Clair::Float4& color,
+					  const Clair::Float4x4& transform);
 	void resetLights();
 
 	Clair::Scene* mScene {nullptr};
+	Clair::Scene* mLightDebugScene {nullptr};
+	Clair::Material* mGeometryMat {nullptr};
 	Clair::MaterialInstance* mDeferredCompositeMat {nullptr};
 	class Cb_materials_deferredGeometry_Ps* mGeometryCBuffer {nullptr};
 	class Cb_materials_deferredComposite_Ps* mCompositeCBuffer {nullptr};
+	bool mDrawLightDebugCubes {true};
 
 	Clair::RenderTarget* mGBufAlbedo {nullptr};
 	Clair::Texture* mGBufAlbedoTex {nullptr};
@@ -36,7 +44,8 @@ private:
 
 	class Light {
 	public:
-		Clair::Float3 color {};
+		glm::vec3 color {};
+		Clair::Object* debugObj {nullptr};
 		float intensity {1.0f};
 		float height {0.0f};
 		float rotationRadius {0.0f};
