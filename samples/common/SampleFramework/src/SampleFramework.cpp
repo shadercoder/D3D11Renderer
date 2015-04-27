@@ -8,11 +8,12 @@
 #include "SampleFramework/SampleBase.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Random.h"
+#include "Gui.h"
 
 using namespace SampleFramework;
 
 static SampleBase* gSample {nullptr};
-static SDL_Window* gSDL_window {nullptr};
+static SDL_Window* gMainWindow {nullptr};
 static bool gIsRunning {true};
 static int gWidth {0};
 static int gHeight {0};
@@ -27,9 +28,15 @@ static void setWindowSize(const int width, const int height) {
 static void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
-		if (event.window.windowID == 2) continue;
+		//if (event.window.windowID == 2) {
+			Gui::handleEvent(event);
+		//	continue;
+		//}
 		switch(event.type) {
 		case SDL_QUIT:
+			gIsRunning = false;
+			break;
+		case SDL_WINDOWEVENT_CLOSE:
 			gIsRunning = false;
 			break;
 		case SDL_WINDOWEVENT:
@@ -69,10 +76,11 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		return -1;
 	}
 	
-	gSDL_window = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_CENTERED,
+	gMainWindow = SDL_CreateWindow(caption.c_str(), SDL_WINDOWPOS_CENTERED,
 								  SDL_WINDOWPOS_CENTERED, gWidth, gHeight,
-								  SDL_WINDOW_RESIZABLE|SDL_WINDOW_HIDDEN);
-	if (!gSDL_window) {
+								  SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN
+								  | SDL_WINDOW_OPENGL);
+	if (!gMainWindow) {
 		MessageBox(nullptr, (std::string("Couldn't initialize SDL2:\n") +
 				   SDL_GetError()).c_str(), "Fatal error",
 				   MB_OK | MB_ICONERROR);
@@ -82,28 +90,31 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 	}
 
 	// Initialize all systems
-	Logger::log("SampleFramework: Window created");
+	Logger::log("SampleFramework: Main window created");
 	Loader::setSearchPath(dataPath);
 	Random::initialize();
 	SDL_SysWMinfo info;
 	SDL_VERSION(&info.version);
-	SDL_GetWindowWMInfo(gSDL_window, &info);
+	SDL_GetWindowWMInfo(gMainWindow, &info);
 	int winX, winY;
-	SDL_GetWindowPosition(gSDL_window, &winX, &winY);
+	SDL_GetWindowPosition(gMainWindow, &winX, &winY);
 	// OpenGL GUI window
 	RECT rect;
 	GetWindowRect(info.info.win.window, &rect);
 	const int borderWidth = rect.right - rect.left - gWidth;
 	const int guiWidth = 300;
 	SDL_Window* guiWindow =
-		SDL_CreateWindow("Clair sample GUI", winX - guiWidth - (borderWidth),
-						 winY, guiWidth, gHeight,
-						 SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL);
+		SDL_CreateWindow("Clair sample GUI", winX - (guiWidth + borderWidth),
+						 winY, guiWidth, gHeight, SDL_WINDOW_OPENGL);
 	SDL_GLContext glcontext = SDL_GL_CreateContext(guiWindow);
 	SDL_GL_SetSwapInterval(0);
-	SDL_ShowWindow(gSDL_window);
+	SDL_ShowWindow(gMainWindow); // show main window later to give it focus
+	Logger::log("SampleFramework: GUI window created");
+	Gui::initialize();
+	Gui::resize(guiWidth, gHeight);
+	Logger::log("SampleFramework: GUI initialized");
 	if (!gSample->initialize(info.info.win.window)) {
-		MessageBox(nullptr, "Couldn't initialize Clair.",
+		MessageBox(nullptr, "Couldn't initialize sample.",
 				   "Fatal error", MB_OK | MB_ICONERROR);
 		gSample->terminate();
 		SDL_Quit();
@@ -120,6 +131,7 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 	double runningTime = 0.0f;
 	while (gIsRunning) {
 		// Events and input
+		Gui::newFrame();
 		Input::update();
 		handleEvents();
 		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
@@ -129,8 +141,8 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		gSample->render();
 
 		// GUI
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		Gui::render();
+		//SwapBuffers(GetDC(info.info.win.window));
 		SDL_GL_SwapWindow(guiWindow);
 
 		// Timing
@@ -145,10 +157,11 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 
 	gSample->terminate();
 	Logger::log("SampleFramework: Sample terminated");
+	Gui::terminate();
 
 	SDL_GL_DeleteContext(glcontext);
 	SDL_DestroyWindow(guiWindow);
-	SDL_DestroyWindow(gSDL_window);
+	SDL_DestroyWindow(gMainWindow);
 	SDL_Quit();
 	delete sample;
 	Logger::log("SampleFramework: Terminated");

@@ -7,6 +7,7 @@
 #include "SampleFramework/Logger.h"
 #include "SampleFramework/Random.h"
 #include "SampleFramework/Input.h"
+#include "ImGui/imgui.h"
 #include "Clair/Material.h"
 #include "../../data/materials/deferredGeometry.h"
 #include "../../data/materials/deferredComposite.h"
@@ -40,7 +41,7 @@ void DeferredSample::resetLights() {
 	for (auto& light : mLights) {
 		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
 					   Random::randomFloat()};
-		light.intensity = Random::randomFloat(0.2f, 1.0f) / 10.0f;
+		light.intensity = Random::randomFloat(0.5f, 1.0f) / 20.0f;
 		light.height = Random::randomFloat(0.1f, 2.0f);
 		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
 		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
@@ -164,10 +165,22 @@ void DeferredSample::update() {
 		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
 		mGeometryCBuffer =
 			matInst->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-		col *= mLights[i].intensity * 800.0;
+		col *= mLights[i].intensity * 500.0;
 		mGeometryCBuffer->DiffuseColor = {col.r, col.g, col.b, 0.0};
 	}
-	//CLAIR_LOG(std::to_string(1.0f / getDeltaTime()));
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 640), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Sample GUI", nullptr, ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings
+		| ImGuiWindowFlags_NoTitleBar);
+	ImGui::Text("%.3f ms/frame (%.1f FPS)",
+		getDeltaTime() * 1000.0f,
+		1.0f / getDeltaTime());
+	if (ImGui::Button("Reset lights")) {
+		resetLights();
+	}
+	ImGui::Checkbox("Show lights", &mDrawLightDebugCubes);
+	ImGui::End();
 }
 
 void DeferredSample::render() {

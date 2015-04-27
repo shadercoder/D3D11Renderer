@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\ImGui\imconfig.h" />
+    <ClInclude Include="include\ImGui\imgui.h" />
     <ClInclude Include="include\SampleFramework\Camera.h" />
     <ClInclude Include="include\SampleFramework\GlmMath.h" />
     <ClInclude Include="include\SampleFramework\Input.h" />
@@ -20,9 +22,15 @@
     <ClInclude Include="include\SampleFramework\SampleFramework.h" />
     <ClInclude Include="include\SampleFramework\Timer.h" />
     <ClInclude Include="include\SampleFramework\Logger.h" />
+    <ClInclude Include="src\Gui.h" />
+    <ClInclude Include="include\ImGui\stb_rect_pack.h" />
+    <ClInclude Include="include\ImGui\stb_textedit.h" />
+    <ClInclude Include="include\ImGui\stb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ImGui\imgui.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Gui.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Loader.cpp" />
     <ClCompile Include="src\Logger.cpp" />

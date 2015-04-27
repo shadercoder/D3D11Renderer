@@ -10,6 +10,12 @@
     <ClInclude Include="include\SampleFramework\Loader.h" />
     <ClInclude Include="include\SampleFramework\Timer.h" />
     <ClInclude Include="include\SampleFramework\Random.h" />
+    <ClInclude Include="src\Gui.h" />
+    <ClInclude Include="include\ImGui\imconfig.h" />
+    <ClInclude Include="include\ImGui\imgui.h" />
+    <ClInclude Include="include\ImGui\stb_rect_pack.h" />
+    <ClInclude Include="include\ImGui\stb_textedit.h" />
+    <ClInclude Include="include\ImGui\stb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
@@ -18,5 +24,7 @@
     <ClCompile Include="src\Loader.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\Random.cpp" />
+    <ClCompile Include="src\Gui.cpp" />
+    <ClCompile Include="src\ImGui\imgui.cpp" />
   </ItemGroup>
 </Project>
