@@ -9,6 +9,7 @@
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Random.h"
 #include "Gui.h"
+#include "ImGui/imgui.h"
 
 using namespace SampleFramework;
 
@@ -28,10 +29,10 @@ static void setWindowSize(const int width, const int height) {
 static void handleEvents() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
-		//if (event.window.windowID == 2) {
+		if (event.window.windowID == 2) {
 			Gui::handleEvent(event);
-		//	continue;
-		//}
+			continue;
+		}
 		switch(event.type) {
 		case SDL_QUIT:
 			gIsRunning = false;
@@ -136,11 +137,24 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		handleEvents();
 		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
 
+		// GUI
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(300, 640), ImGuiSetCond_FirstUseEver);
+		ImGui::Begin("Sample GUI", nullptr, ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings
+			| ImGuiWindowFlags_NoTitleBar);
+		ImGui::Text("%.3f ms/frame (%.1f FPS)",
+			deltaTime * 1000.0f,
+			1.0f / deltaTime);
+		ImGui::Separator();
+		ImGui::Spacing();
+
 		// Sample
 		gSample->update();
 		gSample->render();
 
 		// GUI
+		ImGui::End();
 		Gui::render();
 		//SwapBuffers(GetDC(info.info.win.window));
 		SDL_GL_SwapWindow(guiWindow);

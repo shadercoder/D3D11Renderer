@@ -32,6 +32,7 @@ private:
 	class Cb_materials_deferredGeometry_Ps* mGeometryCBuffer {nullptr};
 	class Cb_materials_deferredComposite_Ps* mCompositeCBuffer {nullptr};
 	bool mDrawLightDebugCubes {true};
+	bool mDrawGBuffers {true};
 
 	Clair::RenderTarget* mGBufAlbedo {nullptr};
 	Clair::Texture* mGBufAlbedoTex {nullptr};

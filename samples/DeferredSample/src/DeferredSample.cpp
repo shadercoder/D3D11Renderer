@@ -138,13 +138,6 @@ void DeferredSample::onResize(const int width, const int height,
 void DeferredSample::update() {
 	Camera::update(getDeltaTime());
 
-	if (Input::getKeyDown(SDL_SCANCODE_F)) {
-		resetLights();
-	}
-	if (Input::getKeyDown(SDL_SCANCODE_R)) {
-		mDrawLightDebugCubes = !mDrawLightDebugCubes;
-	}
-
 	for (int i {0}; i < NUM_LIGHTS; ++i) {
 		auto col = mLights[i].color;
 		mCompositeCBuffer->LightDiffuseColors[i] = {
@@ -168,19 +161,9 @@ void DeferredSample::update() {
 		col *= mLights[i].intensity * 500.0;
 		mGeometryCBuffer->DiffuseColor = {col.r, col.g, col.b, 0.0};
 	}
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(300, 640), ImGuiSetCond_FirstUseEver);
-	ImGui::Begin("Sample GUI", nullptr, ImGuiWindowFlags_NoMove
-		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings
-		| ImGuiWindowFlags_NoTitleBar);
-	ImGui::Text("%.3f ms/frame (%.1f FPS)",
-		getDeltaTime() * 1000.0f,
-		1.0f / getDeltaTime());
-	if (ImGui::Button("Reset lights")) {
-		resetLights();
-	}
+	if (ImGui::Button("Reset lights")) resetLights();
 	ImGui::Checkbox("Show lights", &mDrawLightDebugCubes);
-	ImGui::End();
+	ImGui::Checkbox("Show G-buffers", &mDrawGBuffers);
 }
 
 void DeferredSample::render() {
@@ -200,6 +183,7 @@ void DeferredSample::render() {
 	// Composite
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clear(true);
+	mCompositeCBuffer->DrawGBuffers = mDrawGBuffers;
 	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
 
 	Clair::Renderer::finalizeFrame();

@@ -31,6 +31,7 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	float4 LightDiffuseColors[NUM_LIGHTS];
 	float4 LightPositions[NUM_LIGHTS];
+	bool DrawGBuffers;
 };
 
 float3 calcLighting(float3 albedo, float3 normal, float3 position) {
@@ -47,28 +48,31 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 	return pow(col * albedo + amb, 1.0 / 2.2);
 }
 
+float3 getGbuf(Texture2D tex, float2 uv) {
+	return tex.Sample(samplerLinear, uv * float2(1.0, -1.0)).rgb;
+}
+
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
-	//psIn.Uvs = psIn.Uvs * 2.0 - 1.0;
-	float3 albedo = texAlbedo.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
-	float3 normal = texNormal.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
-	float3 position = texPosition.Sample(samplerLinear, psIn.Uvs * float2(1.0, -1.0));
+	float3 albedo = getGbuf(texAlbedo, psIn.Uvs);
+	float3 normal = getGbuf(texNormal, psIn.Uvs);
+	float3 position = getGbuf(texPosition, psIn.Uvs);
 	col = calcLighting(albedo, normal, position);
-	/*col = albedo;
-	if (psIn.Uvs.x > 0) {
-		if (psIn.Uvs.y > 0) {
-			col = calcLighting(albedo, normal, position);
-		} else {
-			col = normal;
+	if (DrawGBuffers) {
+		const float numGbuf = 3.0;
+		const float ratio = 1.0 / numGbuf;
+		if (psIn.Uvs.y < ratio) {
+			if (psIn.Uvs.x < ratio) {
+				float2 uv = psIn.Uvs / ratio;
+				col = getGbuf(texPosition, uv);
+			} else if (psIn.Uvs.x < 2.0 * ratio) {
+				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
+				col = getGbuf(texAlbedo, uv);
+			} else {
+				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
+				col = getGbuf(texNormal, uv);
+			}
 		}
-	} else {
-		if (psIn.Uvs.y > 0) {
-			col = position;
-		} else {
-			col = albedo;
-		}
-	}*/
-	//col *= 0.01;
-	//col *= float3(psIn.Uvs, 0.0);
+	}
 	return float4(col, 1.0);
 }
