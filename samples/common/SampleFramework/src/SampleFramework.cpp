@@ -131,7 +131,7 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 	timer.start();
 	double deltaTime {0.0};
 	double runningTime {0.0};
-	SmoothValue<double, 20> smoothFps {0.0};
+	SmoothValue<double, 40> smoothFps {0.0};
 	float printedFps {0.0};
 	double fpsUpdateTime {0.0};
 	while (gIsRunning) {
@@ -164,11 +164,11 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		const double elapsedTime {timer.elapsed()};
 		deltaTime = elapsedTime;
 		runningTime += elapsedTime;
-		smoothFps = 1.0 / deltaTime;
+		smoothFps = 1.0 / max(deltaTime, 0.001);
 		fpsUpdateTime -= deltaTime;
 		if (fpsUpdateTime < 0) {
-			fpsUpdateTime = 0.2;
-			printedFps = static_cast<float>(smoothFps.get());
+			fpsUpdateTime = 0.4;
+			printedFps = static_cast<float>(smoothFps);
 		}
 		gSample->mDeltaTime = static_cast<float>(deltaTime);
 		gSample->mRunningTime = static_cast<float>(runningTime);

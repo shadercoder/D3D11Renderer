@@ -27,6 +27,10 @@ namespace SampleFramework {
 			return mValue;
 		}
 
+		operator T() const {
+			return mValue;
+		}
+
 	private:
 		T mValue {};
 		size_t mNumSamples {0};

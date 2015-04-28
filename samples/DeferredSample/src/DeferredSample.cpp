@@ -137,6 +137,7 @@ void DeferredSample::onResize(const int width, const int height,
 
 void DeferredSample::update() {
 	Camera::update(getDeltaTime());
+	mCompositeCBuffer->CameraPosition = value_ptr(Camera::getPosition());
 
 	for (int i {0}; i < NUM_LIGHTS; ++i) {
 		auto col = mLights[i].color;

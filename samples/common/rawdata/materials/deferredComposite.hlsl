@@ -31,21 +31,32 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	float4 LightDiffuseColors[NUM_LIGHTS];
 	float4 LightPositions[NUM_LIGHTS];
+	float3 CameraPosition;
 	bool DrawGBuffers;
 };
 
 float3 calcLighting(float3 albedo, float3 normal, float3 position) {
-	const float3 amb = (1.0, 1.0, 1.0) * 0.0;
+	const float3 amb = (1.0, 1.0, 1.0) * 0.01;
+	float3 view = normalize(CameraPosition - position);
 	float3 col = float3(0, 0, 0);
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
-		float3 lcol = LightDiffuseColors[i].rgb;
-		float3 lpos = LightPositions[i].xyz;
-		float3 l = lpos - position;
-		float bright = LightDiffuseColors[i].a;
-		float diff = saturate(dot(normalize(l), normal) * bright / max(0.001, dot(l, l)));
-		col += diff * lcol;
+		float3 light = LightPositions[i].xyz - position;
+		float lightDist2 = max(0.001, dot(light, light));
+		light = normalize(light);
+
+		float diff = saturate(dot(light, normal));
+		diff *= LightDiffuseColors[i].a / lightDist2;
+
+		float3 H = max(normalize(light + view), 0.0);
+		float spec = pow(saturate(dot(normal, H)), 100.0);
+
+		//col += spec;
+		col += lerp(
+			diff * LightDiffuseColors[i].rgb,
+			spec * LightDiffuseColors[i].rgb,
+			0.05);
 	}
-	return pow(col * albedo + amb, 1.0 / 2.2);
+	return pow(col * albedo + amb * albedo, 1.0 / 2.2);
 }
 
 float3 getGbuf(Texture2D tex, float2 uv) {
