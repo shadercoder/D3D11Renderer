@@ -8,6 +8,7 @@
 #include "SampleFramework/SampleBase.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Random.h"
+#include "SmoothValue.h"
 #include "Gui.h"
 #include "ImGui/imgui.h"
 
@@ -128,8 +129,11 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 
 	Timer timer;
 	timer.start();
-	double deltaTime = 0.0f;
-	double runningTime = 0.0f;
+	double deltaTime {0.0};
+	double runningTime {0.0};
+	SmoothValue<double, 20> smoothFps {0.0};
+	float printedFps {0.0};
+	double fpsUpdateTime {0.0};
 	while (gIsRunning) {
 		// Events and input
 		Gui::newFrame();
@@ -143,9 +147,7 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		ImGui::Begin("Sample GUI", nullptr, ImGuiWindowFlags_NoMove
 			| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings
 			| ImGuiWindowFlags_NoTitleBar);
-		ImGui::Text("%.3f ms/frame (%.1f FPS)",
-			deltaTime * 1000.0f,
-			1.0f / deltaTime);
+		ImGui::Text("Frames per second: % *3.1f", 1, printedFps);
 		ImGui::Separator();
 		ImGui::Spacing();
 
@@ -156,13 +158,18 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		// GUI
 		ImGui::End();
 		Gui::render();
-		//SwapBuffers(GetDC(info.info.win.window));
 		SDL_GL_SwapWindow(guiWindow);
 
 		// Timing
-		const double elapsedTime = timer.elapsed();
+		const double elapsedTime {timer.elapsed()};
 		deltaTime = elapsedTime;
 		runningTime += elapsedTime;
+		smoothFps = 1.0 / deltaTime;
+		fpsUpdateTime -= deltaTime;
+		if (fpsUpdateTime < 0) {
+			fpsUpdateTime = 0.2;
+			printedFps = static_cast<float>(smoothFps.get());
+		}
 		gSample->mDeltaTime = static_cast<float>(deltaTime);
 		gSample->mRunningTime = static_cast<float>(runningTime);
 		Logger::reset(runningTime);

@@ -26,6 +26,7 @@
     <ClInclude Include="include\ImGui\stb_rect_pack.h" />
     <ClInclude Include="include\ImGui\stb_textedit.h" />
     <ClInclude Include="include\ImGui\stb_truetype.h" />
+    <ClInclude Include="src\SmoothValue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ImGui\imgui.cpp" />
