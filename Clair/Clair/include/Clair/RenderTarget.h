@@ -12,6 +12,7 @@ namespace Clair {
 		void RenderTarget::clear(const Float4& color);
 	
 		bool isValid() const;
+		Texture* getTexture() const;
 		ID3D11RenderTargetView* getD3dRenderTargetView() const;
 
 	private:
@@ -26,6 +27,10 @@ namespace Clair {
 
 	inline bool RenderTarget::isValid() const {
 		return mIsValid;
+	}
+
+	inline Texture* RenderTarget::getTexture() const {
+		return mTexture;
 	}
 
 	inline ID3D11RenderTargetView*

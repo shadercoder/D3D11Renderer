@@ -11,6 +11,7 @@ namespace Clair {
 		void clearDepth(float value);
 
 		bool isValid() const;
+		Texture* getTexture() const;
 
 	private:
 		DepthStencilTarget() = default;
@@ -24,5 +25,9 @@ namespace Clair {
 
 	inline bool DepthStencilTarget::isValid() const {
 		return mIsValid;
+	}
+
+	inline Texture* DepthStencilTarget::getTexture() const {
+		return mTexture;
 	}
 }

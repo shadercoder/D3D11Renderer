@@ -4,20 +4,15 @@
 
 using namespace Clair;
 
-Texture::~Texture() {
-	if (!mIsValid) return;
-	if (mD3dTexture) {
-		mD3dTexture->Release();
-	}
-	if (mD3dShaderResView) {
-		mD3dShaderResView->Release();
-	}
-}
+#define TEXTURE_FORMAT_CASE(a) case Format::##a:\
+	texDesc.Format = DXGI_FORMAT_##a;\
+	break;
 
 void Texture::initialize(const int width, const int height,
-						 const Byte* data, const Type type) {
-	//CLAIR_ASSERT(data, "Texture data should not be null");
+						 const Byte* data, const Format format,
+						 const Type type) {
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
+	mFormat = format;
 	mType = type;
 	auto const d3dDevice = D3dDevice::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
@@ -26,8 +21,11 @@ void Texture::initialize(const int width, const int height,
 	texDesc.Height = static_cast<UINT>(height);
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = 1;
-	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	//texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	switch (format) {
+	TEXTURE_FORMAT_CASE(R8G8B8A8_UNORM);
+	TEXTURE_FORMAT_CASE(R32G32B32A32_FLOAT);
+	TEXTURE_FORMAT_CASE(D24_UNORM_S8_UINT);
+	}
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -35,7 +33,6 @@ void Texture::initialize(const int width, const int height,
 		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
 	} else if (type == Type::DEPTH_STENCIL_TARGET) {
 		texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		texDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	} else {
 		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	}
@@ -65,5 +62,25 @@ void Texture::initialize(const int width, const int height,
 	if (type != Type::DEPTH_STENCIL_TARGET) {
 		mIsValid = !FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture,
 			nullptr, &mD3dShaderResView));
+	}
+}
+
+void Texture::resize(const int width, const int height) {
+	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
+	destroyD3dObjects();
+	initialize(width, height, nullptr, mFormat, mType);
+}
+
+Texture::~Texture() {
+	destroyD3dObjects();
+}
+
+void Texture::destroyD3dObjects() {
+	//if (!mIsValid) return;
+	if (mD3dTexture) {
+		mD3dTexture->Release();
+	}
+	if (mD3dShaderResView) {
+		mD3dShaderResView->Release();
 	}
 }

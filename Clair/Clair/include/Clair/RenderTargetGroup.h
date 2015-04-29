@@ -9,6 +9,8 @@ namespace Clair {
 		explicit RenderTargetGroup(int numRenderTargets);
 		~RenderTargetGroup();
 
+		void resize(int width, int height);
+
 		void setRenderTarget(int index, RenderTarget* renderTarget);
 		void setDepthStencilTarget(DepthStencilTarget* depthStencilTarget);
 		int getNumRenderTargets() const;

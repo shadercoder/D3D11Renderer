@@ -36,7 +36,7 @@ cbuffer Buf : register(b1) {
 };
 
 float3 calcLighting(float3 albedo, float3 normal, float3 position) {
-	const float3 amb = (1.0, 1.0, 1.0) * 0.01;
+	const float3 amb = (1.0, 1.0, 1.0) * 0.00;
 	float3 view = normalize(CameraPosition - position);
 	float3 col = float3(0, 0, 0);
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -47,8 +47,9 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 		float diff = saturate(dot(light, normal));
 		diff *= LightDiffuseColors[i].a / lightDist2;
 
-		float3 H = max(normalize(light + view), 0.0);
-		float spec = pow(saturate(dot(normal, H)), 100.0);
+		float3 H = normalize(light + view);
+		float NdotH = max(dot(normal, H), 0.0);
+		float spec = pow(saturate(NdotH), 100.0);
 
 		//col += spec;
 		col += lerp(

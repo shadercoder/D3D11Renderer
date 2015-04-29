@@ -18,3 +18,16 @@ RenderTargetGroup::~RenderTargetGroup() {
 	delete[] mD3dRenderTargetArray;
 	delete[] mRenderTargets;
 }
+
+void RenderTargetGroup::resize(const int width, const int height) {
+	for (int i {0}; i < mNumRenderTargets; ++i) {
+		CLAIR_ASSERT(mRenderTargets[i]->getTexture(),
+			"One or more RenderTargets has no texture to resize");
+		mRenderTargets[i]->getTexture()->resize(width, height);
+	}
+	if (mDepthStencilTarget) {
+		CLAIR_ASSERT(mDepthStencilTarget->getTexture(),
+			"The DepthStencilTarget has no texture to resize");
+		mDepthStencilTarget->getTexture()->resize(width, height);
+	}
+}

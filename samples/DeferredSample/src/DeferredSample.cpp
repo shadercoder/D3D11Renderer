@@ -20,8 +20,10 @@ void DeferredSample::createRenderTarget(Clair::RenderTarget*& outRenderTarget,
 										Clair::Texture*& outTexture) const {
 	outTexture = Clair::ResourceManager::createTexture();
 	outTexture->initialize(960, 640, nullptr,
+		Clair::Texture::Format::R32G32B32A32_FLOAT,
 		Clair::Texture::Type::RENDER_TARGET);
 	outRenderTarget = Clair::ResourceManager::createRenderTarget();
+	outTexture->resize(960, 640);
 	outRenderTarget->initialize(outTexture);
 }
 
@@ -58,8 +60,10 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	createRenderTarget(mGBufNormal, mGBufNormalTex);
 	createRenderTarget(mGBufPosition, mGBufPositionTex);
 	auto depthTex = Clair::ResourceManager::createTexture();
-	depthTex->initialize(960, 640, nullptr,
+	depthTex->initialize(96, 64, nullptr,
+		Clair::Texture::Format::D24_UNORM_S8_UINT,
 		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
+	depthTex->resize(960, 640);
 	mGBufDepthStencil = Clair::ResourceManager::createDepthStencilTarget();
 	mGBufDepthStencil->initialize(depthTex);
 

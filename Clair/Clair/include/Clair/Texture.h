@@ -13,8 +13,18 @@ namespace Clair {
 			RENDER_TARGET,
 			DEPTH_STENCIL_TARGET
 		};
+		enum class Format {
+			R8G8B8A8_UNORM,
+			R32G32B32A32_FLOAT,
+			D24_UNORM_S8_UINT,
+		};
+
 		void initialize(int width, int height,
-						const Byte* data, Type option = Type::DEFAULT);
+						const Byte* data,
+						Format format = Format::R8G8B8A8_UNORM,
+						Type option = Type::DEFAULT);
+
+		void resize(int width, int height);
 
 		bool isValid() const;
 		Type getType() const;
@@ -24,12 +34,14 @@ namespace Clair {
 	private:
 		Texture() = default;
 		~Texture();
+		void destroyD3dObjects();
 		friend class ResourceManager;
 		friend class Renderer;
 		friend class RenderTarget;
 		friend class DepthStencilTarget;
 
 		bool mIsValid {false};
+		Format mFormat {Format::R8G8B8A8_UNORM};
 		Type mType {Type::DEFAULT};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
