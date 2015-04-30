@@ -16,15 +16,11 @@
 using namespace SampleFramework;
 using namespace glm;
 
-void DeferredSample::createRenderTarget(Clair::RenderTarget*& outRenderTarget,
-										Clair::Texture*& outTexture) const {
+void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
 	outTexture = Clair::ResourceManager::createTexture();
 	outTexture->initialize(960, 640, nullptr,
 		Clair::Texture::Format::R32G32B32A32_FLOAT,
 		Clair::Texture::Type::RENDER_TARGET);
-	outRenderTarget = Clair::ResourceManager::createRenderTarget();
-	outTexture->resize(960, 640);
-	outRenderTarget->initialize(outTexture);
 }
 
 void DeferredSample::createObject(Clair::Mesh* mesh,
@@ -56,16 +52,13 @@ bool DeferredSample::initialize(const HWND hwnd) {
 		return false;
 	}
 	// Create render targets
-	createRenderTarget(mGBufAlbedo, mGBufAlbedoTex);
-	createRenderTarget(mGBufNormal, mGBufNormalTex);
-	createRenderTarget(mGBufPosition, mGBufPositionTex);
-	auto depthTex = Clair::ResourceManager::createTexture();
-	depthTex->initialize(96, 64, nullptr,
+	createRenderTarget(mGBufAlbedo);
+	createRenderTarget(mGBufNormal);
+	createRenderTarget(mGBufPosition);
+	mGBufDepthStencil = Clair::ResourceManager::createTexture();
+	mGBufDepthStencil->initialize(960, 640, nullptr,
 		Clair::Texture::Format::D24_UNORM_S8_UINT,
 		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
-	depthTex->resize(960, 640);
-	mGBufDepthStencil = Clair::ResourceManager::createDepthStencilTarget();
-	mGBufDepthStencil->initialize(depthTex);
 
 	// Group them into a GBuffer
 	mGBuffer = new Clair::RenderTargetGroup{3};
@@ -80,9 +73,9 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	compTex->initialize(compTexData.get());
 	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
 	mDeferredCompositeMat->initialize(compTex);
-	mDeferredCompositeMat->setTexture(0, mGBufAlbedoTex);
-	mDeferredCompositeMat->setTexture(1, mGBufNormalTex);
-	mDeferredCompositeMat->setTexture(2, mGBufPositionTex);
+	mDeferredCompositeMat->setTexture(0, mGBufAlbedo);
+	mDeferredCompositeMat->setTexture(1, mGBufNormal);
+	mDeferredCompositeMat->setTexture(2, mGBufPosition);
 	mCompositeCBuffer = mDeferredCompositeMat->
 		getConstantBufferPs<Cb_materials_deferredComposite_Ps>();
 
@@ -137,6 +130,7 @@ void DeferredSample::onResize(const int width, const int height,
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
+	mGBuffer->resize(width, height);
 }
 
 void DeferredSample::update() {
@@ -177,7 +171,7 @@ void DeferredSample::render() {
 	mGBufAlbedo->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufNormal->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufPosition->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	mGBufDepthStencil->clearDepth(1.0f);
+	mGBufDepthStencil->clear({1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);

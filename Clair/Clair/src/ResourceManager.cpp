@@ -5,8 +5,6 @@
 #include "Clair/Material.h"
 #include "Clair/Texture.h"
 #include "Clair/Mesh.h"
-#include "Clair/RenderTarget.h"
-#include "Clair/DepthStencilTarget.h"
 
 using namespace Clair;
 
@@ -25,8 +23,6 @@ CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Mesh);
 CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Material);
 CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(Texture);
 CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(MaterialInstance);
-CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(RenderTarget);
-CLAIR_RESOURCE_MANAGER_CREATABLE_TYPE(DepthStencilTarget);
 
 bool ResourceManager::initialize() {
 	return true;
@@ -46,12 +42,6 @@ void ResourceManager::terminate() {
 		delete it;
 	}
 	for (const auto& it : msMaterialInstanceVec) {
-		delete it;
-	}
-	for (const auto& it : msRenderTargetVec) {
-		delete it;
-	}
-	for (const auto& it : msDepthStencilTargetVec) {
 		delete it;
 	}
 }

@@ -86,7 +86,6 @@
     <ClCompile Include="src\Clair.cpp" />
     <ClCompile Include="src\ConstantBuffer.cpp" />
     <ClCompile Include="src\Debug.cpp" />
-    <ClCompile Include="src\DepthStencilTarget.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\InputLayout.cpp" />
     <ClCompile Include="src\D3dDevice.cpp" />
@@ -97,7 +96,6 @@
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PixelShader.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\RenderTarget.cpp" />
     <ClCompile Include="src\RenderTargetGroup.cpp" />
     <ClCompile Include="src\ResourceManager.cpp" />
     <ClCompile Include="src\Scene.cpp" />
@@ -108,10 +106,8 @@
   <ItemGroup>
     <ClInclude Include="include\Clair\Clair.h" />
     <ClInclude Include="include\Clair\Debug.h" />
-    <ClInclude Include="include\Clair\DepthStencilTarget.h" />
     <ClInclude Include="include\Clair\MaterialConstBufferData.h" />
     <ClInclude Include="include\Clair\MaterialInstance.h" />
-    <ClInclude Include="include\Clair\RenderTarget.h" />
     <ClInclude Include="include\Clair\RenderTargetGroup.h" />
     <ClInclude Include="include\Clair\ResourceManager.h" />
     <ClInclude Include="include\Clair\Texture.h" />

@@ -19,8 +19,7 @@ public:
 	void render() override;
 
 private:
-	void createRenderTarget(Clair::RenderTarget*& outRenderTarget,
-							Clair::Texture*& outTexture) const;
+	void createRenderTarget(Clair::Texture*& outTexture) const;
 	void createObject(Clair::Mesh* mesh, const Clair::Float4& color,
 					  const Clair::Float4x4& transform);
 	void resetLights();
@@ -34,13 +33,10 @@ private:
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};
 
-	Clair::RenderTarget* mGBufAlbedo {nullptr};
-	Clair::Texture* mGBufAlbedoTex {nullptr};
-	Clair::RenderTarget* mGBufNormal {nullptr};
-	Clair::Texture* mGBufNormalTex {nullptr};
-	Clair::RenderTarget* mGBufPosition {nullptr};
-	Clair::Texture* mGBufPositionTex {nullptr};
-	Clair::DepthStencilTarget* mGBufDepthStencil {nullptr};
+	Clair::Texture* mGBufAlbedo {nullptr};
+	Clair::Texture* mGBufNormal {nullptr};
+	Clair::Texture* mGBufPosition {nullptr};
+	Clair::Texture* mGBufDepthStencil {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 
 	class Light {

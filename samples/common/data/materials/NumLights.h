@@ -1,3 +1,3 @@
 #pragma once
 
-static const int NUM_LIGHTS = 128;
+static const int NUM_LIGHTS = 64;

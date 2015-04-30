@@ -60,10 +60,45 @@ void Texture::initialize(const int width, const int height,
 												  &mD3dTexture));
 	delete[] texData;
 	if (type != Type::DEPTH_STENCIL_TARGET) {
-		mIsValid = !FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture,
-			nullptr, &mD3dShaderResView));
+		if (FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture,
+			nullptr, &mD3dShaderResView))) {
+			mIsValid = false;
+			return;
+		}
+	} else {
+		if (FAILED(d3dDevice->CreateDepthStencilView(mD3dTexture, nullptr,
+			&mD3dDepthStencilTargetView))) {
+			mIsValid = false;
+			return;
+		}
+	}
+
+	if (type == Type::RENDER_TARGET) {
+		if (FAILED(d3dDevice->CreateRenderTargetView(mD3dTexture, nullptr,
+			&mD3dRenderTargetView))) {
+			mIsValid = false;
+			return;
+		}
 	}
 }
+
+void Texture::clear(const Float4& value) {
+	CLAIR_ASSERT(mType == Type::RENDER_TARGET,
+		"Clear value doesn't match Texture Format")
+	auto d3dContext = D3dDevice::getD3dDeviceContext();
+	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &value[0][0]);
+}
+
+void Texture::clear(const float value) {
+	CLAIR_ASSERT(mType == Type::DEPTH_STENCIL_TARGET,
+		"Clear value doesn't match Texture Format")
+	auto d3dDeviceContext = D3dDevice::getD3dDeviceContext();
+	d3dDeviceContext->ClearDepthStencilView(
+		mD3dDepthStencilTargetView,
+		D3D11_CLEAR_DEPTH,
+		value, 0);
+}
+
 
 void Texture::resize(const int width, const int height) {
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
@@ -77,6 +112,12 @@ Texture::~Texture() {
 
 void Texture::destroyD3dObjects() {
 	//if (!mIsValid) return;
+	if (mD3dDepthStencilTargetView) {
+		mD3dDepthStencilTargetView->Release();
+	}
+	if (mD3dRenderTargetView) {
+		mD3dRenderTargetView->Release();
+	}
 	if (mD3dTexture) {
 		mD3dTexture->Release();
 	}

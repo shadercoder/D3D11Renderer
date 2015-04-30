@@ -147,7 +147,8 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		ImGui::Begin("Sample GUI", nullptr, ImGuiWindowFlags_NoMove
 			| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings
 			| ImGuiWindowFlags_NoTitleBar);
-		ImGui::Text("Frames per second: % *3.1f", 1, printedFps);
+		ImGui::Text("Frames per second: %0*3.1f", 0, printedFps);
+		ImGui::Text("Resolution: %ix%i", gWidth, gHeight);
 		ImGui::Separator();
 		ImGui::Spacing();
 
