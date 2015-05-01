@@ -49,5 +49,5 @@ private:
 		float rotationSpeed {1.0f};
 		float offset {0.0f};
 	};
-	std::array<Light, NUM_LIGHTS> mLights;
+	Light* mLights {nullptr};
 };

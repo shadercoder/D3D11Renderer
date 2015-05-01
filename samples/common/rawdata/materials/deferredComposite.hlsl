@@ -49,13 +49,12 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 
 		float3 H = normalize(light + view);
 		float NdotH = max(dot(normal, H), 0.0);
-		float spec = pow(saturate(NdotH), 100.0);
+		float spec = pow(saturate(NdotH), 500.0);
 
-		//col += spec;
 		col += lerp(
 			diff * LightDiffuseColors[i].rgb,
 			spec * LightDiffuseColors[i].rgb,
-			0.10);
+			0.50);
 	}
 	return pow(col * albedo + amb * albedo, 1.0 / 2.2);
 }

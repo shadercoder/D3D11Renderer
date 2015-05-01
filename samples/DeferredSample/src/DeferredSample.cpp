@@ -36,7 +36,8 @@ void DeferredSample::createObject(Clair::Mesh* mesh,
 }
 
 void DeferredSample::resetLights() {
-	for (auto& light : mLights) {
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto& light = mLights[i];
 		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
 					   Random::randomFloat()};
 		light.intensity = Random::randomFloat(0.5f, 1.0f) /
@@ -103,6 +104,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	createObject(bunnyMesh, {1.0f, 0.2f, 1.0f, 1.0f},
 				 value_ptr(translate(vec3{2.0f, 0.0f, 2.0f})));
 
+	mLights = new Light[NUM_LIGHTS];
 	resetLights();
 
 	// Light debug objects
@@ -110,7 +112,8 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	auto cubeMesh = Clair::ResourceManager::createMesh();
 	cubeMesh->initialize(cubeMeshData.get());
 	mLightDebugScene = Clair::ResourceManager::createScene();
-	for (auto& light : mLights) {
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto& light = mLights[i];
 		light.debugObj = mLightDebugScene->createObject();
 		light.debugObj->setMesh(cubeMesh);
 		light.debugObj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
@@ -123,6 +126,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 }
 
 void DeferredSample::terminate() {
+	delete[] mLights;
 	delete mGBuffer;
 	Clair::terminate();
 }
