@@ -86,11 +86,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ConstBufferDesc.cpp" />
+    <ClCompile Include="src\IncludedFiles.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ConstBufferDesc.h" />
     <ClInclude Include="include\ErrorCodes.h" />
+    <ClInclude Include="include\IncludedFiles.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

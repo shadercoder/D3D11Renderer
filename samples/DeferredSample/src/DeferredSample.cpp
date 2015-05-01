@@ -104,6 +104,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 
 	resetLights();
 
+	// Light debug objects
 	auto cubeMeshData = Loader::loadBinaryData("models/cube.cmod");
 	auto cubeMesh = Clair::ResourceManager::createMesh();
 	cubeMesh->initialize(cubeMeshData.get());
@@ -137,6 +138,7 @@ void DeferredSample::update() {
 	Camera::update(getDeltaTime());
 	mCompositeCBuffer->CameraPosition = value_ptr(Camera::getPosition());
 
+	// Update lights
 	for (int i {0}; i < NUM_LIGHTS; ++i) {
 		auto col = mLights[i].color;
 		mCompositeCBuffer->LightDiffuseColors[i] = {
@@ -160,18 +162,20 @@ void DeferredSample::update() {
 		col *= mLights[i].intensity * 500.0;
 		mGeometryCBuffer->DiffuseColor = {col.r, col.g, col.b, 0.0};
 	}
+
+	// GUI
 	if (ImGui::Button("Reset lights")) resetLights();
 	ImGui::Checkbox("Show lights", &mDrawLightDebugCubes);
-	ImGui::Checkbox("Show G-buffers", &mDrawGBuffers);
+	ImGui::Checkbox("Show G-buffer", &mDrawGBuffers);
 }
 
 void DeferredSample::render() {
 	// Render to G-buffer
-	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	mGBufAlbedo->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufNormal->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufPosition->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufDepthStencil->clear({1.0f});
+	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
@@ -180,8 +184,8 @@ void DeferredSample::render() {
 	}
 
 	// Composite
-	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clear(true);
+	Clair::Renderer::setRenderTargetGroup(nullptr);
 	mCompositeCBuffer->DrawGBuffers = mDrawGBuffers;
 	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
 

@@ -14,6 +14,7 @@
 #include "ErrorCodes.h"
 #include "../../common/CommandLineUtils.h"
 #include "ConstBufferDesc.h"
+#include "IncludedFiles.h"
 
 #include <direct.h>
 #define GetCurrentDir _getcwd
@@ -48,6 +49,8 @@ static std::string gMaterialName {"material"};
 static ConstBufferDesc gVsCBufferDesc;
 static ConstBufferDesc gPsCBufferDesc;
 static std::ofstream gLogFile {};
+static IncludedFiles gIncludedFiles {};
+static std::string gWorkinDirectory {'/'};
 
 //int main(int , char* []) {
 int main(int argc, char* argv[]) {
@@ -69,6 +72,12 @@ int main(int argc, char* argv[]) {
 			std::cout << "Converting " << argv[1] << '\n';
 		}
 	}
+	auto findLastSlashPos = gInFileName.find_last_of("/\\");
+	if (findLastSlashPos != std::string::npos) {
+		gWorkinDirectory = gInFileName.substr(0, findLastSlashPos) + '/';
+	}
+	std::cout << "error: " << gWorkinDirectory << '\n';
+	std::cout << "error: " << gInFileName << '\n';
 
 	gLogFile.open(gLogFileName);
 	if (!gLogFile.is_open()) {
@@ -115,6 +124,7 @@ int main(int argc, char* argv[]) {
 	if (!writeToFile(gOutFileName)) {
 		return MaterialToolError::WRITE;
 	}
+	gIncludedFiles.writeToLog(gLogFile);
 	gVs->Release();
 	gPs->Release();
 	gLogFile.close();
@@ -131,15 +141,17 @@ public:
 	STDMETHOD(Open)(THIS_ D3D_INCLUDE_TYPE /*IncludeType*/,
 		LPCSTR pFileName, LPCVOID /*pParentData*/, LPCVOID *ppData,
 		UINT *pBytes) override {
-		std::ifstream f(pFileName);
+		const std::string filename {gWorkinDirectory + pFileName};
+		std::ifstream f(filename);
 		if (!f.is_open()) {
-			std::cout << "Error: Couldn't open "  << pFileName << '\n';
+			std::cout << "Error: Couldn't open "  << filename << '\n';
 			return S_OK;
 		}
-		mString = std::string(
-			std::istreambuf_iterator<char>(f),
-			std::istreambuf_iterator<char>()
-		);
+		gIncludedFiles.addFile(pFileName);
+		mString = std::string{
+			std::istreambuf_iterator<char>{f},
+			std::istreambuf_iterator<char>{}
+		};
 		*ppData = mString.c_str();
 		*pBytes = mString.size();
 		return S_OK;
@@ -150,7 +162,7 @@ public:
 	}
 
 private:
-	std::string mString;
+	std::string mString {};
 };
 
 HRESULT compileShader(const std::string& sourceCode, const std::string& target,

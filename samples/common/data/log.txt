@@ -1,2 +1,0 @@
-D:\School\Specialization\ClairRenderer\samples\common\rawdata\materials\deferredComposite.hlsl(33,28-37): error X3004: undeclared identifier 'NUM_LIGHTS'
-D:\School\Specialization\ClairRenderer\samples\common\rawdata\materials\deferredComposite.hlsl(33,9-38): error X3074: 'LightDiffuseColors': implicit array missing initial value

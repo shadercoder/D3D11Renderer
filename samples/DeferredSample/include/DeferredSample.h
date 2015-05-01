@@ -6,7 +6,7 @@
 #include "Clair/RenderTargetGroup.h"
 #include "Clair/Mesh.h"
 #include "SampleFramework/GlmMath.h"
-#include "../../data/materials/NumLights.h"
+#include "../../rawdata/materials/numLights.h"
 
 
 class DeferredSample : public SampleFramework::SampleBase {

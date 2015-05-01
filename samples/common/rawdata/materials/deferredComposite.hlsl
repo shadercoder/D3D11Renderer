@@ -1,4 +1,4 @@
-#include "../common/data/materials/NumLights.h"
+#include "numLights.h"
 
 Texture2D texAlbedo : register(t0);
 Texture2D texNormal : register(t1);
@@ -55,7 +55,7 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 		col += lerp(
 			diff * LightDiffuseColors[i].rgb,
 			spec * LightDiffuseColors[i].rgb,
-			0.05);
+			0.10);
 	}
 	return pow(col * albedo + amb * albedo, 1.0 / 2.2);
 }

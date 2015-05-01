@@ -6,6 +6,7 @@
 #include "../../../../Clair/tools/MeshTool/include/ErrorCodes.h"
 #include <algorithm>
 #include "AssetDatabase.h"
+#include <iostream>
 
 static std::string gInFileName {"../../rawdata"};
 static std::string gOutFileName {"../../data"};
@@ -150,10 +151,19 @@ void processFile(const std::string& currFile, const std::string& folder,
 	const int commandResult {std::system(command.c_str())};
 
 	// Check if it was successful
+	std::ifstream matLogFile(gInFileName + ".materialLog");
 	if (commandResult == 0) {
-		printf(">  %s %s -> SUCCES\n", gIndent.c_str(), ffd.cFileName,
-								   currOutFile.c_str());
+		printf(">  %s %s -> SUCCES\n", gIndent.c_str(), ffd.cFileName);
 		AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
+		std::string matLog {};
+		std::string line {};
+		if (matLogFile.is_open()) {
+			while (std::getline(matLogFile, line)) {
+				matLog += /*">  " +*/ line + '\n';
+			}
+		}
+		//file
+		std::cout << "error: " << matLog << '\n';
 		++gNumSucceeded;
 	} else {
 		if (isMesh) {
@@ -162,7 +172,6 @@ void processFile(const std::string& currFile, const std::string& folder,
 				   MeshToolError::ERROR_STRING[commandResult].c_str());
 		} else {
 			// get errors from log
-			std::ifstream matLogFile(gInFileName + ".materialLog");
 			std::string matLog {};
 			std::string line {};
 			if (matLogFile.is_open()) {

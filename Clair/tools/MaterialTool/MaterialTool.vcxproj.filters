@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ConstBufferDesc.cpp" />
+    <ClCompile Include="src\IncludedFiles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ErrorCodes.h" />
     <ClInclude Include="include\ConstBufferDesc.h" />
+    <ClInclude Include="include\IncludedFiles.h" />
   </ItemGroup>
 </Project>
