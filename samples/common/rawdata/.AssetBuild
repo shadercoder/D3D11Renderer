@@ -1,5 +1,6 @@
 /materials/default.hlsl|30441329|766989476
-/materials/deferredComposite.hlsl|30442487|2060452841
+/materials/deferredComposite.hlsl|30442498|50783418|1
+/materials/numLights.h|30442526|158689400
 /materials/deferredGeometry.hlsl|30441261|1690133059
 /materials/drawTexture.hlsl|30441083|4119662285
 /materials/normals.hlsl|30440679|856966016

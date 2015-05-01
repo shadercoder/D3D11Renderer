@@ -39,7 +39,8 @@ void DeferredSample::resetLights() {
 	for (auto& light : mLights) {
 		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
 					   Random::randomFloat()};
-		light.intensity = Random::randomFloat(0.5f, 1.0f) / 20.0f;
+		light.intensity = Random::randomFloat(0.5f, 1.0f) /
+			(0.2f * static_cast<float>(NUM_LIGHTS));
 		light.height = Random::randomFloat(0.1f, 2.0f);
 		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
 		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);

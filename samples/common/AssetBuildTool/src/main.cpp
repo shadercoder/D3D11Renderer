@@ -26,7 +26,7 @@ static std::string pathToName(const std::string& str);
 int main(int argc, char* argv[]) {
 	// Get paths from command arguments (or hardcoded values for debugging)
 	if (argc != 3) {
-		return -1;
+		//return -1;
 	} else {
 		gInFileName = argv[1];
 		gOutFileName = argv[2];
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 	printf(">------ AssetBuildTool started ------\n");
 
 	// Check for timestamp file
-	if (!AssetDatabase::initialize(gInFileName + "\\.AssetBuild")) {
+	if (!AssetDatabase::initialize(gInFileName)) {
 		return -1;
 	}
 	printf(">  Converting files:\n");
@@ -95,9 +95,8 @@ static bool scanFolder(const std::string& folder) {
 void processFile(const std::string& currFile, const std::string& folder,
 				 const WIN32_FIND_DATA& ffd) {
 	// Check if file is up to date
-	if (AssetDatabase::isFileUpToDate(
-		folder + '/' + currFile, ffd.ftLastWriteTime)) {
-		AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
+	if (AssetDatabase::isFileUpToDate(folder + '/' + currFile)) {
+		//AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
 		++gNumUpToDate;
 		return;
 	}
@@ -154,16 +153,17 @@ void processFile(const std::string& currFile, const std::string& folder,
 	std::ifstream matLogFile(gInFileName + ".materialLog");
 	if (commandResult == 0) {
 		printf(">  %s %s -> SUCCES\n", gIndent.c_str(), ffd.cFileName);
-		AssetDatabase::writeFile(folder + '/' + currFile, ffd.ftLastWriteTime);
-		std::string matLog {};
 		std::string line {};
+		std::vector<std::string> dependencies {};
 		if (matLogFile.is_open()) {
 			while (std::getline(matLogFile, line)) {
-				matLog += /*">  " +*/ line + '\n';
+				dependencies.push_back(line);
 			}
 		}
+		AssetDatabase::writeFile(folder + '/' + currFile,
+			ffd.ftLastWriteTime, dependencies);
 		//file
-		std::cout << "error: " << matLog << '\n';
+		//std::cout << "error: " << matLog << '\n';
 		++gNumSucceeded;
 	} else {
 		if (isMesh) {

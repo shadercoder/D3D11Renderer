@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
 	if (findLastSlashPos != std::string::npos) {
 		gWorkinDirectory = gInFileName.substr(0, findLastSlashPos) + '/';
 	}
-	std::cout << "error: " << gWorkinDirectory << '\n';
-	std::cout << "error: " << gInFileName << '\n';
+	//std::cout << "error: " << gWorkinDirectory << '\n';
+	//std::cout << "error: " << gInFileName << '\n';
 
 	gLogFile.open(gLogFileName);
 	if (!gLogFile.is_open()) {
