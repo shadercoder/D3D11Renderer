@@ -4,8 +4,9 @@
 
 using namespace Clair;
 
-#define TEXTURE_FORMAT_CASE(a) case Format::##a:\
-	texDesc.Format = DXGI_FORMAT_##a;\
+#define TEXTURE_FORMAT_CASE(FORMAT, ELEMENT_SIZE) case Format::##FORMAT:\
+	texDesc.Format = DXGI_FORMAT_##FORMAT;\
+	elementSize = ELEMENT_SIZE;\
 	break;
 
 void Texture::initialize(const int width, const int height,
@@ -21,10 +22,11 @@ void Texture::initialize(const int width, const int height,
 	texDesc.Height = static_cast<UINT>(height);
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = 1;
+	size_t elementSize {0};
 	switch (format) {
-	TEXTURE_FORMAT_CASE(R8G8B8A8_UNORM);
-	TEXTURE_FORMAT_CASE(R32G32B32A32_FLOAT);
-	TEXTURE_FORMAT_CASE(D24_UNORM_S8_UINT);
+	TEXTURE_FORMAT_CASE(R8G8B8A8_UNORM, 4);
+	TEXTURE_FORMAT_CASE(R32G32B32A32_FLOAT, 16);
+	TEXTURE_FORMAT_CASE(D24_UNORM_S8_UINT, 4);
 	}
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
@@ -39,7 +41,7 @@ void Texture::initialize(const int width, const int height,
 	texDesc.CPUAccessFlags = 0;
 	texDesc.MiscFlags = 0;
 
-	Byte* texData = new Byte[width * height * 4 * 4]();
+	Byte* texData = new Byte[width * height * elementSize]();
 	if (data) {
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x) {
@@ -54,7 +56,7 @@ void Texture::initialize(const int width, const int height,
 	D3D11_SUBRESOURCE_DATA texInitData;
 	ZeroMemory(&texInitData, sizeof(D3D11_SUBRESOURCE_DATA));
 	texInitData.pSysMem = texData;
-	texInitData.SysMemPitch = sizeof(Byte) * width * 4 * 4;
+	texInitData.SysMemPitch = sizeof(Byte) * width * elementSize;
 
 	mIsValid = !FAILED(d3dDevice->CreateTexture2D(&texDesc, &texInitData,
 												  &mD3dTexture));

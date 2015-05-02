@@ -176,11 +176,11 @@ void DeferredSample::update() {
 
 void DeferredSample::render() {
 	// Render to G-buffer
+	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	mGBufAlbedo->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufNormal->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufPosition->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufDepthStencil->clear({1.0f});
-	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
@@ -189,8 +189,8 @@ void DeferredSample::render() {
 	}
 
 	// Composite
-	Clair::Renderer::clear(true);
 	Clair::Renderer::setRenderTargetGroup(nullptr);
+	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	mCompositeCBuffer->DrawGBuffers = mDrawGBuffers;
 	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
 

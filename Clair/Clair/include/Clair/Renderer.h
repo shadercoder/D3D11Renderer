@@ -17,7 +17,9 @@ namespace Clair {
 		static void terminate();
 
 		static void setViewport(int x, int y, int width, int height);
-		static void clear(bool clearCol);
+		static void clearColor(const Float4& value);
+		static void clearDepthStencil(float depthValue,
+									  unsigned char stencilValue);
 		static void finalizeFrame();
 
 		static void setRenderTargetGroup(const RenderTargetGroup* targets);

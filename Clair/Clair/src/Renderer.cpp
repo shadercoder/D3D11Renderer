@@ -236,16 +236,18 @@ void Renderer::terminate() {
 	//releaseComObject(d3dDevice);
 }
 
-void Renderer::clear(const bool clearCol) {
-	if (clearCol) {
-		const float col[] {0.2f, 0.4f, 0.6f, 1.0f};
-		d3dDeviceContext->ClearRenderTargetView(renderTargetView, col);
-	}
+void Renderer::clearColor(const Float4& value) {
+	d3dDeviceContext->ClearRenderTargetView(renderTargetView, &value[0][0]);
+}
+
+void Renderer::clearDepthStencil(const float depthValue,
+								 const unsigned char stencilValue) {
 	d3dDeviceContext->ClearDepthStencilView(
 										depthStencilView,
 										D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL,
-										1.0f, 0);
+										depthValue, stencilValue);
 }
+
 
 void Renderer::finalizeFrame() {
 	swapChain->Present(0, 0);

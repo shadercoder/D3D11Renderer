@@ -55,9 +55,8 @@ void BasicSample::update() {
 }
 
 void BasicSample::render() {
-	Clair::Renderer::clear(true);
-	Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
-	screen->clearRenderTarget({0.2f, 0.4f, 0.6f, 1.0f});
+	Clair::Renderer::clearColor({0.2f, 0.4f, 0.6f, 1.0f});
+	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();

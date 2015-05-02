@@ -1,13 +1,13 @@
 #include "MaterialSample.h"
-#include "Clair/Object.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
+#include "Clair/Clair.h"
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
+#include "Clair/Object.h"
 #include "../../data/materials/pbrSimple.h"
-#include <Clair/Clair.h>
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -22,8 +22,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto texture = Clair::ResourceManager::createTexture();
 	texture->initialize(
 		loadedTex.width, loadedTex.height,
-		loadedTex.data, Clair::Texture::Type::DEFAULT);
-	//texture->clearRenderTarget({1.0f, 0.1f, 0.2f, 1.0f});
+		loadedTex.data, Clair::Texture::Format::R8G8B8A8_UNORM);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();
@@ -87,12 +86,10 @@ void MaterialSample::update() {
 }
 
 void MaterialSample::render() {
-	//Clair::Texture* screen = Clair::Renderer::getDefaultRenderTarget();
-	//screen->clearRenderTarget({1.0f, 0.0f, 0.0f, 1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
-	Clair::Renderer::clear(false);
+	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::render(mScene);
 	Clair::Renderer::finalizeFrame();
 }
