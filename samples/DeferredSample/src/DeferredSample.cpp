@@ -18,9 +18,12 @@ using namespace glm;
 
 void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
 	outTexture = Clair::ResourceManager::createTexture();
-	outTexture->initialize(960, 640, nullptr,
-		Clair::Texture::Format::R32G32B32A32_FLOAT,
-		Clair::Texture::Type::RENDER_TARGET);
+	Clair::Texture::Options texOptions;
+	texOptions.width = 960;
+	texOptions.height = 640;
+	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	outTexture->initialize(texOptions);
 }
 
 void DeferredSample::createObject(Clair::Mesh* mesh,
@@ -58,9 +61,12 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	createRenderTarget(mGBufNormal);
 	createRenderTarget(mGBufPosition);
 	mGBufDepthStencil = Clair::ResourceManager::createTexture();
-	mGBufDepthStencil->initialize(960, 640, nullptr,
-		Clair::Texture::Format::D24_UNORM_S8_UINT,
-		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
+	Clair::Texture::Options depthTexOptions;
+	depthTexOptions.width = 960;
+	depthTexOptions.height = 640;
+	depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
+	depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
+	mGBufDepthStencil->initialize(depthTexOptions);
 
 	// Group them into a GBuffer
 	mGBuffer = new Clair::RenderTargetGroup{3};

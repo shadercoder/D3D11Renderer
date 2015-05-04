@@ -1,4 +1,4 @@
-Texture2D texAlbedo : register(t0);
+TextureCube texAlbedo : register(t0);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -49,7 +49,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	float3 reflCol =
-		texAlbedo.Sample(samplerLinear, (refl.xz / refl.y) * 0.1).rgb;
+		texAlbedo.Sample(samplerLinear, refl).rgb;
 	reflCol = pow(reflCol, 2.2);
 	float3 col = albedo * diff;
 	col = lerp(col, lerp(reflCol, reflCol * albedo, Metalness), Reflectivity);

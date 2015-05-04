@@ -20,9 +20,14 @@ bool MaterialSample::initialize(const HWND hwnd) {
 
 	auto loadedTex = Loader::loadImageData("textures/avatar.png");
 	auto texture = Clair::ResourceManager::createTexture();
-	texture->initialize(
-		loadedTex.width, loadedTex.height,
-		loadedTex.data, Clair::Texture::Format::R8G8B8A8_UNORM);
+	Clair::Texture::Options texOptions {};
+	texOptions.width = loadedTex.width;
+	texOptions.height = loadedTex.height;
+	texOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
+	texOptions.initialData = loadedTex.data;
+	texOptions.arraySize = 6;
+	texOptions.type = Clair::Texture::Type::CUBE_MAP_DEFAULT;
+	texture->initialize(texOptions);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();

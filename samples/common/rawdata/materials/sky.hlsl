@@ -1,4 +1,4 @@
-Texture2D texAlbedo : register(t0);
+TextureCube texAlbedo : register(t0);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -35,6 +35,6 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 			   (CamRight * psIn.Uvs.x * Aspect) +
 			   (CamUp * psIn.Uvs.y);
 	r = normalize(r);
-	float3 col = texAlbedo.Sample(samplerLinear, r.xz / r.y * 0.4);
+	float3 col = texAlbedo.Sample(samplerLinear, r);
 	return float4(col, 1.0);
 }

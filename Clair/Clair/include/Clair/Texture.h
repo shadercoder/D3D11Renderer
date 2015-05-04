@@ -15,18 +15,28 @@ namespace Clair {
 		enum class Type {
 			DEFAULT,
 			RENDER_TARGET,
-			DEPTH_STENCIL_TARGET
+			DEPTH_STENCIL_TARGET,
+			CUBE_MAP_DEFAULT,
+			CUBE_MAP_RENDER_TARGET
 		};
 		enum class Format {
 			R8G8B8A8_UNORM,
 			R32G32B32A32_FLOAT,
 			D24_UNORM_S8_UINT,
 		};
+		class Options {
+		public:
+			Options() = default;
 
-		void initialize(int width, int height,
-						const Byte* data,
-						Format format = Format::R8G8B8A8_UNORM,
-						Type option = Type::DEFAULT);
+			int width {1};
+			int height {1};
+			const Byte* initialData {nullptr};
+			Format format {Format::R8G8B8A8_UNORM};
+			Type type {Type::DEFAULT};
+			size_t arraySize {1};
+		};
+
+		void initialize(const Options& options);
 
 		void clear(const Float4& value);
 		void clear(float value);
