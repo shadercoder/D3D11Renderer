@@ -66,16 +66,17 @@ void Texture::initialize(const Options& options) {
 			subResourceData[subResIdx].SysMemPitch =
 				sizeof(Byte) * mipWidth * elementSize;
 			subResourceData[subResIdx].SysMemSlicePitch = 0;
-			if (options.initialData && i_mip == 0) {
+			if (options.initialData) {
 				for (int y {0}; y < mipHeight; ++y) {
 					for (int x {0}; x < mipWidth; ++x) {
 						const int idx = (x + y * mipWidth) * 4;
+						const int arrOffset = mipWidth * mipHeight * i_arr * 4;
 						texData[i_arr][i_mip][idx + 0] =
-							options.initialData[idx + 0];
+							options.initialData[arrOffset + (idx + 0) / (i_mip + 1)];
 						texData[i_arr][i_mip][idx + 1] =
-							options.initialData[idx + 1];
+							options.initialData[arrOffset + (idx + 1) / (i_mip + 1)];
 						texData[i_arr][i_mip][idx + 2] =
-							options.initialData[idx + 2];
+							options.initialData[arrOffset + (idx + 2) / (i_mip + 1)];
 						texData[i_arr][i_mip][idx + 3] = 255;
 					}
 				}

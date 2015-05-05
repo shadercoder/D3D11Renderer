@@ -17,7 +17,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
-	auto loadedTex = Loader::loadImageData("textures/avatar.png");
+	auto loadedTex = Loader::loadCubeImageData("textures/sky");
 	auto texture = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options texOptions {};
 	texOptions.width = loadedTex.width;
