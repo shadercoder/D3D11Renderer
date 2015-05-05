@@ -24,16 +24,14 @@ namespace Clair {
 			R32G32B32A32_FLOAT,
 			D24_UNORM_S8_UINT,
 		};
-		class Options {
-		public:
-			Options() = default;
-
+		struct Options {
 			int width {1};
 			int height {1};
 			const Byte* initialData {nullptr};
 			Format format {Format::R8G8B8A8_UNORM};
 			Type type {Type::DEFAULT};
 			size_t arraySize {1};
+			size_t mipLevels {1};
 		};
 
 		void initialize(const Options& options);
@@ -56,9 +54,8 @@ namespace Clair {
 		friend class ResourceManager;
 		friend class Renderer;
 
+		Options mOptions {};
 		bool mIsValid {false};
-		Format mFormat {Format::R8G8B8A8_UNORM};
-		Type mType {Type::DEFAULT};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
 		ID3D11RenderTargetView* mD3dRenderTargetView {nullptr};
@@ -70,7 +67,7 @@ namespace Clair {
 	}
 
 	inline Texture::Type Texture::getType() const {
-		return mType;
+		return mOptions.type;
 	}
 
 	inline const ID3D11Texture2D* Texture::getD3dTexture() const {
@@ -84,7 +81,7 @@ namespace Clair {
 
 	inline ID3D11RenderTargetView*
 	Texture::getD3dRenderTargetView() const {
-		CLAIR_ASSERT(mType == Type::RENDER_TARGET,
+		CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
 			"Texture is not a render target");
 		return mD3dRenderTargetView;
 	}

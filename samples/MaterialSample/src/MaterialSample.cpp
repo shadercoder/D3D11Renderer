@@ -17,7 +17,6 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
-
 	auto loadedTex = Loader::loadImageData("textures/avatar.png");
 	auto texture = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options texOptions {};
@@ -27,6 +26,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texOptions.initialData = loadedTex.data;
 	texOptions.arraySize = 6;
 	texOptions.type = Clair::Texture::Type::CUBE_MAP_DEFAULT;
+	texOptions.mipLevels = 2;
 	texture->initialize(texOptions);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");

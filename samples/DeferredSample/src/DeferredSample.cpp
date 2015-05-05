@@ -23,6 +23,7 @@ void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
 	texOptions.height = 640;
 	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
 	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	texOptions.mipLevels = 1;
 	outTexture->initialize(texOptions);
 }
 

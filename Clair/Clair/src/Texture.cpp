@@ -14,14 +14,13 @@ void Texture::initialize(const Options& options) {
 		"Invalid texture dimensions");
 	CLAIR_ASSERT(options.arraySize >= 1 && options.arraySize <= 6,
 		"Invalid array size");
-	mFormat = options.format;
-	mType = options.type;
+	mOptions = options;
 	auto const d3dDevice = D3dDevice::getD3dDevice();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 	texDesc.Width = static_cast<UINT>(options.width);
 	texDesc.Height = static_cast<UINT>(options.height);
-	texDesc.MipLevels = 1;
+	texDesc.MipLevels = static_cast<UINT>(options.mipLevels);
 	texDesc.ArraySize = static_cast<UINT>(options.arraySize);
 	size_t elementSize {0};
 	switch (options.format) {
@@ -46,34 +45,50 @@ void Texture::initialize(const Options& options) {
 		texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 	}
 
-	Byte** texData = new Byte*[options.arraySize]();
+	Byte*** texData = new Byte**[options.arraySize]();
 	D3D11_SUBRESOURCE_DATA* subResourceData =
-		new D3D11_SUBRESOURCE_DATA[options.arraySize];
-	for (size_t a {0}; a < options.arraySize; ++a) {
-		texData[a] = new Byte[options.width * options.height * elementSize]();
-		ZeroMemory(&subResourceData[a], sizeof(D3D11_SUBRESOURCE_DATA));
-	}
-	for (size_t a {0}; a < options.arraySize; ++a) {
-		if (options.initialData) {
-			for (int y {0}; y < options.height; ++y) {
-				for (int x {0}; x < options.width; ++x) {
-					const int idx = (x + y * options.width) * 4;
-					texData[a][idx + 0] = options.initialData[idx + 0];
-					texData[a][idx + 1] = options.initialData[idx + 1];
-					texData[a][idx + 2] = options.initialData[idx + 2];
-					texData[a][idx + 3] = 255;
+		new D3D11_SUBRESOURCE_DATA[options.mipLevels * options.arraySize];
+	for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
+		texData[i_arr] = new Byte*[options.mipLevels]();
+		int mipWidth = options.width;
+		int mipHeight = options.height;
+		for (size_t i_mip {0}; i_mip < options.mipLevels; ++i_mip) {
+			if (i_mip > 0) {
+				mipWidth /= 2;
+				mipHeight /= 2;
+			}
+			const size_t subResIdx = i_mip + i_arr * options.mipLevels;
+			ZeroMemory(&subResourceData[subResIdx],
+				sizeof(D3D11_SUBRESOURCE_DATA));
+			texData[i_arr][i_mip] =
+				new Byte[mipWidth * mipHeight * elementSize]();
+			subResourceData[subResIdx].pSysMem = texData[i_arr][i_mip];
+			subResourceData[subResIdx].SysMemPitch =
+				sizeof(Byte) * mipWidth * elementSize;
+			subResourceData[subResIdx].SysMemSlicePitch = 0;
+			if (options.initialData && i_mip == 0) {
+				for (int y {0}; y < mipHeight; ++y) {
+					for (int x {0}; x < mipWidth; ++x) {
+						const int idx = (x + y * mipWidth) * 4;
+						texData[i_arr][i_mip][idx + 0] =
+							options.initialData[idx + 0];
+						texData[i_arr][i_mip][idx + 1] =
+							options.initialData[idx + 1];
+						texData[i_arr][i_mip][idx + 2] =
+							options.initialData[idx + 2];
+						texData[i_arr][i_mip][idx + 3] = 255;
+					}
 				}
 			}
 		}
-		subResourceData[a].pSysMem = texData[a];
-		subResourceData[a].SysMemPitch =
-			sizeof(Byte) * options.width * elementSize;
-		subResourceData[a].SysMemSlicePitch = 0;
 	}
 	mIsValid = !FAILED(d3dDevice->CreateTexture2D(&texDesc, &subResourceData[0],
 												  &mD3dTexture));
 	delete[] subResourceData;
 	for (size_t a {0}; a < options.arraySize; ++a) {
+		for (size_t m {0}; m < options.mipLevels; ++m) {
+			delete[] texData[a][m];
+		}
 		delete[] texData[a];
 	}
 	delete[] texData;
@@ -112,14 +127,14 @@ void Texture::initialize(const Options& options) {
 }
 
 void Texture::clear(const Float4& value) {
-	CLAIR_ASSERT(mType == Type::RENDER_TARGET,
+	CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
 		"Clear value doesn't match Texture Format")
 	auto d3dContext = D3dDevice::getD3dDeviceContext();
 	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &value[0][0]);
 }
 
 void Texture::clear(const float value) {
-	CLAIR_ASSERT(mType == Type::DEPTH_STENCIL_TARGET,
+	CLAIR_ASSERT(mOptions.type == Type::DEPTH_STENCIL_TARGET,
 		"Clear value doesn't match Texture Format")
 	auto d3dDeviceContext = D3dDevice::getD3dDeviceContext();
 	d3dDeviceContext->ClearDepthStencilView(
@@ -132,11 +147,9 @@ void Texture::clear(const float value) {
 void Texture::resize(const int width, const int height) {
 	CLAIR_ASSERT(width > 0 && height > 0, "Invalid texture dimensions");
 	destroyD3dObjects();
-	Options newOptions {};
+	Options newOptions (mOptions);
 	newOptions.width = width;
 	newOptions.height = height;
-	newOptions.format = mFormat;
-	newOptions.type = mType;
 	initialize(newOptions);
 }
 
