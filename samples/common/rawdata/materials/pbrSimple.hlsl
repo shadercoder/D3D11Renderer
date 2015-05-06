@@ -43,16 +43,23 @@ cbuffer Material : register(b1) {
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 n = normalize(psIn.WNormal);
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
-	float3 viewVec = normalize(psIn.WPosition - CameraPos);
-	float3 refl = reflect(viewVec, n);
-	float3 albedo = float3(1.0, 0.4, 0.2);
+	float3 V = normalize(psIn.WPosition - CameraPos);
+
+	float3 albedo = float3(0.0, 1.0, 0.0);
 	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
+	
+	float3 refl = reflect(V, n);
 	float3 reflCol =
 		texAlbedo.SampleLevel(samplerLinear, refl, Roughness * 1.0).rgb;
 	reflCol = pow(reflCol, 2.2);
+	reflCol = lerp(reflCol, reflCol * albedo, Metalness);
+	float3 H = normalize(refl + V);
+	float HdotV = dot(H, V);
+	float finalReflectivity = Reflectivity + (1 - Reflectivity) * pow(HdotV, 100);
+	
 	float3 col = albedo * diff;
-	col = lerp(col, lerp(reflCol, reflCol * albedo, Metalness), Reflectivity);
+	col = lerp(col, reflCol, finalReflectivity);
 	col += 0.01;
 	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);

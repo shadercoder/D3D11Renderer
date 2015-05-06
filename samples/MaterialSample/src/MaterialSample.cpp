@@ -7,6 +7,7 @@
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
 #include "Clair/Object.h"
+#include "Clair/RenderTargetGroup.h"
 #include "../../data/materials/pbrSimple.h"
 //#include "vld.h"
 
@@ -18,7 +19,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		return false;
 	}
 	auto loadedTex = Loader::loadCubeImageData("textures/sky");
-	auto texture = Clair::ResourceManager::createTexture();
+	mSkyTexture = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options texOptions {};
 	texOptions.width = loadedTex.width;
 	texOptions.height = loadedTex.height;
@@ -27,7 +28,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texOptions.arraySize = 6;
 	texOptions.type = Clair::Texture::Type::CUBE_MAP_RENDER_TARGET;
 	texOptions.maxMipLevels = 2;
-	texture->initialize(texOptions);
+	mSkyTexture->initialize(texOptions);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();
@@ -54,7 +55,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		obj->setMesh(sphereMesh);
 		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 2.2f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setTexture(0, texture);
+		matInst->setTexture(0, mSkyTexture);
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
 		cbuf->Reflectivity = fx;
 		cbuf->Roughness = fy;
@@ -63,7 +64,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 
 	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
 	mSkyMaterialInstance->initialize(skyMaterial);
-	mSkyMaterialInstance->setTexture(0, texture);
+	mSkyMaterialInstance->setTexture(0, mSkyTexture);
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
@@ -74,7 +75,21 @@ bool MaterialSample::initialize(const HWND hwnd) {
 }
 
 void MaterialSample::filterCubeMap() {
-	
+	for (size_t i {1}; i < mSkyTexture->getNumMipMaps(); ++i) {
+		auto renderTargets = Clair::RenderTargetGroup{6};
+		renderTargets.setRenderTarget(0, mSkyTexture,
+			Clair::Texture::Element{0, i});
+		renderTargets.setRenderTarget(1, mSkyTexture,
+			Clair::Texture::Element{1, i});
+		renderTargets.setRenderTarget(2, mSkyTexture,
+			Clair::Texture::Element{2, i});
+		renderTargets.setRenderTarget(3, mSkyTexture,
+			Clair::Texture::Element{3, i});
+		renderTargets.setRenderTarget(4, mSkyTexture,
+			Clair::Texture::Element{4, i});
+		renderTargets.setRenderTarget(5, mSkyTexture,
+			Clair::Texture::Element{5, i});
+	}
 }
 
 void MaterialSample::terminate() {
@@ -99,6 +114,7 @@ void MaterialSample::update() {
 void MaterialSample::render() {
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
+	Clair::Renderer::clearColor({0,0,0,0});
 	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::render(mScene);

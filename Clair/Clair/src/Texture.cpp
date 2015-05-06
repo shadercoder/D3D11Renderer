@@ -67,7 +67,7 @@ void Texture::initialize(const Options& options) {
 			subResourceData[subResIdx].SysMemPitch =
 				sizeof(Byte) * mipWidth * elementSize;
 			subResourceData[subResIdx].SysMemSlicePitch = 0;
-			if (options.initialData) {
+			if (options.initialData && i_mip == 0) {
 				for (int y {0}; y < mipHeight; ++y) {
 					for (int x {0}; x < mipWidth; ++x) {
 						const int idx = (x + y * mipWidth) * 4;
