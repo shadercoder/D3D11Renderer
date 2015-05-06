@@ -4,7 +4,7 @@
 /materials/deferredGeometry.hlsl|30441261|1690133059
 /materials/drawTexture.hlsl|30441083|4119662285
 /materials/normals.hlsl|30440679|856966016
-/materials/pbrSimple.hlsl|30443315|2831175845
+/materials/pbrSimple.hlsl|30443503|3283277926
 /materials/sky.hlsl|30443316|2433998486
 /models/bunny.obj|30440679|856966016
 /models/cube.obj|30441679|2049949893

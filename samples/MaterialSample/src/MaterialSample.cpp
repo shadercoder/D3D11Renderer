@@ -25,8 +25,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
 	texOptions.initialData = loadedTex.data;
 	texOptions.arraySize = 6;
-	texOptions.type = Clair::Texture::Type::CUBE_MAP_DEFAULT;
-	texOptions.mipLevels = 2;
+	texOptions.type = Clair::Texture::Type::CUBE_MAP_RENDER_TARGET;
+	texOptions.maxMipLevels = 2;
 	texture->initialize(texOptions);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
@@ -67,8 +67,14 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
+	filterCubeMap();
+
 	Camera::initialize({-4.5f, 16.6f, -4.5f}, 0.705f, 0.770f);
 	return true;
+}
+
+void MaterialSample::filterCubeMap() {
+	
 }
 
 void MaterialSample::terminate() {

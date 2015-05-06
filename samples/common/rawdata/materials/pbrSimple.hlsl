@@ -45,7 +45,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
 	float3 viewVec = normalize(psIn.WPosition - CameraPos);
 	float3 refl = reflect(viewVec, n);
-	float3 albedo = float3(0.2, 1.0, 0.2);
+	float3 albedo = float3(1.0, 0.4, 0.2);
 	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	float3 reflCol =

@@ -16,43 +16,6 @@
 using namespace SampleFramework;
 using namespace glm;
 
-void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
-	outTexture = Clair::ResourceManager::createTexture();
-	Clair::Texture::Options texOptions;
-	texOptions.width = 960;
-	texOptions.height = 640;
-	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
-	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
-	texOptions.mipLevels = 1;
-	outTexture->initialize(texOptions);
-}
-
-void DeferredSample::createObject(Clair::Mesh* mesh,
-								  const Clair::Float4& color,
-								  const Clair::Float4x4& transform) {
-	auto obj = mScene->createObject();
-	obj->setMesh(mesh);
-	obj->setMatrix(transform);
-	auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
-	mGeometryCBuffer =
-		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-	mGeometryCBuffer->DiffuseColor = color;
-}
-
-void DeferredSample::resetLights() {
-	for (int i {0}; i < NUM_LIGHTS; ++i) {
-		auto& light = mLights[i];
-		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
-					   Random::randomFloat()};
-		light.intensity = Random::randomFloat(0.5f, 1.0f) /
-			(0.2f * static_cast<float>(NUM_LIGHTS));
-		light.height = Random::randomFloat(0.1f, 2.0f);
-		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
-		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
-		light.offset = Random::randomFloat(0.0f, 2.0f * glm::pi<float>());
-	}
-}
-
 bool DeferredSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
@@ -130,6 +93,43 @@ bool DeferredSample::initialize(const HWND hwnd) {
 
 	Camera::initialize({0.0f, 5.5f, -4.0f}, 1.14f, 0.0f);
 	return true;
+}
+
+void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
+	outTexture = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options texOptions;
+	texOptions.width = 960;
+	texOptions.height = 640;
+	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	texOptions.maxMipLevels = 1;
+	outTexture->initialize(texOptions);
+}
+
+void DeferredSample::createObject(Clair::Mesh* mesh,
+								  const Clair::Float4& color,
+								  const Clair::Float4x4& transform) {
+	auto obj = mScene->createObject();
+	obj->setMesh(mesh);
+	obj->setMatrix(transform);
+	auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
+	mGeometryCBuffer =
+		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
+	mGeometryCBuffer->DiffuseColor = color;
+}
+
+void DeferredSample::resetLights() {
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto& light = mLights[i];
+		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
+					   Random::randomFloat()};
+		light.intensity = Random::randomFloat(0.5f, 1.0f) /
+			(0.2f * static_cast<float>(NUM_LIGHTS));
+		light.height = Random::randomFloat(0.1f, 2.0f);
+		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
+		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
+		light.offset = Random::randomFloat(0.0f, 2.0f * glm::pi<float>());
+	}
 }
 
 void DeferredSample::terminate() {

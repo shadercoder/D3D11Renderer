@@ -259,6 +259,7 @@ void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
 											 depthStencilView);
 	} else {
 		auto targetArray = targets->getD3dRenderTargetArray();
+		CLAIR_ASSERT(targetArray, "Render targets should not be null");
 		auto numTargets = targets->getNumRenderTargets();
 		d3dDeviceContext->OMSetRenderTargets(numTargets, targetArray,
 			targets->getDepthStencilTarget()->mD3dDepthStencilTargetView);

@@ -57,7 +57,7 @@ LoadedTexture Loader::loadImageData(const std::string& filename) {
 			returnData[idx * 4  + 0] = imgData[inverseIdx * 4 + 0];
 			returnData[idx * 4  + 1] = imgData[inverseIdx * 4 + 1];
 			returnData[idx * 4  + 2] = imgData[inverseIdx * 4 + 2];
-			//returnData[idx + 0] = imgData[inverseIdx + 0];
+			returnData[idx * 4  + 3] = 255;
 		}
 	}
 	stbi_image_free(imgData);

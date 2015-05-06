@@ -15,6 +15,7 @@ public:
 	void render() override;
 
 private:
+	void filterCubeMap();
 	Clair::Scene* mScene {nullptr};
 	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
 	Cb_materials_sky_Ps* mSkyConstBuffer {nullptr};
