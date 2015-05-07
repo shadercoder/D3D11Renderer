@@ -350,9 +350,9 @@ void Renderer::render(Scene* const scene) {
 		const auto ps = material->getPixelShader()->getD3dShader();
 		// material const buffer start
 		const auto matCb = material->getConstantBufferPs();
-		const auto texMap = matInstance->getTextureMap();
+		const auto texMap = matInstance->getShaderResourceMap();
 		for (const auto& itTex : texMap) {
-			auto const resView = itTex.second->getD3DShaderResourceView();
+			auto const resView = itTex.second;
 			d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
 		}
 		{//if (iteration++ == 0) {
@@ -434,9 +434,9 @@ void Renderer::renderScreenQuad(
 											0, 0);
 		d3dDeviceContext->PSSetConstantBuffers(1, 1, &matD3d);
 	}
-	const auto texMap = materialInstance->getTextureMap();
+	const auto texMap = materialInstance->getShaderResourceMap();
 	for (const auto& itTex : texMap) {
-		auto const resView = itTex.second->getD3DShaderResourceView();
+		auto const resView = itTex.second;
 		d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
 	}
 	const UINT stride {sizeof(Float3)};

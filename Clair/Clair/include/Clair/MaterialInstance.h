@@ -4,17 +4,19 @@
 #include <map>
 
 namespace Clair {
-	typedef std::map<unsigned, const Texture*> TextureMap;
+	typedef std::map<unsigned, ID3D11ShaderResourceView*>
+		ShaderResourceMap;
 	class MaterialInstance {
 	public:
 		void initialize(const Material* material);
 
 		void setTexture(unsigned index, const Texture* texture);
+		void setTexture(unsigned index, const SubTexture* subTexture);
 
 		bool isValid() const;
 		const Material* getMaterial() const;
 		const MaterialConstBufferData* getConstBufferData() const;
-		const TextureMap& getTextureMap() const;
+		const ShaderResourceMap& getShaderResourceMap() const;
 		template<typename T>
 		T* getConstantBufferPs() const;
 
@@ -26,7 +28,7 @@ namespace Clair {
 		bool mIsValid {false};
 		const Material* mMaterial {nullptr};
 		MaterialConstBufferData* mCBufferData;
-		TextureMap mTextureMap;
+		ShaderResourceMap mTextureMap;
 	};
 
 	template<typename T>
@@ -50,7 +52,8 @@ namespace Clair {
 		return mCBufferData;
 	}
 
-	inline const TextureMap& MaterialInstance::getTextureMap() const {
+	inline const ShaderResourceMap&
+	MaterialInstance::getShaderResourceMap() const {
 		return mTextureMap;
 	}
 }

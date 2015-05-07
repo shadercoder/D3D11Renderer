@@ -46,6 +46,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	mScene = Clair::ResourceManager::createScene();
 	const int size = 5;
 	const float fsize = static_cast<float>(size);
+	Clair::SubTexture* inputCube =
+		mSkyTexture->createSubTexture(0, 6, 0, 1, true);
 	for (int x = 0; x < size; ++x) {
 	for (int y = 0; y < size; ++y) {
 	for (int z = 0; z < size; ++z) {
@@ -56,7 +58,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		obj->setMesh(sphereMesh);
 		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 2.2f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setTexture(0, mSkyTexture);
+		matInst->setTexture(0, inputCube);
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
 		cbuf->Reflectivity = fx;
 		cbuf->Roughness = fy;
@@ -77,19 +79,21 @@ bool MaterialSample::initialize(const HWND hwnd) {
 
 void MaterialSample::filterCubeMap() {
 	for (size_t i {1}; i < mSkyTexture->getNumMipMaps(); ++i) {
-		auto renderTargets = Clair::RenderTargetGroup{6};
-		renderTargets.setRenderTarget(0, mSkyTexture,
-			Clair::Texture::Element{0, i});
-		renderTargets.setRenderTarget(1, mSkyTexture,
-			Clair::Texture::Element{1, i});
-		renderTargets.setRenderTarget(2, mSkyTexture,
-			Clair::Texture::Element{2, i});
-		renderTargets.setRenderTarget(3, mSkyTexture,
-			Clair::Texture::Element{3, i});
-		renderTargets.setRenderTarget(4, mSkyTexture,
-			Clair::Texture::Element{4, i});
-		renderTargets.setRenderTarget(5, mSkyTexture,
-			Clair::Texture::Element{5, i});
+		//auto renderTargets = Clair::RenderTargetGroup{6};
+		//renderTargets.setRenderTarget(0, mSkyTexture,
+		//	Clair::Texture::Element{0, i});
+		//renderTargets.setRenderTarget(1, mSkyTexture,
+		//	Clair::Texture::Element{1, i});
+		//renderTargets.setRenderTarget(2, mSkyTexture,
+		//	Clair::Texture::Element{2, i});
+		//renderTargets.setRenderTarget(3, mSkyTexture,
+		//	Clair::Texture::Element{3, i});
+		//renderTargets.setRenderTarget(4, mSkyTexture,
+		//	Clair::Texture::Element{4, i});
+		//renderTargets.setRenderTarget(5, mSkyTexture,
+		//	Clair::Texture::Element{5, i});
+		//Clair::SubTexture* inputCube =
+		//	mSkyTexture->createSubTexture(0, 6, i, 1, true);
 	}
 }
 

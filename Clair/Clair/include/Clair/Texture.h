@@ -44,6 +44,9 @@ namespace Clair {
 		void clear(const Float4& value, const Element& element = Element{0, 0});
 		void clear(float value, const Element& element = Element{0, 0});
 		void resize(int width, int height);
+		SubTexture* createSubTexture(size_t arrayStartIndex, size_t numArrays,
+									 size_t mipStartIndex, size_t numMips,
+									 bool isCubeMap = false);
 
 		bool isValid() const;
 		size_t getNumMipMaps() const;
@@ -68,6 +71,7 @@ namespace Clair {
 		std::vector<SubTexture*> mSubTextures {};
 		std::vector<ID3D11RenderTargetView*> mD3dRenderTargetViews {};
 		ID3D11DepthStencilView* mD3dDepthStencilTargetView {nullptr};
+		unsigned mD3dFormat {0};
 	};
 
 	inline bool Texture::isValid() const {
