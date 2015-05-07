@@ -12,6 +12,7 @@ namespace Clair {
 		~SubTexture();
 
 		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
+		ID3D11RenderTargetView* getD3dRenderTargetView() const;
 	
 	private:
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
@@ -22,5 +23,10 @@ namespace Clair {
 	inline ID3D11ShaderResourceView*
 	SubTexture::getD3DShaderResourceView() const {
 		return mD3dShaderResView;
+	}
+
+	inline ID3D11RenderTargetView*
+	SubTexture::getD3dRenderTargetView() const {
+		return mD3dRenderTargetView;
 	}
 }

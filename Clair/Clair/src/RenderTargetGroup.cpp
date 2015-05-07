@@ -1,4 +1,5 @@
 #include "Clair/RenderTargetGroup.h"
+#include "SubTexture.h"
 
 using namespace Clair;
 
@@ -6,38 +7,34 @@ RenderTargetGroup::RenderTargetGroup(const int numRenderTargets)
 	: mDepthStencilTarget (nullptr) 
 	, mNumRenderTargets (numRenderTargets) {
 	CLAIR_ASSERT(mNumRenderTargets >= 1, "Invalid number of render targets");
-	mRenderTargets = new Texture*[mNumRenderTargets];
-	mD3dRenderTargetArray = new ID3D11RenderTargetView*[mNumRenderTargets];
-	mRenderTargetElements = new Texture::Element[mNumRenderTargets]();
+	mD3dRenderTargets = new ID3D11RenderTargetView*[mNumRenderTargets];
 	for (int i {0}; i < mNumRenderTargets; ++i) {
-		mRenderTargets[i] = nullptr;
-		mD3dRenderTargetArray[i] = nullptr;
+		mD3dRenderTargets[i] = nullptr;
 	}
 }
 
 RenderTargetGroup::~RenderTargetGroup() {
-	delete[] mRenderTargetElements;
-	delete[] mD3dRenderTargetArray;
-	delete[] mRenderTargets;
+	delete[] mD3dRenderTargets;
 }
 
+void RenderTargetGroup::setRenderTarget(
+	const int index, SubTexture* const renderTarget) {
+	CLAIR_ASSERT(renderTarget, "Render target should not be null");
+	//CLAIR_ASSERT(renderTarget->getType() == Texture::Type::RENDER_TARGET,
+	//	"Texture should be of type RENDER_TARGET");
+	setD3dRenderTarget(index, renderTarget->getD3dRenderTargetView());
+}
+
+// TODO: REMOVE
 void RenderTargetGroup::resize(const int width, const int height) {
 	for (int i {0}; i < mNumRenderTargets; ++i) {
-		CLAIR_ASSERT(mRenderTargets[i],
-			"One or more render target Textures missing");
-		mRenderTargets[i]->resize(width, height);
+		//CLAIR_ASSERT(mRenderTargets[i],
+		//	"One or more render target Textures missing");
+		//mRenderTargets[i]->resize(width, height);
 	}
 	if (mDepthStencilTarget) {
 		CLAIR_ASSERT(mDepthStencilTarget,
 			"Depth stencil Texture missing");
 		mDepthStencilTarget->resize(width, height);
 	}
-}
-ID3D11RenderTargetView** RenderTargetGroup::getD3dRenderTargetArray() const {
-	for (int i {0}; i < mNumRenderTargets; ++i) {
-		const auto targ = mRenderTargets[i]->getD3dRenderTargetView(
-			mRenderTargetElements[i]);
-		mD3dRenderTargetArray[i] = targ;
-	}
-	return mD3dRenderTargetArray;
 }

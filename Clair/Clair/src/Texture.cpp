@@ -126,49 +126,46 @@ void Texture::initialize(const Options& options) {
 	}
 
 	if (options.type == Type::RENDER_TARGET) {
-		for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
-			for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
-				D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
-				ZeroMemory(&renderViewDesc,
-					sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-				renderViewDesc.Texture2DArray.MipSlice = i_mip;
-				renderViewDesc.Texture2DArray.FirstArraySlice = i_arr;
-				renderViewDesc.Texture2DArray.ArraySize = options.arraySize;
-				renderViewDesc.Format = texDesc.Format;
-				renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-				ID3D11RenderTargetView* renderTargetView {nullptr};
-				if (FAILED(d3dDevice->CreateRenderTargetView(
-						mD3dTexture, &renderViewDesc, &renderTargetView))) {
-					mIsValid = false;
-					return;
-				}
-				mD3dRenderTargetViews.push_back(renderTargetView);
-			}
+		if (FAILED(d3dDevice->CreateRenderTargetView(
+				mD3dTexture, nullptr, &mD3dRenderTargetView))) {
+			mIsValid = false;
+			return;
 		}
+		//for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
+		//	for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
+		//		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
+		//		ZeroMemory(&renderViewDesc,
+		//			sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+		//		renderViewDesc.Texture2DArray.MipSlice = i_mip;
+		//		renderViewDesc.Texture2DArray.FirstArraySlice = i_arr;
+		//		renderViewDesc.Texture2DArray.ArraySize = options.arraySize;
+		//		renderViewDesc.Format = texDesc.Format;
+		//		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		//		ID3D11RenderTargetView* renderTargetView {nullptr};
+		//		if (FAILED(d3dDevice->CreateRenderTargetView(
+		//				mD3dTexture, &renderViewDesc, &renderTargetView))) {
+		//			mIsValid = false;
+		//			return;
+		//		}
+		//		mD3dRenderTargetViews.push_back(renderTargetView);
+		//	}
+		//}
 	}
 }
 
-void Texture::clear(const Float4& value, const Element& e) {
+void Texture::clear(const Float4& value) {
 	CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
 		"Clear value doesn't match Texture Format")
-	CLAIR_ASSERT(e.arrayIndex >= 0 && e.arrayIndex < mOptions.arraySize,
-		"Invalid array index");
-	CLAIR_ASSERT(e.mipIndex >= 0 && e.mipIndex < mNumMips,
-		"Invalid mip map index");
 	if (!mIsValid) {
 		return;
 	}
 	auto d3dContext = D3dDevice::getD3dDeviceContext();
-	d3dContext->ClearRenderTargetView(getD3dRenderTargetView(e), &value[0][0]);
+	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &value[0][0]);
 }
 
-void Texture::clear(const float value, const Element& e) {
+void Texture::clear(const float value) {
 	CLAIR_ASSERT(mOptions.type == Type::DEPTH_STENCIL_TARGET,
 		"Clear value doesn't match Texture Format")
-	CLAIR_ASSERT(e.arrayIndex >= 0 && e.arrayIndex < mOptions.arraySize,
-		"Invalid array index");
-	CLAIR_ASSERT(e.mipIndex >= 0 && e.mipIndex < mNumMips,
-		"Invalid mip map index");
 	if (!mIsValid) {
 		return;
 	}
@@ -222,7 +219,6 @@ SubTexture* Texture::createSubTexture(
 		viewDesc.TextureCube.MipLevels = numMips;
 		viewDesc.TextureCube.MostDetailedMip = mipStartIndex;
 	} else {
-		viewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
 		viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
 		viewDesc.Texture2DArray.MipLevels = numMips;
 		viewDesc.Texture2DArray.MostDetailedMip = mipStartIndex;
@@ -237,11 +233,11 @@ SubTexture* Texture::createSubTexture(
 	if (mOptions.type == Type::RENDER_TARGET) {
 		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
 		ZeroMemory(&renderViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+		renderViewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
+		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
 		renderViewDesc.Texture2DArray.MipSlice = mipStartIndex;
 		renderViewDesc.Texture2DArray.FirstArraySlice = arrayStartIndex;
 		renderViewDesc.Texture2DArray.ArraySize = arraySize;
-		renderViewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
-		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		if (FAILED(d3dDevice->CreateRenderTargetView(
 				mD3dTexture, &renderViewDesc, &newRenderTargetView))) {
 			newRenderTargetView = nullptr;
@@ -250,6 +246,11 @@ SubTexture* Texture::createSubTexture(
 	SubTexture* newSubTexture = new SubTexture{
 		newShaderResView, newRenderTargetView, mOptions.type};
 	mSubTextures.push_back(newSubTexture);
+	auto d3dContext = D3dDevice::getD3dDeviceContext();
+	if (!isCubeMap) {
+		Float4 value {1.0f, 0.0f, 1.0f, 1.0f};
+		d3dContext->ClearRenderTargetView(newRenderTargetView, &value[0][0]);
+	}
 	return newSubTexture;
 }
 
@@ -265,10 +266,9 @@ void Texture::destroyD3dObjects() {
 	if (mD3dDepthStencilTargetView) {
 		mD3dDepthStencilTargetView->Release();
 	}
-	for (const auto& it : mD3dRenderTargetViews) {
-		it->Release();
+	if (mD3dRenderTargetView) {
+		mD3dRenderTargetView->Release();
 	}
-	mD3dRenderTargetViews.clear();
 	if (mD3dTexture) {
 		mD3dTexture->Release();
 	}

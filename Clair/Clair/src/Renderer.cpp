@@ -257,22 +257,24 @@ void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
 	if (!targets) {
 		d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
 											 depthStencilView);
-	} else {
-		auto targetArray = targets->getD3dRenderTargetArray();
-		CLAIR_ASSERT(targetArray, "Render targets should not be null");
-		auto numTargets = targets->getNumRenderTargets();
-		d3dDeviceContext->OMSetRenderTargets(numTargets, targetArray,
-			targets->getDepthStencilTarget()->mD3dDepthStencilTargetView);
+		return;
 	}
+	auto targetArray = targets->getD3dRenderTargets();
+	CLAIR_ASSERT(targetArray, "Render targets should not be null");
+	auto numTargets = targets->getNumRenderTargets();
+	auto depthStencilTarget = targets->getDepthStencilTarget();
+	ID3D11DepthStencilView* d3dDepthStencil {nullptr};
+	if (depthStencilTarget) {
+		d3dDepthStencil = depthStencilTarget->mD3dDepthStencilTargetView;
+	}
+	d3dDeviceContext->OMSetRenderTargets(numTargets, targetArray,
+		d3dDepthStencil);
 }
 
 static float viewWidth = 640.0f;
 static float viewHeight = 480.0f;
 
-void Renderer::setViewport(const int x, const int y,
-								   const int width, const int height) {
-	d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
-
+void Renderer::resizeScreen(const int width, const int height) {
 	// new render target view
 	releaseComObject(renderTargetView);
 	HRESULT result {0};
@@ -310,9 +312,11 @@ void Renderer::setViewport(const int x, const int y,
 	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
 											   &depthStencilView);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
+}
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
-										 depthStencilView);
+void Renderer::setViewport(const int x, const int y,
+						   const int width, const int height) {
+	d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// new viewport
 	D3D11_VIEWPORT viewport = {0};
@@ -325,6 +329,9 @@ void Renderer::setViewport(const int x, const int y,
 	d3dDeviceContext->RSSetViewports(1, &viewport);
 	viewWidth = static_cast<float>(width);
 	viewHeight = static_cast<float>(height);
+
+	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
+										 depthStencilView);
 }
 
 void Renderer::render(Scene* const scene) {
@@ -386,8 +393,9 @@ void Renderer::render(Scene* const scene) {
 			mesh->getIndexBuffer()->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		d3dDeviceContext->DrawIndexed(mesh->getIndexBufferSize(), 0, 0);
 	}
-	ID3D11ShaderResourceView* bla[] {nullptr, nullptr, nullptr, nullptr};
-	d3dDeviceContext->PSSetShaderResources(0, 4, bla);
+	ID3D11ShaderResourceView* bla[] {
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 8, bla);
 }
 
 void Renderer::setViewMatrix(const Float4x4& view) {
@@ -449,6 +457,7 @@ void Renderer::renderScreenQuad(
 	d3dDeviceContext->IASetIndexBuffer(
 		gQuadIndexBuffer->getD3dBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	d3dDeviceContext->DrawIndexed(6, 0, 0);
-	ID3D11ShaderResourceView* bla[] {nullptr, nullptr, nullptr, nullptr};
-	d3dDeviceContext->PSSetShaderResources(0, 4, bla);
+	ID3D11ShaderResourceView* bla[] {
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+	d3dDeviceContext->PSSetShaderResources(0, 8, bla);
 }

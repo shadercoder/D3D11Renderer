@@ -24,10 +24,6 @@ namespace Clair {
 			R32G32B32A32_FLOAT,
 			D24_UNORM_S8_UINT,
 		};
-		struct Element {
-			size_t arrayIndex;
-			size_t mipIndex;
-		};
 		struct Options {
 			int width {1};
 			int height {1};
@@ -41,8 +37,8 @@ namespace Clair {
 
 		void initialize(const Options& options);
 
-		void clear(const Float4& value, const Element& element = Element{0, 0});
-		void clear(float value, const Element& element = Element{0, 0});
+		void clear(const Float4& value);
+		void clear(float value);
 		void resize(int width, int height);
 		SubTexture* createSubTexture(size_t arrayStartIndex, size_t numArrays,
 									 size_t mipStartIndex, size_t numMips,
@@ -52,8 +48,7 @@ namespace Clair {
 		size_t getNumMipMaps() const;
 		Type getType() const;
 		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
-		ID3D11RenderTargetView* getD3dRenderTargetView(
-			const Element& element = Element{0, 0}) const;
+		ID3D11RenderTargetView* getD3dRenderTargetView() const;
 
 	private:
 		Texture() = default;
@@ -68,9 +63,9 @@ namespace Clair {
 		bool mIsValid {false};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
-		std::vector<SubTexture*> mSubTextures {};
-		std::vector<ID3D11RenderTargetView*> mD3dRenderTargetViews {};
+		ID3D11RenderTargetView* mD3dRenderTargetView {nullptr};
 		ID3D11DepthStencilView* mD3dDepthStencilTargetView {nullptr};
+		std::vector<SubTexture*> mSubTextures {};
 		unsigned mD3dFormat {0};
 	};
 
@@ -92,16 +87,12 @@ namespace Clair {
 	}
 
 	inline ID3D11RenderTargetView*
-	Texture::getD3dRenderTargetView(const Element& e) const {
+	Texture::getD3dRenderTargetView() const {
 		CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
 			"Texture is not a render target");
-		CLAIR_ASSERT(e.arrayIndex >= 0 && e.arrayIndex < mOptions.arraySize,
-			"Invalid array index");
-		CLAIR_ASSERT(e.mipIndex >= 0 && e.mipIndex < mNumMips,
-			"Invalid mip map index");
 		if (!mIsValid) {
 			return nullptr;
 		}
-		return mD3dRenderTargetViews[e.arrayIndex * mNumMips + e.mipIndex];
+		return mD3dRenderTargetView;
 	}
 }
