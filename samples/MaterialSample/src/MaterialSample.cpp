@@ -26,7 +26,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
 	texOptions.initialData = loadedTex.data;
 	texOptions.arraySize = 6;
-	texOptions.type = Clair::Texture::Type::CUBE_MAP_RENDER_TARGET;
+	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	texOptions.isCubeMap = true;
 	texOptions.maxMipLevels = 2;
 	mSkyTexture->initialize(texOptions);
 

@@ -56,7 +56,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	reflCol = lerp(reflCol, reflCol * albedo, Metalness);
 	float3 H = normalize(refl + V);
 	float HdotV = dot(H, V);
-	float finalReflectivity = Reflectivity + (1 - Reflectivity) * pow(HdotV, 100);
+	float finalReflectivity = Reflectivity + (1 - Reflectivity) * pow(HdotV, 5);
 	
 	float3 col = albedo * diff;
 	col = lerp(col, reflCol, finalReflectivity);

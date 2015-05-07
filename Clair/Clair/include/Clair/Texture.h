@@ -11,16 +11,13 @@ struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 
 namespace Clair {
-	typedef size_t ArrayIndex;
-	typedef size_t MipIndex;
+	class SubTexture;
 	class Texture {
 	public:
 		enum class Type {
 			DEFAULT,
 			RENDER_TARGET,
 			DEPTH_STENCIL_TARGET,
-			CUBE_MAP_DEFAULT,
-			CUBE_MAP_RENDER_TARGET
 		};
 		enum class Format {
 			R8G8B8A8_UNORM,
@@ -37,6 +34,7 @@ namespace Clair {
 			const Byte* initialData {nullptr};
 			Format format {Format::R8G8B8A8_UNORM};
 			Type type {Type::DEFAULT};
+			bool isCubeMap {false};
 			size_t arraySize {1};
 			size_t maxMipLevels {1};
 		};
@@ -50,7 +48,6 @@ namespace Clair {
 		bool isValid() const;
 		size_t getNumMipMaps() const;
 		Type getType() const;
-		const ID3D11Texture2D* getD3dTexture() const;
 		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
 		ID3D11RenderTargetView* getD3dRenderTargetView(
 			const Element& element = Element{0, 0}) const;
@@ -68,6 +65,7 @@ namespace Clair {
 		bool mIsValid {false};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
+		std::vector<SubTexture*> mSubTextures {};
 		std::vector<ID3D11RenderTargetView*> mD3dRenderTargetViews {};
 		ID3D11DepthStencilView* mD3dDepthStencilTargetView {nullptr};
 	};
@@ -82,10 +80,6 @@ namespace Clair {
 
 	inline Texture::Type Texture::getType() const {
 		return mOptions.type;
-	}
-
-	inline const ID3D11Texture2D* Texture::getD3dTexture() const {
-		return mD3dTexture;
 	}
 
 	inline ID3D11ShaderResourceView*

@@ -34,8 +34,7 @@ void Texture::initialize(const Options& options) {
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
-	if (options.type == Type::RENDER_TARGET
-		|| options.type == Type::CUBE_MAP_RENDER_TARGET) {
+	if (options.type == Type::RENDER_TARGET) {
 		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
 	} else if (options.type == Type::DEPTH_STENCIL_TARGET) {
 		texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -43,8 +42,7 @@ void Texture::initialize(const Options& options) {
 		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	}
 	texDesc.CPUAccessFlags = 0;
-	if (options.type == Type::CUBE_MAP_DEFAULT
-		|| options.type == Type::CUBE_MAP_RENDER_TARGET) {
+	if (options.isCubeMap) {
 		CLAIR_ASSERT(options.arraySize == 6,
 			"Cube map requires texture array size of 6");
 		texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
@@ -106,8 +104,7 @@ void Texture::initialize(const Options& options) {
 			mIsValid = false;
 			return;
 		}
-	} else if (options.type == Type::CUBE_MAP_DEFAULT
-				|| options.type == Type::CUBE_MAP_RENDER_TARGET) {
+	} else if (options.isCubeMap) {
 		D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
 		viewDesc.Format = texDesc.Format;
 		viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
@@ -126,8 +123,7 @@ void Texture::initialize(const Options& options) {
 		}
 	}
 
-	if (options.type == Type::RENDER_TARGET
-		|| options.type == Type::CUBE_MAP_RENDER_TARGET) {
+	if (options.type == Type::RENDER_TARGET) {
 		for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
 			for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
 				D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;

@@ -125,6 +125,7 @@
     <ClInclude Include="include\Clair\Mesh.h" />
     <ClInclude Include="src\PixelShader.h" />
     <ClInclude Include="src\Serialization.h" />
+    <ClInclude Include="src\SubTexture.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexShader.h" />
   </ItemGroup>

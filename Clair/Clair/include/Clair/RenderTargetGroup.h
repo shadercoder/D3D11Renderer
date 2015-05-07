@@ -35,8 +35,7 @@ namespace Clair {
 		const Texture::Element& element) {
 		CLAIR_ASSERT(index >= 0 && index < mNumRenderTargets, "Invalid index");
 		CLAIR_ASSERT(renderTarget, "Render target should not be null");
-		CLAIR_ASSERT(renderTarget->getType() == Texture::Type::RENDER_TARGET
-			|| renderTarget->getType() == Texture::Type::CUBE_MAP_RENDER_TARGET,
+		CLAIR_ASSERT(renderTarget->getType() == Texture::Type::RENDER_TARGET,
 			"Texture should be of type RENDER_TARGET");
 		CLAIR_DEBUG_LOG_IF(mRenderTargets[index],
 			"Overwriting existing render target in RenderTargetGroup");
