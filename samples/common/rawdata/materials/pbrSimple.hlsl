@@ -1,3 +1,5 @@
+#include "numRoughnessMips.h"
+
 TextureCube texAlbedo : register(t0);
 SamplerState samplerLinear : register(s0);
 
@@ -51,7 +53,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	
 	float3 refl = reflect(V, n);
 	float3 reflCol =
-		texAlbedo.SampleLevel(samplerLinear, refl, Roughness * 1.0).rgb;
+		texAlbedo.SampleLevel(samplerLinear, refl, Roughness * float(NUM_ROUGHNESS_MIPS - 1)).rgb;
 	reflCol = pow(reflCol, 2.2);
 	reflCol = lerp(reflCol, reflCol * albedo, Metalness);
 	float3 H = normalize(refl + V);

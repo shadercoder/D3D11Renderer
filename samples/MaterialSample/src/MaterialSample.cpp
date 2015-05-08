@@ -11,6 +11,7 @@
 #include "Clair/RenderTargetGroup.h"
 #include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/filterCube.h"
+#include "../../rawdata/materials/numRoughnessMips.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -30,7 +31,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	texOptions.arraySize = 6;
 	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
 	texOptions.isCubeMap = true;
-	texOptions.maxMipLevels = 2;
+	texOptions.maxMipLevels = NUM_ROUGHNESS_MIPS;
 	mSkyTexture->initialize(texOptions);
 
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
@@ -49,31 +50,27 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto filterMaterial = Clair::ResourceManager::createMaterial();
 	filterMaterial->initialize(filterMatData.get());
 
-	auto inputCube = mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
 	mScene = Clair::ResourceManager::createScene();
-	const int size = 5;
+	const int size = 10;
 	const float fsize = static_cast<float>(size);
-	for (int x = 0; x < size; ++x) {
-	for (int y = 0; y < size; ++y) {
-	for (int z = 0; z < size; ++z) {
-		const float fx = static_cast<float>(x) / (fsize - 1);
-		const float fy = static_cast<float>(y) / (fsize - 1);
-		const float fz = static_cast<float>(z) / (fsize - 1);
+	for (int i = 0; i < size; ++i) {
+		const float fi = static_cast<float>(i) / (fsize - 1);
 		Clair::Object* const obj = mScene->createObject();
 		obj->setMesh(sphereMesh);
-		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 2.2f)));
+		obj->setMatrix(value_ptr(translate(vec3{fi, 0, 0} * fsize * 2.2f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
 		matInst->setShaderResource(0, mSkyTexture->getShaderResource());
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
-		cbuf->Reflectivity = fx;
-		cbuf->Roughness = fy;
-		cbuf->Metalness = fz;
-	}}}
+		cbuf->Reflectivity = 1.0f;
+		cbuf->Roughness = fi;
+		cbuf->Metalness = 0.0f;
+	}
 
 	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
 	mSkyMaterialInstance->initialize(skyMaterial);
 	mSkyMaterialInstance->setShaderResource(
 		0, mSkyTexture->getShaderResource());
+		//0, mSkyTexture->createCustomShaderResource(0, 6, 2, 1, true));
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
@@ -81,17 +78,16 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	mFilterCubeMapMatInstance =
 		Clair::ResourceManager::createMaterialInstance();
 	mFilterCubeMapMatInstance->initialize(filterMaterial);
-	//auto inputCube = mSkyTexture->createCustomRenderTarget(0, 6, 0, 1, true);
-	mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
-	//mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
-	//	Cb_materials_filterCube_Ps>();
-	//mFilterCubeMapCBuffer->FinalColor = {1.0f, 0.0f, 1.0f, 1.0f};
+	mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
+		Cb_materials_filterCube_Ps>();
+	filterCubeMap();
 
 	Camera::initialize({-4.5f, 16.6f, -4.5f}, 0.705f, 0.770f);
 	return true;
 }
 
 void MaterialSample::filterCubeMap() {
+	int res = 256;
 	for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
 		auto renderTargets = Clair::RenderTargetGroup{6};
 		for (int i_face {0}; i_face < 6; ++i_face) {
@@ -100,18 +96,14 @@ void MaterialSample::filterCubeMap() {
 			renderTargets.setRenderTarget(i_face, outFace);
 			outFace->clear({1.0f, static_cast<float>(i_face) / 6.0f, 0.0f, 1.0f});
 		}
-		// depth
-		//auto depthTarget = Clair::ResourceManager::createTexture();
-		//Clair::Texture::Options depthTexOptions;
-		//depthTexOptions.width = 256;
-		//depthTexOptions.height = 256;
-		//depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
-		//depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
-		//depthTarget->initialize(depthTexOptions);
-		//depthTarget->clear(1.0f);
-		//renderTargets.setDepthStencilTarget(depthTarget);
-		Clair::Renderer::setViewport(0, 0, 256, 256);
+		Clair::Renderer::setViewport(0, 0, res, res);
+		res /= 2;
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
+		auto inputCube =
+			mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
+		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
+		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
+			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
 		Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
 	}
 }
@@ -125,7 +117,7 @@ void MaterialSample::onResize(const int width, const int height,
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::resizeScreen(width, height);
 	Clair::Renderer::setProjectionMatrix(
-		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
+		value_ptr(perspectiveLH(radians(60.0f), aspect, 0.01f, 100.0f)));
 	mSkyConstBuffer->Aspect = aspect;
 }
 
