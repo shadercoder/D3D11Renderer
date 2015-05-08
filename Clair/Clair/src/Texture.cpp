@@ -1,7 +1,8 @@
 #include "Clair/Texture.h"
 #include "D3dDevice.h"
 #include "Clair/Debug.h"
-#include "SubTexture.h"
+#include "Clair/ShaderResource.h"
+#include "Clair/RenderTarget.h"
 
 using namespace Clair;
 
@@ -100,11 +101,11 @@ void Texture::initialize(const Options& options) {
 		delete[] texData[a];
 	}
 	delete[] texData;
+	ID3D11ShaderResourceView* newShaderResView {nullptr};
 	if (options.type != Type::DEPTH_STENCIL_TARGET) {
 		if (FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture,
-			nullptr, &mD3dShaderResView))) {
+			nullptr, &newShaderResView))) {
 			mIsValid = false;
-			return;
 		}
 	} else if (options.isCubeMap) {
 		D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
@@ -113,9 +114,8 @@ void Texture::initialize(const Options& options) {
 		viewDesc.TextureCube.MipLevels =  texDesc.MipLevels;
 		viewDesc.TextureCube.MostDetailedMip = 0;
 		if (FAILED(d3dDevice->CreateShaderResourceView(mD3dTexture, &viewDesc,
-			&mD3dShaderResView))) {
+			&newShaderResView))) {
 			mIsValid = false;
-			return;
 		}
 	} else {
 		if (FAILED(d3dDevice->CreateDepthStencilView(mD3dTexture, nullptr,
@@ -124,13 +124,15 @@ void Texture::initialize(const Options& options) {
 			return;
 		}
 	}
+	mShaderResource = new ShaderResource{newShaderResView};
 
 	if (options.type == Type::RENDER_TARGET) {
+		ID3D11RenderTargetView* newRenderTargetView {nullptr};
 		if (FAILED(d3dDevice->CreateRenderTargetView(
-				mD3dTexture, nullptr, &mD3dRenderTargetView))) {
+				mD3dTexture, nullptr, &newRenderTargetView))) {
 			mIsValid = false;
-			return;
 		}
+		mRenderTarget = new RenderTarget{newRenderTargetView};
 		//for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
 		//	for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
 		//		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
@@ -151,16 +153,6 @@ void Texture::initialize(const Options& options) {
 		//	}
 		//}
 	}
-}
-
-void Texture::clear(const Float4& value) {
-	CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
-		"Clear value doesn't match Texture Format")
-	if (!mIsValid) {
-		return;
-	}
-	auto d3dContext = D3dDevice::getD3dDeviceContext();
-	d3dContext->ClearRenderTargetView(mD3dRenderTargetView, &value[0][0]);
 }
 
 void Texture::clear(const float value) {
@@ -186,7 +178,7 @@ void Texture::resize(const int width, const int height) {
 	initialize(newOptions);
 }
 
-SubTexture* Texture::createSubTexture(
+RenderTarget* Texture::createCustomRenderTarget(
 	const size_t arrayStartIndex, const size_t arraySize,
 	const size_t mipStartIndex, const size_t numMips,
 	const bool isCubeMap) {
@@ -195,10 +187,11 @@ SubTexture* Texture::createSubTexture(
 	CLAIR_ASSERT(mipStartIndex + numMips <= mNumMips,
 		"Incorrect mip map indices");
 	CLAIR_ASSERT(mOptions.type != Type::DEPTH_STENCIL_TARGET,
-		"SubTextures for DEPTH_STENCIL_TARGETs not supported yet");
+		"DEPTH_STENCIL_TARGETs not supported yet");
 	if (isCubeMap) {
 		CLAIR_ASSERT(arrayStartIndex == 0 && arraySize == 6,
-			"Unable to create a cube map SubTexture when arraySize is not 6");
+			"Unable to create a cube map render target"
+			"when arraySize is not 6");
 	}
 	if (mOptions.type == Type::RENDER_TARGET) {
 		CLAIR_ASSERT(numMips == 1,
@@ -206,11 +199,49 @@ SubTexture* Texture::createSubTexture(
 	}
 	CLAIR_DEBUG_LOG_IF(mOptions.isCubeMap && arraySize == 6 && !isCubeMap,
 		"Warning: "
+		"The parent Texture is a cube map and the render target has an"
+		"arraySize of 6, are you sure you didn't want to make this a cube map"
+		"as well?");
+	auto const d3dDevice = D3dDevice::getD3dDevice();
+	ID3D11RenderTargetView* newRenderTargetView {nullptr};
+	if (mOptions.type == Type::RENDER_TARGET) {
+		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
+		ZeroMemory(&renderViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+		renderViewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
+		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+		renderViewDesc.Texture2DArray.MipSlice = mipStartIndex;
+		renderViewDesc.Texture2DArray.FirstArraySlice = arrayStartIndex;
+		renderViewDesc.Texture2DArray.ArraySize = arraySize;
+		if (FAILED(d3dDevice->CreateRenderTargetView(
+				mD3dTexture, &renderViewDesc, &newRenderTargetView))) {
+			newRenderTargetView = nullptr;
+		}
+	}
+	RenderTarget* newCustomRenderTarget {new RenderTarget{newRenderTargetView}};
+	mCustomRenderTargets.push_back(newCustomRenderTarget);
+	return newCustomRenderTarget;
+}
+
+ShaderResource* Texture::createCustomShaderResource(
+	const size_t arrayStartIndex, const size_t arraySize,
+	const size_t mipStartIndex, const size_t numMips,
+	const bool isCubeMap) {
+	CLAIR_ASSERT(arrayStartIndex + arraySize <= mOptions.arraySize,
+		"Incorrect array indices");
+	CLAIR_ASSERT(mipStartIndex + numMips <= mNumMips,
+		"Incorrect mip map indices");
+	CLAIR_ASSERT(mOptions.type != Type::DEPTH_STENCIL_TARGET,
+		"DEPTH_STENCIL_TARGETs not supported yet");
+	if (isCubeMap) {
+		CLAIR_ASSERT(arrayStartIndex == 0 && arraySize == 6,
+			"Unable to create a cube map SubTexture when arraySize is not 6");
+	}
+	CLAIR_DEBUG_LOG_IF(mOptions.isCubeMap && arraySize == 6 && !isCubeMap,
+		"Warning: "
 		"The parent Texture is a cube map and the SubTexture has an arraySize"
 		"of 6, are you sure you didn't want to make this a cube map as well?");
 	auto const d3dDevice = D3dDevice::getD3dDevice();
 	ID3D11ShaderResourceView* newShaderResView {nullptr};
-	ID3D11RenderTargetView* newRenderTargetView {nullptr};
 	// Create shader resource view
 	D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
 	viewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
@@ -229,33 +260,16 @@ SubTexture* Texture::createSubTexture(
 		&newShaderResView))) {
 		newShaderResView = nullptr;
 	}
-	// Create render target view
-	if (mOptions.type == Type::RENDER_TARGET) {
-		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
-		ZeroMemory(&renderViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-		renderViewDesc.Format = static_cast<DXGI_FORMAT>(mD3dFormat);
-		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-		renderViewDesc.Texture2DArray.MipSlice = mipStartIndex;
-		renderViewDesc.Texture2DArray.FirstArraySlice = arrayStartIndex;
-		renderViewDesc.Texture2DArray.ArraySize = arraySize;
-		if (FAILED(d3dDevice->CreateRenderTargetView(
-				mD3dTexture, &renderViewDesc, &newRenderTargetView))) {
-			newRenderTargetView = nullptr;
-		}
-	}
-	SubTexture* newSubTexture = new SubTexture{
-		newShaderResView, newRenderTargetView, mOptions.type};
-	mSubTextures.push_back(newSubTexture);
-	auto d3dContext = D3dDevice::getD3dDeviceContext();
-	if (!isCubeMap) {
-		Float4 value {1.0f, 0.0f, 1.0f, 1.0f};
-		d3dContext->ClearRenderTargetView(newRenderTargetView, &value[0][0]);
-	}
-	return newSubTexture;
+	ShaderResource* newCustomShadResView {new ShaderResource{newShaderResView}};
+	mCustomShaderResources.push_back(newCustomShadResView);
+	return newCustomShadResView;
 }
 
 Texture::~Texture() {
-	for (const auto& it : mSubTextures) {
+	for (const auto& it : mCustomShaderResources) {
+		delete it;
+	}
+	for (const auto& it : mCustomRenderTargets) {
 		delete it;
 	}
 	destroyD3dObjects();
@@ -266,14 +280,14 @@ void Texture::destroyD3dObjects() {
 	if (mD3dDepthStencilTargetView) {
 		mD3dDepthStencilTargetView->Release();
 	}
-	if (mD3dRenderTargetView) {
-		mD3dRenderTargetView->Release();
+	if (mRenderTarget) {
+		delete mRenderTarget;
 	}
 	if (mD3dTexture) {
 		mD3dTexture->Release();
 	}
-	if (mD3dShaderResView) {
-		mD3dShaderResView->Release();
+	if (mShaderResource) {
+		delete mShaderResource;
 	}
 }
 

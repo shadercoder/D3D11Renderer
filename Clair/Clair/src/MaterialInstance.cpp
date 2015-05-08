@@ -1,5 +1,4 @@
 #include "Clair/MaterialInstance.h"
-#include "SubTexture.h"
 
 using namespace Clair;
 
@@ -15,18 +14,10 @@ MaterialInstance::~MaterialInstance() {
 	delete mCBufferData;
 }
 
-void MaterialInstance::setTexture(
-	const unsigned index, const Texture* const texture) {
-	CLAIR_ASSERT(texture, "Texture shouldn't be null");
-	CLAIR_DEBUG_LOG_IF(mTextureMap.count(index) != 0,
-					   "Overriding existing texture");
-	mTextureMap[index] = texture->getD3DShaderResourceView();
-}
-
-void MaterialInstance::setTexture(
-	const unsigned index, const SubTexture* const subTexture) {
-	CLAIR_ASSERT(subTexture, "Texture shouldn't be null");
-	CLAIR_DEBUG_LOG_IF(mTextureMap.count(index) != 0,
-					   "Overriding existing texture");
-	mTextureMap[index] = subTexture->getD3DShaderResourceView();
+void MaterialInstance::setShaderResource(
+	const unsigned index, const ShaderResource* const resource) {
+	CLAIR_ASSERT(resource, "Texture shouldn't be null");
+	CLAIR_DEBUG_LOG_IF(mShaderResourceMap.count(index) != 0,
+					   "Overriding existing shader resource");
+	mShaderResourceMap[index] = resource;
 }

@@ -1,5 +1,4 @@
 #include "Clair/RenderTargetGroup.h"
-#include "SubTexture.h"
 
 using namespace Clair;
 
@@ -15,14 +14,6 @@ RenderTargetGroup::RenderTargetGroup(const int numRenderTargets)
 
 RenderTargetGroup::~RenderTargetGroup() {
 	delete[] mD3dRenderTargets;
-}
-
-void RenderTargetGroup::setRenderTarget(
-	const int index, SubTexture* const renderTarget) {
-	CLAIR_ASSERT(renderTarget, "Render target should not be null");
-	//CLAIR_ASSERT(renderTarget->getType() == Texture::Type::RENDER_TARGET,
-	//	"Texture should be of type RENDER_TARGET");
-	setD3dRenderTarget(index, renderTarget->getD3dRenderTargetView());
 }
 
 // TODO: REMOVE

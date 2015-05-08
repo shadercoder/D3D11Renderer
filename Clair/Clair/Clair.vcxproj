@@ -96,10 +96,11 @@
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\PixelShader.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\RenderTarget.cpp" />
     <ClCompile Include="src\RenderTargetGroup.cpp" />
     <ClCompile Include="src\ResourceManager.cpp" />
     <ClCompile Include="src\Scene.cpp" />
-    <ClCompile Include="src\SubTexture.cpp" />
+    <ClCompile Include="src\ShaderResource.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\VertexBuffer.cpp" />
     <ClCompile Include="src\VertexShader.cpp" />
@@ -109,8 +110,10 @@
     <ClInclude Include="include\Clair\Debug.h" />
     <ClInclude Include="include\Clair\MaterialConstBufferData.h" />
     <ClInclude Include="include\Clair\MaterialInstance.h" />
+    <ClInclude Include="include\Clair\RenderTarget.h" />
     <ClInclude Include="include\Clair\RenderTargetGroup.h" />
     <ClInclude Include="include\Clair\ResourceManager.h" />
+    <ClInclude Include="include\Clair\ShaderResource.h" />
     <ClInclude Include="include\Clair\Texture.h" />
     <ClInclude Include="src\ConstantBuffer.h" />
     <ClInclude Include="include\Clair\RenderPass.h" />
@@ -126,7 +129,6 @@
     <ClInclude Include="include\Clair\Mesh.h" />
     <ClInclude Include="src\PixelShader.h" />
     <ClInclude Include="src\Serialization.h" />
-    <ClInclude Include="src\SubTexture.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexShader.h" />
   </ItemGroup>

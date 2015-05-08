@@ -45,6 +45,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto skyMaterial = Clair::ResourceManager::createMaterial();
 	skyMaterial->initialize(skyMatData.get());
 
+	auto inputCube = mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
 	mScene = Clair::ResourceManager::createScene();
 	const int size = 5;
 	const float fsize = static_cast<float>(size);
@@ -58,7 +59,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		obj->setMesh(sphereMesh);
 		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 2.2f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setTexture(0, mSkyTexture);
+		matInst->setShaderResource(0, inputCube);
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
 		cbuf->Reflectivity = fx;
 		cbuf->Roughness = fy;
@@ -67,7 +68,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 
 	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
 	mSkyMaterialInstance->initialize(skyMaterial);
-	mSkyMaterialInstance->setTexture(0, mSkyTexture);
+	mSkyMaterialInstance->setShaderResource(
+		0, mSkyTexture->getShaderResource());
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
@@ -75,8 +77,8 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	mFilterCubeMapMatInstance =
 		Clair::ResourceManager::createMaterialInstance();
 	mFilterCubeMapMatInstance->initialize(skyMaterial);
-	auto inputCube = mSkyTexture->createSubTexture(0, 6, 0, 1, true);
-	mFilterCubeMapMatInstance->setTexture(0, inputCube);
+	//auto inputCube = mSkyTexture->createCustomRenderTarget(0, 6, 0, 1, true);
+	//mFilterCubeMapMatInstance->setTexture(0, inputCube);
 	//mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
 	//	Cb_materials_filterCube_Ps>();
 
@@ -85,26 +87,26 @@ bool MaterialSample::initialize(const HWND hwnd) {
 }
 
 void MaterialSample::filterCubeMap() {
-	for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
-		auto renderTargets = Clair::RenderTargetGroup{6};
-		for (int i_face {0}; i_face < 6; ++i_face) {
-			auto outFace = mSkyTexture->createSubTexture(i_face, 1, i_mip, 1);
-			renderTargets.setRenderTarget(i_face, outFace);
-		}
-		// depth
-		auto depthTarget = Clair::ResourceManager::createTexture();
-		Clair::Texture::Options depthTexOptions;
-		depthTexOptions.width = 256;
-		depthTexOptions.height = 256;
-		depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
-		depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
-		depthTarget->initialize(depthTexOptions);
-		depthTarget->clear(1.0f);
-		renderTargets.setDepthStencilTarget(depthTarget);
-		Clair::Renderer::setViewport(0, 0, 256, 256);
-		Clair::Renderer::setRenderTargetGroup(&renderTargets);
-		Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
-	}
+	//for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
+	//	auto renderTargets = Clair::RenderTargetGroup{6};
+	//	for (int i_face {0}; i_face < 6; ++i_face) {
+	//		auto outFace = mSkyTexture->createSubTexture(i_face, 1, i_mip, 1);
+	//		renderTargets.setRenderTarget(i_face, outFace);
+	//	}
+	//	// depth
+	//	auto depthTarget = Clair::ResourceManager::createTexture();
+	//	Clair::Texture::Options depthTexOptions;
+	//	depthTexOptions.width = 256;
+	//	depthTexOptions.height = 256;
+	//	depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
+	//	depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
+	//	depthTarget->initialize(depthTexOptions);
+	//	depthTarget->clear(1.0f);
+	//	renderTargets.setDepthStencilTarget(depthTarget);
+	//	Clair::Renderer::setViewport(0, 0, 256, 256);
+	//	Clair::Renderer::setRenderTargetGroup(&renderTargets);
+	//	Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
+	//}
 }
 
 void MaterialSample::terminate() {

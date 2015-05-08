@@ -11,7 +11,8 @@ struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 
 namespace Clair {
-	class SubTexture;
+	class RenderTarget;
+	class ShaderResource;
 	class Texture {
 	public:
 		enum class Type {
@@ -37,18 +38,22 @@ namespace Clair {
 
 		void initialize(const Options& options);
 
-		void clear(const Float4& value);
 		void clear(float value);
 		void resize(int width, int height);
-		SubTexture* createSubTexture(size_t arrayStartIndex, size_t numArrays,
-									 size_t mipStartIndex, size_t numMips,
-									 bool isCubeMap = false);
+		RenderTarget* createCustomRenderTarget(
+			size_t arrayStartIndex, size_t arraySize,
+			size_t mipStartIndex, size_t numMips,
+			bool isCubeMap = false);
+		ShaderResource* createCustomShaderResource(
+			size_t arrayStartIndex, size_t arraySize,
+			size_t mipStartIndex, size_t numMips,
+			bool isCubeMap = false);
 
 		bool isValid() const;
 		size_t getNumMipMaps() const;
 		Type getType() const;
-		ID3D11ShaderResourceView* getD3DShaderResourceView() const;
-		ID3D11RenderTargetView* getD3dRenderTargetView() const;
+		ShaderResource* getShaderResource() const;
+		RenderTarget* getRenderTarget() const;
 
 	private:
 		Texture() = default;
@@ -62,10 +67,11 @@ namespace Clair {
 		size_t mNumMips {0};
 		bool mIsValid {false};
 		ID3D11Texture2D* mD3dTexture {nullptr};
-		ID3D11ShaderResourceView* mD3dShaderResView {nullptr};
-		ID3D11RenderTargetView* mD3dRenderTargetView {nullptr};
 		ID3D11DepthStencilView* mD3dDepthStencilTargetView {nullptr};
-		std::vector<SubTexture*> mSubTextures {};
+		std::vector<ShaderResource*> mCustomShaderResources {};
+		std::vector<RenderTarget*> mCustomRenderTargets {};
+		ShaderResource* mShaderResource {nullptr};
+		RenderTarget* mRenderTarget {nullptr};
 		unsigned mD3dFormat {0};
 	};
 
@@ -81,18 +87,18 @@ namespace Clair {
 		return mOptions.type;
 	}
 
-	inline ID3D11ShaderResourceView*
-	Texture::getD3DShaderResourceView() const {
-		return mD3dShaderResView;
+	inline ShaderResource*
+	Texture::getShaderResource() const {
+		return mShaderResource;
 	}
 
-	inline ID3D11RenderTargetView*
-	Texture::getD3dRenderTargetView() const {
+	inline RenderTarget*
+	Texture::getRenderTarget() const {
 		CLAIR_ASSERT(mOptions.type == Type::RENDER_TARGET,
 			"Texture is not a render target");
 		if (!mIsValid) {
 			return nullptr;
 		}
-		return mD3dRenderTargetView;
+		return mRenderTarget;
 	}
 }

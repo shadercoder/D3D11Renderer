@@ -1,5 +1,6 @@
 #pragma once
 #include "Clair/Texture.h"
+#include "Clair/RenderTarget.h"
 #include "Clair/Debug.h"
 
 namespace Clair {
@@ -10,8 +11,7 @@ namespace Clair {
 
 		void resize(int width, int height);
 
-		void setRenderTarget(int index, Texture* renderTarget);
-		void setRenderTarget(int index, SubTexture* renderTarget);
+		void setRenderTarget(int index, RenderTarget* renderTarget);
 		void setDepthStencilTarget(Texture* depthStencilTarget);
 		int getNumRenderTargets() const;
 		Texture* getDepthStencilTarget() const;
@@ -29,10 +29,8 @@ namespace Clair {
 	}
 
 	inline void RenderTargetGroup::setRenderTarget(
-		const int index, Texture* const renderTarget) {
+		const int index, RenderTarget* const renderTarget) {
 		CLAIR_ASSERT(renderTarget, "Render target should not be null");
-		CLAIR_ASSERT(renderTarget->getType() == Texture::Type::RENDER_TARGET,
-			"Texture should be of type RENDER_TARGET");
 		setD3dRenderTarget(index, renderTarget->getD3dRenderTargetView());
 	}
 

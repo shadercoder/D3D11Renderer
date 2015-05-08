@@ -18,6 +18,8 @@
 #include "ConstantBuffer.h"
 #include "Clair/MaterialInstance.h"
 #include "Clair/RenderTargetGroup.h"
+#include "Clair/ShaderResource.h"
+#include "Clair/RenderTarget.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -359,7 +361,7 @@ void Renderer::render(Scene* const scene) {
 		const auto matCb = material->getConstantBufferPs();
 		const auto texMap = matInstance->getShaderResourceMap();
 		for (const auto& itTex : texMap) {
-			auto const resView = itTex.second;
+			auto const resView = itTex.second->getD3dShaderResourceView();
 			d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
 		}
 		{//if (iteration++ == 0) {
@@ -444,7 +446,7 @@ void Renderer::renderScreenQuad(
 	}
 	const auto texMap = materialInstance->getShaderResourceMap();
 	for (const auto& itTex : texMap) {
-		auto const resView = itTex.second;
+		auto const resView = itTex.second->getD3dShaderResourceView();
 		d3dDeviceContext->PSSetShaderResources(itTex.first, 1, &resView);
 	}
 	const UINT stride {sizeof(Float3)};
