@@ -34,9 +34,9 @@ bool DeferredSample::initialize(const HWND hwnd) {
 
 	// Group them into a GBuffer
 	mGBuffer = new Clair::RenderTargetGroup{3};
-	mGBuffer->setRenderTarget(0, mGBufAlbedo);
-	mGBuffer->setRenderTarget(1, mGBufNormal);
-	mGBuffer->setRenderTarget(2, mGBufPosition);
+	mGBuffer->setRenderTarget(0, mGBufAlbedo->getRenderTarget());
+	mGBuffer->setRenderTarget(1, mGBufNormal->getRenderTarget());
+	mGBuffer->setRenderTarget(2, mGBufPosition->getRenderTarget());
 	mGBuffer->setDepthStencilTarget(mGBufDepthStencil);
 
 	// Deferred composite material
@@ -45,9 +45,12 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	compTex->initialize(compTexData.get());
 	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
 	mDeferredCompositeMat->initialize(compTex);
-	mDeferredCompositeMat->setTexture(0, mGBufAlbedo);
-	mDeferredCompositeMat->setTexture(1, mGBufNormal);
-	mDeferredCompositeMat->setTexture(2, mGBufPosition);
+	mDeferredCompositeMat->setShaderResource(
+		0, mGBufAlbedo->getShaderResource());
+	mDeferredCompositeMat->setShaderResource(
+		1, mGBufNormal->getShaderResource());
+	mDeferredCompositeMat->setShaderResource(
+		2, mGBufPosition->getShaderResource());
 	mCompositeCBuffer = mDeferredCompositeMat->
 		getConstantBufferPs<Cb_materials_deferredComposite_Ps>();
 
@@ -143,7 +146,7 @@ void DeferredSample::onResize(const int width, const int height,
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
-	mGBuffer->resize(width, height);
+	//mGBuffer->resize(width, height);
 }
 
 void DeferredSample::update() {
@@ -184,9 +187,9 @@ void DeferredSample::update() {
 void DeferredSample::render() {
 	// Render to G-buffer
 	Clair::Renderer::setRenderTargetGroup(mGBuffer);
-	mGBufAlbedo->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	mGBufNormal->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	mGBufPosition->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufAlbedo->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufNormal->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufPosition->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufDepthStencil->clear({1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));

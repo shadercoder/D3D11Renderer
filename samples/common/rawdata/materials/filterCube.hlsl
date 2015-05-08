@@ -23,6 +23,10 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
+//cbuffer Buf : register(b1) {
+//	float4 FinalColor;
+//};
+
 struct PsOut {
 	float4 Face0 : SV_TARGET0;
 	float4 Face1 : SV_TARGET1;
@@ -36,7 +40,7 @@ PsOut psMain(PsIn psIn) {
 	PsOut psOut;
 	float3 col;
 	col = CubeMapInput.Sample(SamplerLinear, float3(psIn.Uvs, 1.0)).rgb;
-	col *= float3(1.0, 1.0, 0.0);
+	//col *= float3(1.0, 1.0, 0.0);
 	float4 finalCol = float4(col, 1.0);
 	psOut.Face0 = finalCol;
 	psOut.Face1 = finalCol;

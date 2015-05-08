@@ -124,7 +124,9 @@ void Texture::initialize(const Options& options) {
 			return;
 		}
 	}
-	mShaderResource = new ShaderResource{newShaderResView};
+	// TODO: TEMP IF
+	if (options.type != Type::DEPTH_STENCIL_TARGET)
+		mShaderResource = new ShaderResource{newShaderResView};
 
 	if (options.type == Type::RENDER_TARGET) {
 		ID3D11RenderTargetView* newRenderTargetView {nullptr};

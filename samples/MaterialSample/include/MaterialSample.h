@@ -23,5 +23,5 @@ private:
 	Cb_materials_sky_Ps* mSkyConstBuffer {nullptr};
 
 	Clair::MaterialInstance* mFilterCubeMapMatInstance {nullptr};
-	class Cb_materials_filterCubeMap_Ps* mFilterCubeMapCBuffer {nullptr};
+	class Cb_materials_filterCube_Ps* mFilterCubeMapCBuffer {nullptr};
 };

@@ -10,7 +10,7 @@
 #include "Clair/Object.h"
 #include "Clair/RenderTargetGroup.h"
 #include "../../data/materials/pbrSimple.h"
-//#include "../../data/materials/filterCube.h"
+#include "../../data/materials/filterCube.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -45,6 +45,10 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	auto skyMaterial = Clair::ResourceManager::createMaterial();
 	skyMaterial->initialize(skyMatData.get());
 
+	auto filterMatData = Loader::loadBinaryData("materials/filterCube.cmat");
+	auto filterMaterial = Clair::ResourceManager::createMaterial();
+	filterMaterial->initialize(filterMatData.get());
+
 	auto inputCube = mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
 	mScene = Clair::ResourceManager::createScene();
 	const int size = 5;
@@ -59,7 +63,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 		obj->setMesh(sphereMesh);
 		obj->setMatrix(value_ptr(translate(vec3{fx, fy, fz} * fsize * 2.2f)));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setShaderResource(0, inputCube);
+		matInst->setShaderResource(0, mSkyTexture->getShaderResource());
 		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
 		cbuf->Reflectivity = fx;
 		cbuf->Roughness = fy;
@@ -76,37 +80,40 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	// filtering the cube map
 	mFilterCubeMapMatInstance =
 		Clair::ResourceManager::createMaterialInstance();
-	mFilterCubeMapMatInstance->initialize(skyMaterial);
+	mFilterCubeMapMatInstance->initialize(filterMaterial);
 	//auto inputCube = mSkyTexture->createCustomRenderTarget(0, 6, 0, 1, true);
-	//mFilterCubeMapMatInstance->setTexture(0, inputCube);
+	mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 	//mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
 	//	Cb_materials_filterCube_Ps>();
+	//mFilterCubeMapCBuffer->FinalColor = {1.0f, 0.0f, 1.0f, 1.0f};
 
 	Camera::initialize({-4.5f, 16.6f, -4.5f}, 0.705f, 0.770f);
 	return true;
 }
 
 void MaterialSample::filterCubeMap() {
-	//for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
-	//	auto renderTargets = Clair::RenderTargetGroup{6};
-	//	for (int i_face {0}; i_face < 6; ++i_face) {
-	//		auto outFace = mSkyTexture->createSubTexture(i_face, 1, i_mip, 1);
-	//		renderTargets.setRenderTarget(i_face, outFace);
-	//	}
-	//	// depth
-	//	auto depthTarget = Clair::ResourceManager::createTexture();
-	//	Clair::Texture::Options depthTexOptions;
-	//	depthTexOptions.width = 256;
-	//	depthTexOptions.height = 256;
-	//	depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
-	//	depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
-	//	depthTarget->initialize(depthTexOptions);
-	//	depthTarget->clear(1.0f);
-	//	renderTargets.setDepthStencilTarget(depthTarget);
-	//	Clair::Renderer::setViewport(0, 0, 256, 256);
-	//	Clair::Renderer::setRenderTargetGroup(&renderTargets);
-	//	Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
-	//}
+	for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
+		auto renderTargets = Clair::RenderTargetGroup{6};
+		for (int i_face {0}; i_face < 6; ++i_face) {
+			auto outFace = mSkyTexture->createCustomRenderTarget(
+				i_face, 1, i_mip, 1);
+			renderTargets.setRenderTarget(i_face, outFace);
+			outFace->clear({1.0f, static_cast<float>(i_face) / 6.0f, 0.0f, 1.0f});
+		}
+		// depth
+		//auto depthTarget = Clair::ResourceManager::createTexture();
+		//Clair::Texture::Options depthTexOptions;
+		//depthTexOptions.width = 256;
+		//depthTexOptions.height = 256;
+		//depthTexOptions.format = Clair::Texture::Format::D24_UNORM_S8_UINT;
+		//depthTexOptions.type = Clair::Texture::Type::DEPTH_STENCIL_TARGET;
+		//depthTarget->initialize(depthTexOptions);
+		//depthTarget->clear(1.0f);
+		//renderTargets.setDepthStencilTarget(depthTarget);
+		Clair::Renderer::setViewport(0, 0, 256, 256);
+		Clair::Renderer::setRenderTargetGroup(&renderTargets);
+		Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
+	}
 }
 
 void MaterialSample::terminate() {

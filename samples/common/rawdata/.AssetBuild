@@ -3,7 +3,7 @@
 /materials/numLights.h|30442535|483267130
 /materials/deferredGeometry.hlsl|30441261|1690133059
 /materials/drawTexture.hlsl|30441083|4119662285
-/materials/filterCube.hlsl|30443768|2321944627
+/materials/filterCube.hlsl|30443914|3444778415
 /materials/normals.hlsl|30440679|856966016
 /materials/pbrSimple.hlsl|30443546|3544715677
 /materials/sky.hlsl|30443766|2555108674
