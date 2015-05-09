@@ -59,31 +59,32 @@ void Texture::initialize(const Options& options) {
 		int mipWidth = options.width;
 		int mipHeight = options.height;
 		for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
+			const size_t subSize {mipWidth * mipHeight * elementSize};
+			texData[i_arr][i_mip] = new Byte[subSize]();
+			if (options.initialData && i_mip == 0) {
+				memcpy(texData[i_arr][i_mip], options.initialData, subSize);
+				//for (int y {0}; y < mipHeight; ++y) {
+				//	for (int x {0}; x < mipWidth; ++x) {
+				//		const int idx = (x + y * mipWidth) * 4;
+				//		const int arrOffset = mipWidth * mipHeight * i_arr * 4;
+				//		texData[i_arr][i_mip][idx + 0] =
+				//			options.initialData[arrOffset + (idx + 0) / (i_mip + 1)];
+				//		texData[i_arr][i_mip][idx + 1] =
+				//			options.initialData[arrOffset + (idx + 1) / (i_mip + 1)];
+				//		texData[i_arr][i_mip][idx + 2] =
+				//			options.initialData[arrOffset + (idx + 2) / (i_mip + 1)];
+				//		texData[i_arr][i_mip][idx + 3] = 
+				//			options.initialData[arrOffset + (idx + 3) / (i_mip + 1)];
+				//	}
+				//}
+			}
 			const size_t subResIdx = i_mip + i_arr * mNumMips;
 			ZeroMemory(&subResourceData[subResIdx],
 				sizeof(D3D11_SUBRESOURCE_DATA));
-			texData[i_arr][i_mip] =
-				new Byte[mipWidth * mipHeight * elementSize]();
 			subResourceData[subResIdx].pSysMem = texData[i_arr][i_mip];
 			subResourceData[subResIdx].SysMemPitch =
 				sizeof(Byte) * mipWidth * elementSize;
 			subResourceData[subResIdx].SysMemSlicePitch = 0;
-			if (options.initialData && i_mip == 0) {
-				for (int y {0}; y < mipHeight; ++y) {
-					for (int x {0}; x < mipWidth; ++x) {
-						const int idx = (x + y * mipWidth) * 4;
-						const int arrOffset = mipWidth * mipHeight * i_arr * 4;
-						texData[i_arr][i_mip][idx + 0] =
-							options.initialData[arrOffset + (idx + 0) / (i_mip + 1)];
-						texData[i_arr][i_mip][idx + 1] =
-							options.initialData[arrOffset + (idx + 1) / (i_mip + 1)];
-						texData[i_arr][i_mip][idx + 2] =
-							options.initialData[arrOffset + (idx + 2) / (i_mip + 1)];
-						texData[i_arr][i_mip][idx + 3] = 
-							options.initialData[arrOffset + (idx + 3) / (i_mip + 1)];
-					}
-				}
-			}
 			mipWidth = max(mipWidth / 2, 1);
 			mipHeight = max(mipHeight / 2, 1);
 		}

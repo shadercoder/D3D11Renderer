@@ -173,6 +173,9 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		}
 		gSample->mDeltaTime = static_cast<float>(deltaTime);
 		gSample->mRunningTime = static_cast<float>(runningTime);
+		gSample->mWidth = gWidth;
+		gSample->mHeight = gHeight;
+		gSample->mAspect = gAspect;
 		Logger::reset(runningTime);
 		timer.start();
 	}

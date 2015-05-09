@@ -20,6 +20,7 @@ namespace SampleFramework {
 		static void setSearchPath(const std::string& path);
 		static std::unique_ptr<Byte> loadBinaryData(const std::string& filename);
 		static LoadedTexture loadImageData(const std::string& filename);
+		static LoadedTexture loadHDRImageData(const std::string& filename);
 		static LoadedTexture loadCubeImageData(const std::string& foldername);
 
 	private:

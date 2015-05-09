@@ -21,13 +21,13 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
-	auto loadedTex = Loader::loadCubeImageData("textures/sky");
+	//auto loadedTex = Loader::loadCubeImageData("textures/sky");
 	mSkyTexture = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options texOptions {};
-	texOptions.width = loadedTex.width;
-	texOptions.height = loadedTex.height;
-	texOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
-	texOptions.initialData = loadedTex.data;
+	texOptions.width = 512;
+	texOptions.height = 512;
+	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	texOptions.initialData = nullptr;//loadedTex.data;
 	texOptions.arraySize = 6;
 	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
 	texOptions.isCubeMap = true;
@@ -74,6 +74,30 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
+	// Creating cube map from HDR image
+	auto hdrSkyTexData = Loader::loadHDRImageData("textures/pisa.hdr");
+	auto hdrSkyTex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options hdrTexOptions {};
+	hdrTexOptions.width = hdrSkyTexData.width;
+	hdrTexOptions.height = hdrSkyTexData.height;
+	hdrTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	hdrTexOptions.initialData = hdrSkyTexData.data;
+	hdrSkyTex->initialize(hdrTexOptions);
+	auto panCubeData = Loader::loadBinaryData("materials/panoramaToCube.cmat");
+	auto panCubeMat = Clair::ResourceManager::createMaterial();
+	panCubeMat->initialize(panCubeData.get());
+	mPanoramaToCube = Clair::ResourceManager::createMaterialInstance();
+	mPanoramaToCube->initialize(panCubeMat);
+	mPanoramaToCube->setShaderResource(0, hdrSkyTex->getShaderResource());
+	auto renderTargets = Clair::RenderTargetGroup{6};
+	for (int i_face {0}; i_face < 6; ++i_face) {
+		auto outFace = mSkyTexture->createCustomRenderTarget(i_face, 1, 0, 1);
+		renderTargets.setRenderTarget(i_face, outFace);
+	}
+	Clair::Renderer::setViewport(0, 0, 512, 512);
+	Clair::Renderer::setRenderTargetGroup(&renderTargets);
+	Clair::Renderer::renderScreenQuad(mPanoramaToCube);
+
 	// filtering the cube map
 	mFilterCubeMapMatInstance =
 		Clair::ResourceManager::createMaterialInstance();
@@ -94,13 +118,14 @@ void MaterialSample::filterCubeMap() {
 			auto outFace = mSkyTexture->createCustomRenderTarget(
 				i_face, 1, i_mip, 1);
 			renderTargets.setRenderTarget(i_face, outFace);
-			outFace->clear({1.0f, static_cast<float>(i_face) / 6.0f, 0.0f, 1.0f});
 		}
 		Clair::Renderer::setViewport(0, 0, res, res);
 		res /= 2;
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
 		auto inputCube =
-			mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
+			mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
+		//auto inputCube =
+		//	mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
@@ -112,13 +137,16 @@ void MaterialSample::terminate() {
 	Clair::terminate();
 }
 
+float FoV {60.0f};
+
 void MaterialSample::onResize(const int width, const int height,
 						   const float aspect) {
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::resizeScreen(width, height);
 	Clair::Renderer::setProjectionMatrix(
-		value_ptr(perspectiveLH(radians(60.0f), aspect, 0.01f, 100.0f)));
+		value_ptr(perspectiveLH(radians(FoV), aspect, 0.01f, 100.0f)));
 	mSkyConstBuffer->Aspect = aspect;
+	mSkyConstBuffer->FieldOfView = FoV;
 }
 
 void MaterialSample::update() {
@@ -133,7 +161,6 @@ void MaterialSample::update() {
 }
 
 void MaterialSample::render() {
-	Clair::Renderer::setViewport(0, 0, 960, 640);
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));

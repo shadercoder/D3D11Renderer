@@ -19,6 +19,7 @@ private:
 	Clair::Scene* mScene {nullptr};
 
 	Clair::Texture* mSkyTexture {nullptr};
+	Clair::MaterialInstance* mPanoramaToCube {nullptr};
 	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
 	Cb_materials_sky_Ps* mSkyConstBuffer {nullptr};
 

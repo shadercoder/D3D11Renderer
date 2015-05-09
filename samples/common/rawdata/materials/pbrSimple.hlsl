@@ -52,13 +52,16 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	
 	float3 refl = reflect(V, n);
+	float actualMip = texAlbedo.Sample(samplerLinear, refl).a;
+	float roughnessMip = Roughness * float(NUM_ROUGHNESS_MIPS - 1);
+	// TODO: probably should use max(actualMip, roughnessMip) but seems too blurry
 	float3 reflCol =
-		texAlbedo.SampleLevel(samplerLinear, refl, Roughness * float(NUM_ROUGHNESS_MIPS - 1)).rgb;
+		texAlbedo.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
 	reflCol = pow(reflCol, 2.2);
 	reflCol = lerp(reflCol, reflCol * albedo, Metalness);
 	float3 H = normalize(refl + V);
 	float HdotV = dot(H, V);
-	float finalReflectivity = Reflectivity + (1 - Reflectivity) * pow(HdotV, 5);
+	float finalReflectivity = Reflectivity;// + (1 - Reflectivity) * pow(HdotV, 5);
 	
 	float3 col = albedo * diff;
 	col = lerp(col, reflCol, finalReflectivity);

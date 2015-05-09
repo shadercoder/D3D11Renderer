@@ -28,10 +28,12 @@ cbuffer Material : register(b1) {
 	float3 CamUp;
 	float3 CamForward;
 	float Aspect;
+	float FieldOfView;
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
-	float3 r = CamForward +
+	float dist = 1.0 / tan(FieldOfView / 2.0 * 3.14 / 180.0);
+	float3 r = CamForward * dist +
 			   (CamRight * psIn.Uvs.x * Aspect) +
 			   (CamUp * psIn.Uvs.y);
 	r = normalize(r);

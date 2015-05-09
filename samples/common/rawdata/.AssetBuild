@@ -2,12 +2,13 @@
 /materials/deferredComposite.hlsl|30442532|4201629735|1
 /materials/numLights.h|30442535|483267130
 /materials/deferredGeometry.hlsl|30441261|1690133059
-/materials/drawTexture.hlsl|30441083|4119662285
-/materials/filterCube.hlsl|30443947|2139809685
+/materials/drawTexture.hlsl|30444108|1829593942
+/materials/filterCube.hlsl|30444133|2000681688
 /materials/normals.hlsl|30440679|856966016
-/materials/pbrSimple.hlsl|30443944|2273371874|1
+/materials/panoramaToCube.hlsl|30444118|1987783941
+/materials/pbrSimple.hlsl|30444115|2484864912|1
 /materials/numRoughnessMips.h|30443944|3833457871
-/materials/sky.hlsl|30443766|2555108674
+/materials/sky.hlsl|30444136|1005451538
 /models/bunny.obj|30440679|856966016
 /models/cube.obj|30441679|2049949893
 /models/plane.obj|30441959|3421867683
