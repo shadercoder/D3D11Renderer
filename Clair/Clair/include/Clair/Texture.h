@@ -51,6 +51,7 @@ namespace Clair {
 
 		bool isValid() const;
 		size_t getNumMipMaps() const;
+		void getMipMapDimensions(size_t mipLevel, int* outWidth, int* outHeight);
 		Type getType() const;
 		ShaderResource* getShaderResource() const;
 		RenderTarget* getRenderTarget() const;

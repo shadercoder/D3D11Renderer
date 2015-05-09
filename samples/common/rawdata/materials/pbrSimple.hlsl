@@ -1,6 +1,6 @@
 #include "numRoughnessMips.h"
 
-TextureCube texAlbedo : register(t0);
+TextureCube CubeMap : register(t0);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -47,23 +47,27 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 l = normalize(float3(-1.0, 5.0, -2.0));
 	float3 V = normalize(psIn.WPosition - CameraPos);
 
-	float3 albedo = float3(0.0, 1.0, 0.0);
-	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
-	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
+	//float3 albedo = float3(0.3, 0.6, 0.9);
+	float3 albedo = float3(1.0, 1.0, 1.0);
+	//float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
+	//diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
 	
 	float3 refl = reflect(V, n);
-	float actualMip = texAlbedo.Sample(samplerLinear, refl).a;
+	float actualMip = CubeMap.Sample(samplerLinear, refl).a;
 	float roughnessMip = Roughness * float(NUM_ROUGHNESS_MIPS - 1);
 	// TODO: probably should use max(actualMip, roughnessMip) but seems too blurry
 	float3 reflCol =
-		texAlbedo.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
-	reflCol = pow(reflCol, 2.2);
+		CubeMap.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
 	reflCol = lerp(reflCol, reflCol * albedo, Metalness);
 	float3 H = normalize(refl + V);
 	float HdotV = dot(H, V);
-	float finalReflectivity = Reflectivity;// + (1 - Reflectivity) * pow(HdotV, 5);
+	float base = HdotV;
+	float exp = pow(base, 5);
+	float finalReflectivity = exp + Reflectivity * (1.0 - exp);
+	finalReflectivity = lerp(finalReflectivity, Reflectivity, Roughness);
 	
-	float3 col = albedo * diff;
+	float3 col = albedo *
+		CubeMap.SampleLevel(samplerLinear, n, float(NUM_ROUGHNESS_MIPS - 1)).rgb;
 	col = lerp(col, reflCol, finalReflectivity);
 	col += 0.01;
 	col = pow(col, 1.0 / 2.2);

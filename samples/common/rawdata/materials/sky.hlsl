@@ -38,5 +38,6 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 			   (CamUp * psIn.Uvs.y);
 	r = normalize(r);
 	float3 col = texAlbedo.SampleLevel(samplerLinear, r, 0);
+	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);
 }

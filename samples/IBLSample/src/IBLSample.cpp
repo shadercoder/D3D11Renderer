@@ -121,20 +121,21 @@ bool IBLSample::initialize(const HWND hwnd) {
 }
 
 void IBLSample::filterCubeMap() {
-	int res = 256;
-	for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
+	int w, h;
+	mSkyTexture->getMipMapDimensions(1, &w, &h);
+	for (size_t i_mip {1}; i_mip < NUM_ROUGHNESS_MIPS; ++i_mip) {
 		auto renderTargets = Clair::RenderTargetGroup{6};
 		for (int i_face {0}; i_face < 6; ++i_face) {
 			auto outFace = mSkyTexture->createCustomRenderTarget(
 				i_face, 1, i_mip, 1);
 			renderTargets.setRenderTarget(i_face, outFace);
 		}
-		Clair::Renderer::setViewport(0, 0, res, res);
-		res /= 2;
+		Clair::Renderer::setViewport(0, 0, w, h);
+		w /= 2;
+		h /= 2;
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
 		auto inputCube =
-			//mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
-			mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
+			mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);

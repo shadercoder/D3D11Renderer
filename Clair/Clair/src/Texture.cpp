@@ -292,3 +292,17 @@ size_t Texture::maxPossibleMips(int width, int height, const size_t max) {
 	}
 	return numLevels;
 }
+
+void Texture::getMipMapDimensions(
+	const size_t mipLevel, int* outWidth, int* outHeight) {
+	CLAIR_ASSERT(mipLevel >= 0 && mipLevel < mNumMips,
+		"Incorrect mip map level");
+	int width = mOptions.width;
+	int height = mOptions.height;
+	for (size_t i {0}; i < mipLevel; ++i) {
+		width = max(width / 2, 1);
+		height = max(height / 2, 1);
+	}
+	*outWidth = width;
+	*outHeight = height;
+}

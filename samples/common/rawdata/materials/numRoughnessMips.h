@@ -1,3 +1,3 @@
 #pragma once
 
-static const int NUM_ROUGHNESS_MIPS = 5;
+static const int NUM_ROUGHNESS_MIPS = 8;

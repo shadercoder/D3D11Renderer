@@ -28,7 +28,7 @@ private:
 	class Cb_materials_pbrSimple_Ps* mModelCBuffer {nullptr};
 
 	float mFoV {60.0f};
-	float mReflectivity {0.5f};
-	float mRoughness {0.5f};
-	float mMetalness {0.5f};
+	float mReflectivity {0.0f};
+	float mRoughness {1.0f};
+	float mMetalness {0.0f};
 };

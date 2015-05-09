@@ -62,11 +62,13 @@ float3 filter(float2 uv, float3 right, float3 up, float3 forward) {
 	float3 dir = normalize(forward + uv.x * right + uv.y * up);
 	const int NUM_SAMPLES = 1024;
 	for (int i = 0; i < NUM_SAMPLES; ++i) {
-		float sign = i % 2 == 0 ? 1.0f : -1.0f;
 		float3 offset = hemisphereSample_uniform(hammersley2d(i, NUM_SAMPLES));
-		float3 sampDir = normalize(dir + 1.0 * Roughness * sign * offset);
-		//sampDir = normalize(offset);
-		//if (dot(sampDir, dir) < 0) sampDir = -sampDir;
+		offset = normalize(offset);
+		if (dot(offset, dir) < 0) {
+			offset = -offset;
+		}
+		float3 sampDir = lerp(dir, offset, pow(Roughness, 2));
+		sampDir = normalize(sampDir);
 		col += CubeMapInput.Sample(SamplerLinear, sampDir).rgb;
 	}
 	col /= float(NUM_SAMPLES);

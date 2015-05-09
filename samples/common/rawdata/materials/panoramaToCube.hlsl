@@ -42,7 +42,7 @@ float3 panoramaToCube(float2 uv, float3 right, float3 up, float3 forward) {
 	float u = fmod(0.5 * (1.0 + atan2(dir.x, -dir.z) * (1.0 / PI)) + 0.0, 1.0);
 	float v = saturate(fmod(acos(dir.y) * (1.0 / PI), 1.0));
 	float3 col = PanoramaInput.Sample(SamplerLinear, float2(u, v)).rgb;
-	return pow(col, 1.0 / 2.2);
+	return col;
 }
 
 PsOut psMain(PsIn psIn) {
