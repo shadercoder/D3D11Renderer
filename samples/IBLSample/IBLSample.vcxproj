@@ -11,16 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\MaterialSample.cpp" />
+    <ClCompile Include="src\IBLSample.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\MaterialSample.h" />
+    <ClInclude Include="include\IBLSample.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BF0EAB0A-DF2C-439F-BDD5-40A51F97FA96}</ProjectGuid>
     <RootNamespace>MaterialSample</RootNamespace>
-    <ProjectName>MaterialSample</ProjectName>
+    <ProjectName>IBLSample</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

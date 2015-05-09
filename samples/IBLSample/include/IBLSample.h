@@ -5,7 +5,7 @@
 #include <Clair/MaterialInstance.h>
 #include "../../data/materials/sky.h"
 
-class MaterialSample : public SampleFramework::SampleBase {
+class IBLSample : public SampleFramework::SampleBase {
 public:
 	bool initialize(HWND hwnd) override;
 	void terminate() override;

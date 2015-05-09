@@ -1,4 +1,4 @@
-#include "MaterialSample.h"
+#include "IBLSample.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
@@ -17,7 +17,7 @@
 using namespace SampleFramework;
 using namespace glm;
 
-bool MaterialSample::initialize(const HWND hwnd) {
+bool IBLSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
@@ -120,7 +120,7 @@ bool MaterialSample::initialize(const HWND hwnd) {
 	return true;
 }
 
-void MaterialSample::filterCubeMap() {
+void IBLSample::filterCubeMap() {
 	int res = 256;
 	for (size_t i_mip {1}; i_mip < mSkyTexture->getNumMipMaps(); ++i_mip) {
 		auto renderTargets = Clair::RenderTargetGroup{6};
@@ -144,11 +144,11 @@ void MaterialSample::filterCubeMap() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
-void MaterialSample::terminate() {
+void IBLSample::terminate() {
 	Clair::terminate();
 }
 
-void MaterialSample::onResize(const int width, const int height,
+void IBLSample::onResize(const int width, const int height,
 						   const float aspect) {
 	Clair::Renderer::setViewport(0, 0, width, height);
 	Clair::Renderer::resizeScreen(width, height);
@@ -158,7 +158,7 @@ void MaterialSample::onResize(const int width, const int height,
 	mSkyConstBuffer->FieldOfView = mFoV;
 }
 
-void MaterialSample::update() {
+void IBLSample::update() {
 	Camera::update(getDeltaTime());
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
@@ -172,7 +172,7 @@ void MaterialSample::update() {
 	mModelCBuffer->Metalness = mMetalness;
 }
 
-void MaterialSample::render() {
+void IBLSample::render() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));

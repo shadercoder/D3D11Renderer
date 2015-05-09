@@ -1,5 +1,5 @@
 #include "SampleFramework/SampleFramework.h"
-#include "MaterialSample.h"
+#include "IBLSample.h"
 
 #ifdef NDEBUG
 	#pragma comment(linker, "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
@@ -9,8 +9,8 @@
 
 int main(int, char* []) {
 	return SampleFramework::Framework::run(
-		new MaterialSample{},
-		"Clair MaterialSample",
+		new IBLSample{},
+		"Clair IBLSample",
 		960, 640,
 		"../../common/data/"
 	);
