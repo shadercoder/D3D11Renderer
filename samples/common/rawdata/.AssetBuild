@@ -6,7 +6,7 @@
 /materials/filterCube.hlsl|30444133|2000681688
 /materials/normals.hlsl|30440679|856966016
 /materials/panoramaToCube.hlsl|30444118|1987783941
-/materials/pbrSimple.hlsl|30444115|2484864912|1
+/materials/pbrSimple.hlsl|30444143|1602372430|1
 /materials/numRoughnessMips.h|30443944|3833457871
 /materials/sky.hlsl|30444136|1005451538
 /models/bunny.obj|30440679|856966016

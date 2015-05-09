@@ -50,16 +50,7 @@ LoadedTexture Loader::loadImageData(const std::string& filename) {
 	imgData = stbi_load_from_file(file, &imgx, &imgy, &comp, 4);
 	fclose(file);
 	Byte* returnData {new Byte[imgx * imgy * 4]};
-	for (int x {0}; x < imgx; ++x) {
-		for (int y {0}; y < imgy; ++y) {
-			const int idx {x + y * imgx};
-			const int inverseIdx {x + (y) * imgx};
-			returnData[idx * 4  + 0] = imgData[inverseIdx * 4 + 0];
-			returnData[idx * 4  + 1] = imgData[inverseIdx * 4 + 1];
-			returnData[idx * 4  + 2] = imgData[inverseIdx * 4 + 2];
-			returnData[idx * 4  + 3] = imgData[inverseIdx * 4 + 3];
-		}
-	}
+	memcpy(returnData, imgData, sizeof(Byte) * imgx * imgy * 4);
 	stbi_image_free(imgData);
 	return LoadedTexture{imgx, imgy, returnData};
 }
@@ -72,35 +63,7 @@ LoadedTexture Loader::loadHDRImageData(const std::string& filename) {
 	imgData = stbi_loadf_from_file(file, &imgx, &imgy, &comp, 4);
 	fclose(file);
 	float* returnData {new float[imgx * imgy * 4]};
-	for (int x {0}; x < imgx; ++x) {
-		for (int y {0}; y < imgy; ++y) {
-			const int idx {x + y * imgx};
-			const int inverseIdx {x + (y) * imgx};
-			returnData[idx * 4  + 0] = imgData[inverseIdx * 4 + 0];
-			returnData[idx * 4  + 1] = imgData[inverseIdx * 4 + 1];
-			returnData[idx * 4  + 2] = imgData[inverseIdx * 4 + 2];
-			returnData[idx * 4  + 3] = imgData[inverseIdx * 4 + 3];
-		}
-	}
+	memcpy(returnData, imgData, sizeof(float) * imgx * imgy * 4);
 	stbi_image_free(imgData);
 	return LoadedTexture{imgx, imgy, reinterpret_cast<Byte*>(returnData)};
-}
-
-LoadedTexture Loader::loadCubeImageData(const std::string& foldername) {
-	LoadedTexture textures[6] = { loadImageData(foldername + "/0.png"),
-								  loadImageData(foldername + "/1.png"),
-								  loadImageData(foldername + "/2.png"),
-								  loadImageData(foldername + "/3.png"),
-								  loadImageData(foldername + "/4.png"),
-								  loadImageData(foldername + "/5.png")};
-	const int imgx = textures[0].width;
-	const int imgy = textures[0].height;
-	Byte* returnData {new Byte[imgx * imgy * 4 * 6]()};
-	for (int i = 0; i < 6; ++i) {
-		//returnData[img]
-		memcpy(&returnData[imgx * imgy * 4 * i],
-			   textures[i].data,
-			   imgx * imgy * 4);
-	}
-	return LoadedTexture{imgx, imgy, returnData};
 }

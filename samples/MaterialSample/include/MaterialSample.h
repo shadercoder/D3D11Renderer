@@ -25,4 +25,10 @@ private:
 
 	Clair::MaterialInstance* mFilterCubeMapMatInstance {nullptr};
 	class Cb_materials_filterCube_Ps* mFilterCubeMapCBuffer {nullptr};
+	class Cb_materials_pbrSimple_Ps* mModelCBuffer {nullptr};
+
+	float mFoV {60.0f};
+	float mReflectivity {0.5f};
+	float mRoughness {0.5f};
+	float mMetalness {0.5f};
 };
