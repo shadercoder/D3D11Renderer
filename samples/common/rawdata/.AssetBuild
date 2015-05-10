@@ -3,10 +3,10 @@
 /materials/numLights.h|30442535|483267130
 /materials/deferredGeometry.hlsl|30441261|1690133059
 /materials/drawTexture.hlsl|30444108|1829593942
-/materials/filterCube.hlsl|30444185|2855760131
+/materials/filterCube.hlsl|30444304|743038013
 /materials/normals.hlsl|30440679|856966016
 /materials/panoramaToCube.hlsl|30444183|1160643944
-/materials/pbrSimple.hlsl|30444185|884091345|1
+/materials/pbrSimple.hlsl|30444352|3039871547|1
 /materials/numRoughnessMips.h|30444184|3166712658
 /materials/sky.hlsl|30444183|1573995809
 /models/bunny.obj|30440679|856966016

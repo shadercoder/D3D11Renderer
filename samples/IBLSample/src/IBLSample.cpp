@@ -135,6 +135,7 @@ void IBLSample::filterCubeMap() {
 		h /= 2;
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
 		auto inputCube =
+			//mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
 			mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
