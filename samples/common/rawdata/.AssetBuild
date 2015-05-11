@@ -1,3 +1,4 @@
+/materials/bloomSimple.hlsl|30444572|2462942713
 /materials/default.hlsl|30442699|4020432316
 /materials/deferredComposite.hlsl|30442532|4201629735|1
 /materials/numLights.h|30442535|483267130
@@ -7,7 +8,7 @@
 /materials/normals.hlsl|30440679|856966016
 /materials/panoramaToCube.hlsl|30444183|1160643944
 /materials/pbrSimple.hlsl|30444352|3039871547|1
-/materials/numRoughnessMips.h|30444184|3166712658
+/materials/numRoughnessMips.h|30444494|2125374914
 /materials/sky.hlsl|30444183|1573995809
 /models/bunny.obj|30440679|856966016
 /models/cube.obj|30441679|2049949893

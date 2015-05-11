@@ -44,7 +44,7 @@ static void handleEvents() {
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
 				setWindowSize(event.window.data1, event.window.data2);
-				gSample->onResize(gWidth, gHeight, gAspect);
+				gSample->onResize();
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -125,7 +125,10 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 	}
 	Logger::log("SampleFramework: Sample initialized");
 
-	gSample->onResize(gWidth, gHeight, gAspect);
+	gSample->mWidth = gWidth;
+	gSample->mHeight = gHeight;
+	gSample->mAspect = gAspect;
+	gSample->onResize();
 
 	Timer timer;
 	timer.start();
@@ -140,6 +143,9 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		Input::update();
 		handleEvents();
 		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
+		gSample->mWidth = gWidth;
+		gSample->mHeight = gHeight;
+		gSample->mAspect = gAspect;
 
 		// GUI
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
@@ -173,9 +179,6 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		}
 		gSample->mDeltaTime = static_cast<float>(deltaTime);
 		gSample->mRunningTime = static_cast<float>(runningTime);
-		gSample->mWidth = gWidth;
-		gSample->mHeight = gHeight;
-		gSample->mAspect = gAspect;
 		Logger::reset(runningTime);
 		timer.start();
 	}

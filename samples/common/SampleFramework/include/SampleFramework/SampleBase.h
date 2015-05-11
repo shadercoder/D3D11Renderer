@@ -12,7 +12,7 @@ namespace SampleFramework {
 		virtual bool initialize(HWND hwnd) = 0;
 		virtual void terminate() = 0;
 
-		virtual void onResize(int width, int height, float aspect) = 0;
+		virtual void onResize() = 0;
 		virtual void update() = 0;
 		virtual void render() = 0;
 

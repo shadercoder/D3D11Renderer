@@ -1,4 +1,4 @@
-#include "IBLSample.h"
+#include "HDRSample.h"
 #include "SampleFramework/GlmMath.h"
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
@@ -17,7 +17,7 @@
 using namespace SampleFramework;
 using namespace glm;
 
-bool IBLSample::initialize(const HWND hwnd) {
+bool HDRSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
 	}
@@ -49,21 +49,6 @@ bool IBLSample::initialize(const HWND hwnd) {
 	skyMaterial->initialize(skyMatData.get());
 
 	mScene = Clair::ResourceManager::createScene();
-	const int size = 10;
-	const float fsize = static_cast<float>(size);
-	for (int i = 0; i < size; ++i) {
-		const float fi = static_cast<float>(i) / (fsize - 1);
-		Clair::Object* const obj = mScene->createObject();
-		obj->setMesh(sphereMesh);
-		obj->setMatrix(value_ptr(
-			translate(vec3{fi * fsize * 2.2f - fsize, 0, 0})));
-		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setShaderResource(0, mSkyTexture->getShaderResource());
-		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
-		cbuf->Reflectivity = 1.0f;
-		cbuf->Roughness = fi;
-		cbuf->Metalness = 0.0f;
-	}
 	Clair::Object* const obj = mScene->createObject();
 	obj->setMesh(bunnyMesh);
 	obj->setMatrix(value_ptr(
@@ -76,7 +61,6 @@ bool IBLSample::initialize(const HWND hwnd) {
 	mSkyMaterialInstance->initialize(skyMaterial);
 	mSkyMaterialInstance->setShaderResource(
 		0, mSkyTexture->getShaderResource());
-		//0, mSkyTexture->createCustomShaderResource(0, 6, 2, 1, true));
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
 
@@ -116,11 +100,20 @@ bool IBLSample::initialize(const HWND hwnd) {
 		Cb_materials_filterCube_Ps>();
 	filterCubeMap();
 
+	// creating render target
+	mSceneTarget = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options sceneTargTexOptions;
+	sceneTargTexOptions.width = 960;
+	sceneTargTexOptions.height = 640;
+	sceneTargTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	sceneTargTexOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	mSceneTarget->initialize(texOptions);
+
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
 }
 
-void IBLSample::filterCubeMap() {
+void HDRSample::filterCubeMap() {
 	int w, h;
 	mSkyTexture->getMipMapDimensions(1, &w, &h);
 	for (size_t i_mip {1}; i_mip < NUM_ROUGHNESS_MIPS; ++i_mip) {
@@ -146,11 +139,11 @@ void IBLSample::filterCubeMap() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
-void IBLSample::terminate() {
+void HDRSample::terminate() {
 	Clair::terminate();
 }
 
-void IBLSample::onResize() {
+void HDRSample::onResize() {
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::resizeScreen(getWidth(), getHeight());
 	Clair::Renderer::setProjectionMatrix(
@@ -159,7 +152,7 @@ void IBLSample::onResize() {
 	mSkyConstBuffer->FieldOfView = mFoV;
 }
 
-void IBLSample::update() {
+void HDRSample::update() {
 	Camera::update(getDeltaTime());
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
@@ -173,13 +166,15 @@ void IBLSample::update() {
 	mModelCBuffer->Metalness = mMetalness;
 }
 
-void IBLSample::render() {
-	Clair::Renderer::setRenderTargetGroup(nullptr);
+void HDRSample::render() {
+	auto sceneRTGroup = Clair::RenderTargetGroup{1};
+	sceneRTGroup.setRenderTarget(0, mSceneTarget->getRenderTarget());
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
-	Clair::Renderer::clearColor({0,0,0,0});
+	Clair::Renderer::setRenderTargetGroup(&sceneRTGroup);
 	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
-	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::render(mScene);
+	Clair::Renderer::setRenderTargetGroup(nullptr);
+	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::finalizeFrame();
 }

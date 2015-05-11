@@ -105,7 +105,6 @@ void DeferredSample::createRenderTarget(Clair::Texture*& outTexture) const {
 	texOptions.height = 640;
 	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
 	texOptions.type = Clair::Texture::Type::RENDER_TARGET;
-	texOptions.maxMipLevels = 1;
 	outTexture->initialize(texOptions);
 }
 
@@ -141,11 +140,10 @@ void DeferredSample::terminate() {
 	Clair::terminate();
 }
 
-void DeferredSample::onResize(const int width, const int height,
-						   const float aspect) {
-	Clair::Renderer::setViewport(0, 0, width, height);
+void DeferredSample::onResize() {
+	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setProjectionMatrix(
-		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
+		value_ptr(perspectiveLH(radians(90.0f), getAspect(), 0.01f, 100.0f)));
 	//mGBuffer->resize(width, height);
 }
 
