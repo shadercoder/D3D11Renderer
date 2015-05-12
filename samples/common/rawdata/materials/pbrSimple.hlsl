@@ -66,9 +66,15 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float exp = pow(base, 5);
 	float finalReflectivity = exp + Reflectivity * (1.0 - exp);
 	finalReflectivity = lerp(finalReflectivity, Reflectivity, Roughness);
-	float a = 1.0 + pow(1.0 - Roughness, 3) * 1000.0;
-	float phong = pow(saturate(dot(refl, l)), a);
-	phong *= (a + 2) / (2 * 3.1415);
+	float phong = 0.0;
+	if (dot(n, l) > 0) {
+		// Using that pow(max_phong_power, roughness) is from
+		// http://renderwonk.com/publications/s2010-shading-course/hoffman/s2010_physically_based_shading_hoffman_b.pdf
+		float a = 0.001 + pow(2048, 1.0 - Roughness);
+		phong = pow(saturate(dot(refl, l)), a);
+		phong *= (a + 2) / (2 * 3.1415);
+		phong /= 5.0;
+	}
 	reflCol += phong;
 	
 	float3 col = albedo * diff;

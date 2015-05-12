@@ -65,7 +65,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 		cbuf->Metalness = 0.0f;
 	}
 	Clair::Object* const obj = mScene->createObject();
-	obj->setMesh(bunnyMesh);
+	obj->setMesh(sphereMesh);
 	obj->setMatrix(value_ptr(
 		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
 	auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
@@ -97,7 +97,10 @@ bool IBLSample::initialize(const HWND hwnd) {
 	mPanoramaToCube->setShaderResource(0, hdrSkyTex->getShaderResource());
 	auto renderTargets = Clair::RenderTargetGroup{6};
 	for (int i_face {0}; i_face < 6; ++i_face) {
-		auto outFace = mSkyTexture->createSubRenderTarget(i_face, 1, 0, 1);
+		Clair::SubTextureOptions o;
+		o.arrayStartIndex = i_face;
+		o.arraySize = 1;
+		auto outFace = mSkyTexture->createSubRenderTarget(o);
 		renderTargets.setRenderTarget(i_face, outFace);
 	}
 	Clair::Renderer::setViewport(0, 0, 512, 512);
@@ -126,17 +129,22 @@ void IBLSample::filterCubeMap() {
 	for (size_t i_mip {1}; i_mip < NUM_ROUGHNESS_MIPS; ++i_mip) {
 		auto renderTargets = Clair::RenderTargetGroup{6};
 		for (int i_face {0}; i_face < 6; ++i_face) {
-			auto outFace = mSkyTexture->createSubRenderTarget(
-				i_face, 1, i_mip, 1);
+			Clair::SubTextureOptions o;
+			o.arrayStartIndex = i_face;
+			o.arraySize = 1;
+			o.mipStartIndex = i_mip;
+			auto outFace = mSkyTexture->createSubRenderTarget(o);
 			renderTargets.setRenderTarget(i_face, outFace);
 		}
 		Clair::Renderer::setViewport(0, 0, w, h);
 		w /= 2;
 		h /= 2;
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
-		auto inputCube =
-			//mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
-			mSkyTexture->createSubShaderResource(0, 6, 0, 1, true);
+		Clair::SubTextureOptions o;
+		o.arrayStartIndex = 0;
+		o.arraySize = 6;
+		o.isCubeMap = true;
+		auto inputCube = mSkyTexture->createSubShaderResource(o);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);

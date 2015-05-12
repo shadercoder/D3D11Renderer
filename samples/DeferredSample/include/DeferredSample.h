@@ -19,7 +19,9 @@ public:
 	void render() override;
 
 private:
-	void createRenderTarget(Clair::Texture*& outTexture) const;
+	Clair::Texture* createGBufferTarget(
+		Clair::Texture::Format format,
+		Clair::Texture::Type type) const;
 	void createObject(Clair::Mesh* mesh, const Clair::Float4& color,
 					  const Clair::Float4x4& transform);
 	void resetLights();
