@@ -81,7 +81,7 @@ bool HDRSample::initialize(const HWND hwnd) {
 	mPanoramaToCube->setShaderResource(0, hdrSkyTex->getShaderResource());
 	auto renderTargets = Clair::RenderTargetGroup{6};
 	for (int i_face {0}; i_face < 6; ++i_face) {
-		auto outFace = mSkyTexture->createCustomRenderTarget(i_face, 1, 0, 1);
+		auto outFace = mSkyTexture->createSubRenderTarget(i_face, 1, 0, 1);
 		renderTargets.setRenderTarget(i_face, outFace);
 	}
 	Clair::Renderer::setViewport(0, 0, 512, 512);
@@ -119,7 +119,7 @@ void HDRSample::filterCubeMap() {
 	for (size_t i_mip {1}; i_mip < NUM_ROUGHNESS_MIPS; ++i_mip) {
 		auto renderTargets = Clair::RenderTargetGroup{6};
 		for (int i_face {0}; i_face < 6; ++i_face) {
-			auto outFace = mSkyTexture->createCustomRenderTarget(
+			auto outFace = mSkyTexture->createSubRenderTarget(
 				i_face, 1, i_mip, 1);
 			renderTargets.setRenderTarget(i_face, outFace);
 		}
@@ -129,7 +129,7 @@ void HDRSample::filterCubeMap() {
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
 		auto inputCube =
 			//mSkyTexture->createCustomShaderResource(0, 6, i_mip - 1, 1, true);
-			mSkyTexture->createCustomShaderResource(0, 6, 0, 1, true);
+			mSkyTexture->createSubShaderResource(0, 6, 0, 1, true);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
 		mFilterCubeMapCBuffer->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
@@ -145,7 +145,7 @@ void HDRSample::terminate() {
 
 void HDRSample::onResize() {
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
-	Clair::Renderer::resizeScreen(getWidth(), getHeight());
+	Clair::Renderer::resizeSwapBuffer(getWidth(), getHeight());
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(mFoV), getAspect(), 0.01f, 100.0f)));
 	mSkyConstBuffer->Aspect = getAspect();

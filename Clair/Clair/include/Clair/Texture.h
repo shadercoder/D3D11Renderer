@@ -13,6 +13,13 @@ struct ID3D11DepthStencilView;
 namespace Clair {
 	class RenderTarget;
 	class ShaderResource;
+	struct SubTextureOptions {
+		size_t arrayStartIndex {0};
+		size_t arraySize {1};
+		size_t mipStartIndex {0};
+		size_t numMips {1};
+		bool isCubeMap {false};
+	};
 	class Texture {
 	public:
 		enum class Type {
@@ -23,6 +30,7 @@ namespace Clair {
 		enum class Format {
 			R8G8B8A8_UNORM,
 			R32G32B32A32_FLOAT,
+			R16G16B16A16_FLOAT,
 			D24_UNORM_S8_UINT,
 		};
 		struct Options {
@@ -40,14 +48,10 @@ namespace Clair {
 
 		void clear(float value);
 		void resize(int width, int height);
-		RenderTarget* createCustomRenderTarget(
-			size_t arrayStartIndex, size_t arraySize,
-			size_t mipStartIndex, size_t numMips,
-			bool isCubeMap = false);
-		ShaderResource* createCustomShaderResource(
-			size_t arrayStartIndex, size_t arraySize,
-			size_t mipStartIndex, size_t numMips,
-			bool isCubeMap = false);
+		RenderTarget* createSubRenderTarget(
+			const SubTextureOptions& options);
+		ShaderResource* createSubShaderResource(
+			const SubTextureOptions& options);
 
 		bool isValid() const;
 		size_t getNumMipMaps() const;
@@ -57,20 +61,24 @@ namespace Clair {
 		RenderTarget* getRenderTarget() const;
 
 	private:
-		Texture() = default;
+		friend class ResourceManager;
+		friend class Renderer;
+		Texture();
 		~Texture();
 		void destroyD3dObjects();
 		size_t maxPossibleMips(int width, int height, size_t max);
-		friend class ResourceManager;
-		friend class Renderer;
+		void initializeSubShaderRes(ShaderResource* outResource,
+								   const SubTextureOptions& options);
+		void initializeSubRenderTarget(RenderTarget* outTarget,
+									  const SubTextureOptions& options);
 
 		Options mOptions {};
 		size_t mNumMips {0};
 		bool mIsValid {false};
 		ID3D11Texture2D* mD3dTexture {nullptr};
 		ID3D11DepthStencilView* mD3dDepthStencilTargetView {nullptr};
-		std::vector<ShaderResource*> mCustomShaderResources {};
-		std::vector<RenderTarget*> mCustomRenderTargets {};
+		std::vector<ShaderResource*> mSubShaderResources {};
+		std::vector<RenderTarget*> mSubRenderTargets {};
 		ShaderResource* mShaderResource {nullptr};
 		RenderTarget* mRenderTarget {nullptr};
 		unsigned mD3dFormat {0};

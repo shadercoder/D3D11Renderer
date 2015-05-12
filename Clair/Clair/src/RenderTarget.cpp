@@ -3,7 +3,22 @@
 
 using namespace Clair;
 
+RenderTarget::RenderTarget() {
+}
+
 RenderTarget::~RenderTarget() {
+	terminate();
+}
+
+void RenderTarget::initialize(
+	ID3D11RenderTargetView* renderTarget,
+	const SubTextureOptions& options) {
+	CLAIR_ASSERT(renderTarget, "Error creating render target");
+	mD3dRenderTargetView = renderTarget;
+	mOptions = options;
+}
+
+void RenderTarget::terminate() {
 	if (mD3dRenderTargetView) {
 		mD3dRenderTargetView->Release();
 	}

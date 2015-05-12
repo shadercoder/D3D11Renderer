@@ -8,7 +8,7 @@ public:
 	bool initialize(HWND hwnd) override;
 	void terminate() override;
 
-	void onResize(int width, int height, float aspect) override;
+	void onResize() override;
 	void update() override;
 	void render() override;
 

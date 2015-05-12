@@ -21,56 +21,12 @@ static int gWidth {0};
 static int gHeight {0};
 static float gAspect {0.0f};
 
-static void setWindowSize(const int width, const int height) {
-	gWidth = width;
-	gHeight = height;
-	gAspect = static_cast<float>(gWidth) / static_cast<float>(gHeight);
-}
-
-static void handleEvents() {
-	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
-		if (event.window.windowID == 2) {
-			Gui::handleEvent(event);
-			continue;
-		}
-		switch(event.type) {
-		case SDL_QUIT:
-			gIsRunning = false;
-			break;
-		case SDL_WINDOWEVENT_CLOSE:
-			gIsRunning = false;
-			break;
-		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-				setWindowSize(event.window.data1, event.window.data2);
-				gSample->onResize();
-			}
-			break;
-		case SDL_KEYDOWN:
-			Input::setKeyDown(event.key.keysym.scancode);
-			break;
-		case SDL_KEYUP:
-			Input::setKeyUp(event.key.keysym.scancode);
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			Input::setMouseButtonDown(event.button.button);
-			break;
-		case SDL_MOUSEBUTTONUP:
-			Input::setMouseButtonUp(event.button.button);
-			break;
-		default:
-			break;
-		}
-	}
-}
-
 int Framework::run(SampleBase* const sample, const std::string& caption,
 					const int width, const int height,
 					const std::string& dataPath) {
 	Logger::reset(0.0f);
-	setWindowSize(width, height);
 	gSample = sample;
+	setWindowSize(width, height);
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		MessageBox(nullptr, "Couldn't initialize SDL2", "Fatal error",
 				   MB_OK | MB_ICONERROR);
@@ -123,12 +79,8 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		delete sample;
 		return -1;
 	}
+	resizeSample();
 	Logger::log("SampleFramework: Sample initialized");
-
-	gSample->mWidth = gWidth;
-	gSample->mHeight = gHeight;
-	gSample->mAspect = gAspect;
-	gSample->onResize();
 
 	Timer timer;
 	timer.start();
@@ -143,9 +95,6 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 		Input::update();
 		handleEvents();
 		if (Input::getKey(SDL_SCANCODE_ESCAPE)) gIsRunning = false;
-		gSample->mWidth = gWidth;
-		gSample->mHeight = gHeight;
-		gSample->mAspect = gAspect;
 
 		// GUI
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
@@ -194,4 +143,55 @@ int Framework::run(SampleBase* const sample, const std::string& caption,
 	delete sample;
 	Logger::log("SampleFramework: Terminated");
 	return 0;
+}
+
+void Framework::setWindowSize(const int width, const int height) {
+	gWidth = width;
+	gHeight = height;
+	gAspect = static_cast<float>(width) / static_cast<float>(height);
+}
+
+void Framework::resizeSample() {
+	gSample->mWidth = gWidth;
+	gSample->mHeight = gHeight;
+	gSample->mAspect = gAspect;
+	gSample->onResize();
+}
+
+void Framework::handleEvents() {
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		if (event.window.windowID == 2) {
+			Gui::handleEvent(event);
+			continue;
+		}
+		switch(event.type) {
+		case SDL_QUIT:
+			gIsRunning = false;
+			break;
+		case SDL_WINDOWEVENT_CLOSE:
+			gIsRunning = false;
+			break;
+		case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+				setWindowSize(event.window.data1, event.window.data2);
+				resizeSample();
+			}
+			break;
+		case SDL_KEYDOWN:
+			Input::setKeyDown(event.key.keysym.scancode);
+			break;
+		case SDL_KEYUP:
+			Input::setKeyUp(event.key.keysym.scancode);
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			Input::setMouseButtonDown(event.button.button);
+			break;
+		case SDL_MOUSEBUTTONUP:
+			Input::setMouseButtonUp(event.button.button);
+			break;
+		default:
+			break;
+		}
+	}
 }

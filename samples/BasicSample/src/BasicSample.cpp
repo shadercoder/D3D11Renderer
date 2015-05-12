@@ -42,11 +42,11 @@ void BasicSample::terminate() {
 	Clair::terminate();
 }
 
-void BasicSample::onResize(const int width, const int height,
-						   const float aspect) {
-	Clair::Renderer::setViewport(0, 0, width, height);
+void BasicSample::onResize() {
+	Clair::Renderer::resizeSwapBuffer(getWidth(), getHeight());
+	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setProjectionMatrix(
-		value_ptr(perspectiveLH(radians(90.0f), aspect, 0.01f, 100.0f)));
+		value_ptr(perspectiveLH(radians(90.0f), getAspect(), 0.01f, 100.0f)));
 }
 
 void BasicSample::update() {

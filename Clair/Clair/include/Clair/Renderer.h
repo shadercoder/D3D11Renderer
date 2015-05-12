@@ -16,7 +16,7 @@ namespace Clair {
 		static bool initialize(HWND hwnd);
 		static void terminate();
 
-		static void resizeScreen(int width, int height);
+		static void resizeSwapBuffer(int width, int height);
 		static void setViewport(int x, int y, int width, int height);
 		static void clearColor(const Float4& value);
 		static void clearDepthStencil(float depthValue,

@@ -141,9 +141,14 @@ void DeferredSample::terminate() {
 }
 
 void DeferredSample::onResize() {
+	Clair::Renderer::resizeSwapBuffer(getWidth(), getHeight());
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setProjectionMatrix(
 		value_ptr(perspectiveLH(radians(90.0f), getAspect(), 0.01f, 100.0f)));
+	mGBufAlbedo->resize(getWidth(), getHeight());
+	mGBufNormal->resize(getWidth(), getHeight());
+	mGBufPosition->resize(getWidth(), getHeight());
+	mGBufDepthStencil->resize(getWidth(), getHeight());
 	//mGBuffer->resize(width, height);
 }
 

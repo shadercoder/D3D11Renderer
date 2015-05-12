@@ -9,8 +9,6 @@ namespace Clair {
 		explicit RenderTargetGroup(int numRenderTargets);
 		~RenderTargetGroup();
 
-		void resize(int width, int height);
-
 		void setRenderTarget(int index, RenderTarget* renderTarget);
 		void setDepthStencilTarget(Texture* depthStencilTarget);
 		int getNumRenderTargets() const;
@@ -18,20 +16,14 @@ namespace Clair {
 		ID3D11RenderTargetView** getD3dRenderTargets() const;
 
 	private:
-		void setD3dRenderTarget(int index, ID3D11RenderTargetView* d3dTarget);
 		ID3D11RenderTargetView** mD3dRenderTargets {nullptr};
+		RenderTarget** mRenderTargets {nullptr};
 		Texture* mDepthStencilTarget {nullptr};
 		int mNumRenderTargets {0};
 	};
 
 	inline int RenderTargetGroup::getNumRenderTargets() const {
 		return mNumRenderTargets;
-	}
-
-	inline void RenderTargetGroup::setRenderTarget(
-		const int index, RenderTarget* const renderTarget) {
-		CLAIR_ASSERT(renderTarget, "Render target should not be null");
-		setD3dRenderTarget(index, renderTarget->getD3dRenderTargetView());
 	}
 
 	inline void RenderTargetGroup::setDepthStencilTarget(
@@ -53,15 +45,16 @@ namespace Clair {
 
 	inline ID3D11RenderTargetView**
 	RenderTargetGroup::getD3dRenderTargets() const {
+		for (int i {0}; i < mNumRenderTargets; ++i) {
+			mD3dRenderTargets[i] = mRenderTargets[i]->getD3dRenderTargetView();
+		}
 		return mD3dRenderTargets;
 	}
 
-	inline void RenderTargetGroup::setD3dRenderTarget(
-		const int index, ID3D11RenderTargetView* const d3dTarget) {
+	inline void RenderTargetGroup::setRenderTarget(
+		const int index, RenderTarget* const target) {
 		CLAIR_ASSERT(index >= 0 && index < mNumRenderTargets, "Invalid index");
-		CLAIR_ASSERT(d3dTarget, "Render target should not be null");
-		CLAIR_DEBUG_LOG_IF(mD3dRenderTargets[index],
-			"Overwriting existing render target in RenderTargetGroup");
-		mD3dRenderTargets[index] = d3dTarget;
+		CLAIR_ASSERT(target, "Render target should not be null");
+		mRenderTargets[index] = target;
 	}
 }

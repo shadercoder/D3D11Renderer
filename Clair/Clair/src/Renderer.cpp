@@ -276,11 +276,14 @@ void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
 static float viewWidth = 640.0f;
 static float viewHeight = 480.0f;
 
-void Renderer::resizeScreen(const int width, const int height) {
+void Renderer::resizeSwapBuffer(const int width, const int height) {
 	// new render target view
 	releaseComObject(renderTargetView);
 	HRESULT result {0};
-	result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+	result = swapChain->ResizeBuffers(0,
+									  static_cast<UINT>(width),
+									  static_cast<UINT>(height),
+									  DXGI_FORMAT_UNKNOWN, 0);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
 	ID3D11Texture2D* buffer {nullptr};
 	result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
