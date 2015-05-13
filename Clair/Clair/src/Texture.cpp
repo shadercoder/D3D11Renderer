@@ -52,6 +52,7 @@ void Texture::initialize(const Options& options) {
 	TEXTURE_FORMAT_CASE(R32G32B32A32_FLOAT, 16);
 	TEXTURE_FORMAT_CASE(R16G16B16A16_FLOAT, 16);
 	TEXTURE_FORMAT_CASE(D24_UNORM_S8_UINT, 4);
+	TEXTURE_FORMAT_CASE(R16G16_FLOAT, 16);
 	}
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;

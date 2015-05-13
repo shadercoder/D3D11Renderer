@@ -22,7 +22,7 @@ private:
 	Clair::Texture* createGBufferTarget(
 		Clair::Texture::Format format,
 		Clair::Texture::Type type) const;
-	void createObject(Clair::Mesh* mesh, const Clair::Float4& color,
+	void createObject(Clair::Mesh* mesh, const Clair::Float3& color,
 					  const Clair::Float4x4& transform);
 	void resetLights();
 
@@ -30,7 +30,6 @@ private:
 	Clair::Scene* mLightDebugScene {nullptr};
 	Clair::Material* mGeometryMat {nullptr};
 	Clair::MaterialInstance* mDeferredCompositeMat {nullptr};
-	class Cb_materials_deferredGeometry_Ps* mGeometryCBuffer {nullptr};
 	class Cb_materials_deferredComposite_Ps* mCompositeCBuffer {nullptr};
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};

@@ -1,4 +1,5 @@
 #include "numLights.h"
+#include "packNormal.h"
 
 Texture2D texAlbedo : register(t0);
 Texture2D texNormal : register(t1);
@@ -35,7 +36,7 @@ cbuffer Buf : register(b1) {
 	bool DrawGBuffers;
 };
 
-float3 calcLighting(float3 albedo, float3 normal, float3 position) {
+float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissive) {
 	const float3 amb = (1.0, 1.0, 1.0) * 0.00;
 	float3 view = normalize(CameraPosition - position);
 	float3 col = float3(0, 0, 0);
@@ -56,32 +57,34 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position) {
 			spec * LightDiffuseColors[i].rgb,
 			0.50);
 	}
-	return pow(col * albedo + amb * albedo, 1.0 / 2.2);
+	col = col * albedo + amb * albedo;
+	col += albedo * emissive * 32.0;
+	return pow(col, 1.0 / 2.2);
 }
 
-float3 getGbuf(Texture2D tex, float2 uv) {
-	return tex.Sample(samplerLinear, uv * float2(1.0, -1.0)).rgb;
+float4 getGbuf(Texture2D tex, float2 uv) {
+	return tex.Sample(samplerLinear, uv * float2(1.0, -1.0));
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
-	float3 albedo = getGbuf(texAlbedo, psIn.Uvs);
-	float3 normal = getGbuf(texNormal, psIn.Uvs);
-	float3 position = getGbuf(texPosition, psIn.Uvs);
-	col = calcLighting(albedo, normal, position);
+	float4 albedo = getGbuf(texAlbedo, psIn.Uvs);
+	float3 normal = unpackNormal(getGbuf(texNormal, psIn.Uvs).rg).rgb;
+	float3 position = getGbuf(texPosition, psIn.Uvs).rgb;
+	col = calcLighting(albedo.rgb, normal, position, albedo.a);
 	if (DrawGBuffers) {
 		const float numGbuf = 3.0;
 		const float ratio = 1.0 / numGbuf;
 		if (psIn.Uvs.y < ratio) {
 			if (psIn.Uvs.x < ratio) {
 				float2 uv = psIn.Uvs / ratio;
-				col = getGbuf(texPosition, uv);
+				col = getGbuf(texPosition, uv).rgb;
 			} else if (psIn.Uvs.x < 2.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
-				col = getGbuf(texAlbedo, uv);
+				col = getGbuf(texAlbedo, uv).rgb;
 			} else {
 				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
-				col = getGbuf(texNormal, uv);
+				col = unpackNormal(getGbuf(texNormal, uv).rg).rgb;
 			}
 		}
 	}

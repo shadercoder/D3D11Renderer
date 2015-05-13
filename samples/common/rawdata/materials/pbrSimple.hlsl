@@ -52,6 +52,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 l = normalize(lightPos - psIn.WPosition);
 	float diff = dot(l, n) * 1.0 / max(0.001, dot(l, l));
 	diff = saturate(diff) + float3(0.2, 0.4, 0.6) * 0.05;
+	diff /= 5.0;
 	
 	float3 refl = reflect(V, n);
 	float actualMip = CubeMap.Sample(samplerLinear, refl).a;

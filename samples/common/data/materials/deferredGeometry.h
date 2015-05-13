@@ -2,5 +2,6 @@
 
 class Cb_materials_deferredGeometry_Ps {
 public:
-	Clair::Float4 DiffuseColor;
+	Clair::Float3 DiffuseColor;
+	float Emissive;
 };

@@ -22,10 +22,10 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	}
 	// Create render targets
 	mGBufAlbedo = createGBufferTarget(
-		Clair::Texture::Format::R32G32B32A32_FLOAT,
+		Clair::Texture::Format::R8G8B8A8_UNORM,
 		Clair::Texture::Type::RENDER_TARGET);
 	mGBufNormal = createGBufferTarget(
-		Clair::Texture::Format::R32G32B32A32_FLOAT,
+		Clair::Texture::Format::R16G16_FLOAT,
 		Clair::Texture::Type::RENDER_TARGET);
 	mGBufPosition = createGBufferTarget(
 		Clair::Texture::Format::R32G32B32A32_FLOAT,
@@ -68,15 +68,15 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mGeometryMat = Clair::ResourceManager::createMaterial();
 	mGeometryMat->initialize(geometryMatData.get());
 	mScene = Clair::ResourceManager::createScene();
-	createObject(planeMesh, {1.0f, 1.0f, 1.0f, 1.0f},
-				 value_ptr(scale(vec3{2.0f})));
-	createObject(bunnyMesh, {1.0f, 0.2f, 0.2f, 1.0f},
+	createObject(planeMesh, {1.0f, 1.0f, 1.0f},
+				value_ptr(scale(vec3{2.0f})));
+	createObject(bunnyMesh, {1.0f, 0.2f, 0.2f},
 				 value_ptr(translate(vec3{-2.0f, 0.0f, 2.0f})));
-	createObject(bunnyMesh, {0.2f, 1.0f, 0.2f, 1.0f},
+	createObject(bunnyMesh, {0.2f, 1.0f, 0.2f},
 				 value_ptr(translate(vec3{-2.0f, 0.0f, -2.0f})));
-	createObject(bunnyMesh, {0.2f, 0.2f, 1.0f, 1.0f},
+	createObject(bunnyMesh, {0.2f, 0.2f, 1.0f},
 				 value_ptr(translate(vec3{2.0f, 0.0f, -2.0f})));
-	createObject(bunnyMesh, {1.0f, 0.2f, 1.0f, 1.0f},
+	createObject(bunnyMesh, {1.0f, 0.2f, 1.0f},
 				 value_ptr(translate(vec3{2.0f, 0.0f, 2.0f})));
 
 	mLights = new Light[NUM_LIGHTS];
@@ -114,15 +114,16 @@ Clair::Texture* DeferredSample::createGBufferTarget(
 }
 
 void DeferredSample::createObject(Clair::Mesh* mesh,
-								  const Clair::Float4& color,
+								  const Clair::Float3& color,
 								  const Clair::Float4x4& transform) {
 	auto obj = mScene->createObject();
 	obj->setMesh(mesh);
 	obj->setMatrix(transform);
 	auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
-	mGeometryCBuffer =
+	auto cbuf =
 		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-	mGeometryCBuffer->DiffuseColor = color;
+	cbuf->DiffuseColor = color;
+	cbuf->Emissive = 0.0f;
 }
 
 void DeferredSample::resetLights() {
@@ -130,7 +131,7 @@ void DeferredSample::resetLights() {
 		auto& light = mLights[i];
 		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
 					   Random::randomFloat()};
-		light.intensity = Random::randomFloat(0.5f, 1.0f) /
+		light.intensity = Random::randomFloat(1.5f, 2.0f) /
 			(0.2f * static_cast<float>(NUM_LIGHTS));
 		light.height = Random::randomFloat(0.1f, 2.0f);
 		light.rotationRadius = Random::randomFloat(0.8f, 5.0f);
@@ -170,7 +171,7 @@ void DeferredSample::update() {
 			getRunningTime() * mLights[i].rotationSpeed + mLights[i].offset};
 		const vec3 lightPos {
 			cosf(p) * mLights[i].rotationRadius,
-			mLights[i].height,
+			cosf(p * 3.0f) * 0.2f + mLights[i].height,
 			sinf(p) * mLights[i].rotationRadius
 		};
 		mCompositeCBuffer->LightPositions[i] = {
@@ -180,10 +181,10 @@ void DeferredSample::update() {
 		auto obj = mLights[i].debugObj;
 		obj->setMatrix(value_ptr(translate(lightPos) * scale(vec3{0.05f})));
 		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
-		mGeometryCBuffer =
+		auto cbuf =
 			matInst->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-		col *= mLights[i].intensity * 500.0;
-		mGeometryCBuffer->DiffuseColor = {col.r, col.g, col.b, 0.0};
+		cbuf->DiffuseColor = {col.r, col.g, col.b};
+		cbuf->Emissive = mLights[i].intensity;
 	}
 
 	// GUI
@@ -196,7 +197,7 @@ void DeferredSample::render() {
 	// Render to G-buffer
 	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	mGBufAlbedo->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	mGBufNormal->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mGBufNormal->getRenderTarget()->clear({atan2f(0.0f, 0.0f), 0.0f, 0.0f, 1.0f});
 	mGBufPosition->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mGBufDepthStencil->clear({1.0f});
 	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));

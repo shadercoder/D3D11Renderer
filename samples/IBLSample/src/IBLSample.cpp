@@ -65,7 +65,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 		cbuf->Metalness = 0.0f;
 	}
 	Clair::Object* const obj = mScene->createObject();
-	obj->setMesh(sphereMesh);
+	obj->setMesh(bunnyMesh);
 	obj->setMatrix(value_ptr(
 		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
 	auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
