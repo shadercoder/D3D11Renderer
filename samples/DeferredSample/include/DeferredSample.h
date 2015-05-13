@@ -34,10 +34,10 @@ private:
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};
 
-	Clair::Texture* mGBufAlbedo {nullptr};
-	Clair::Texture* mGBufNormal {nullptr};
+	Clair::Texture* mGBufferRT0 {nullptr};
+	Clair::Texture* mGBufferRT1 {nullptr};
 	Clair::Texture* mGBufPosition {nullptr};
-	Clair::Texture* mGBufDepthStencil {nullptr};
+	Clair::Texture* mGBufferRT2 {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 
 	class Light {

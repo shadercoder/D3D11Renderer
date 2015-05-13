@@ -4,6 +4,7 @@
 Texture2D texAlbedo : register(t0);
 Texture2D texNormal : register(t1);
 Texture2D texPosition : register(t2);
+Texture2D GBufferRT2 : register(t3);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -78,7 +79,8 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 		if (psIn.Uvs.y < ratio) {
 			if (psIn.Uvs.x < ratio) {
 				float2 uv = psIn.Uvs / ratio;
-				col = getGbuf(texPosition, uv).rgb;
+				//col = getGbuf(texPosition, uv).rgb;
+				col = getGbuf(GBufferRT2, uv).r;
 			} else if (psIn.Uvs.x < 2.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
 				col = getGbuf(texAlbedo, uv).rgb;

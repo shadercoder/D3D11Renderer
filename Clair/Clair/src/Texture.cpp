@@ -35,6 +35,12 @@ void Texture::initialize(const Options& options) {
 		"Invalid texture dimensions");
 	CLAIR_ASSERT(options.arraySize >= 1 && options.arraySize <= 6,
 		"Invalid array size");
+	if (options.type == Type::DEPTH_STENCIL_TARGET) {
+		CLAIR_ASSERT(options.format == Format::D24_UNORM_S8_UINT,
+			"Depth/stencil targets only support the D24_UNORM_S8_UINT type"
+			"at the moment");
+		CLAIR_ASSERT(!options.isCubeMap, "No cube map depth/stencil supported");
+	}
 	mOptions = options;
 	mIsValid = true;
 	mNumMips =
@@ -57,12 +63,12 @@ void Texture::initialize(const Options& options) {
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	if (options.type == Type::RENDER_TARGET) {
-		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE|D3D11_BIND_RENDER_TARGET;
+		texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
 	} else if (options.type == Type::DEPTH_STENCIL_TARGET) {
-		texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	} else {
-		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		texDesc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+		texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	}
 	texDesc.CPUAccessFlags = 0;
 	if (options.isCubeMap) {
@@ -125,22 +131,34 @@ void Texture::initialize(const Options& options) {
 			mIsValid = false;
 		}
 	} else {
-		if (FAILED(d3dDevice->CreateDepthStencilView(mD3dTexture, nullptr,
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+		ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+		dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Texture2D.MipSlice = 0;
+		if (FAILED(d3dDevice->CreateDepthStencilView(mD3dTexture, &dsvDesc,
 			&mD3dDepthStencilTargetView))) {
 			mIsValid = false;
 			return;
 		}
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		ZeroMemory(&srvDesc,sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+		srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		if (FAILED(d3dDevice->CreateShaderResourceView(
+			mD3dTexture, &srvDesc, &newShaderResView))) {
+			mIsValid = false;
+			return;
+		}
 	}
-	// TODO: TEMP IF
-	if (options.type != Type::DEPTH_STENCIL_TARGET) {
-		SubTextureOptions o;
-		o.arrayStartIndex = 0;
-		o.arraySize = options.arraySize;
-		o.mipStartIndex = 0;
-		o.numMips = mNumMips;
-		mShaderResource->terminate();
-		mShaderResource->initialize(newShaderResView, o);
-	}
+	SubTextureOptions o;
+	o.arrayStartIndex = 0;
+	o.arraySize = options.arraySize;
+	o.mipStartIndex = 0;
+	o.numMips = mNumMips;
+	mShaderResource->terminate();
+	mShaderResource->initialize(newShaderResView, o);
 
 	if (options.type == Type::RENDER_TARGET) {
 		ID3D11RenderTargetView* newRenderTargetView {nullptr};
@@ -156,25 +174,6 @@ void Texture::initialize(const Options& options) {
 		o.numMips = mNumMips;
 		mRenderTarget->terminate();
 		mRenderTarget->initialize(newRenderTargetView, o);
-		//for (size_t i_arr {0}; i_arr < options.arraySize; ++i_arr) {
-		//	for (size_t i_mip {0}; i_mip < mNumMips; ++i_mip) {
-		//		D3D11_RENDER_TARGET_VIEW_DESC renderViewDesc;
-		//		ZeroMemory(&renderViewDesc,
-		//			sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-		//		renderViewDesc.Texture2DArray.MipSlice = i_mip;
-		//		renderViewDesc.Texture2DArray.FirstArraySlice = i_arr;
-		//		renderViewDesc.Texture2DArray.ArraySize = options.arraySize;
-		//		renderViewDesc.Format = texDesc.Format;
-		//		renderViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		//		ID3D11RenderTargetView* renderTargetView {nullptr};
-		//		if (FAILED(d3dDevice->CreateRenderTargetView(
-		//				mD3dTexture, &renderViewDesc, &renderTargetView))) {
-		//			mIsValid = false;
-		//			return;
-		//		}
-		//		mD3dRenderTargetViews.push_back(renderTargetView);
-		//	}
-		//}
 	}
 }
 
