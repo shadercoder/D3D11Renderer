@@ -1,10 +1,10 @@
 #include "numLights.h"
 #include "packNormal.h"
 
-Texture2D texAlbedo : register(t0);
-Texture2D texNormal : register(t1);
-Texture2D texPosition : register(t2);
-Texture2D GBufferRT2 : register(t3);
+Texture2D RT0 : register(t0);
+Texture2D RT1 : register(t1);
+Texture2D RT2 : register(t2);
+Texture2D texPosition : register(t3);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -31,6 +31,7 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 
 cbuffer Buf : register(b1) {
+	matrix InverseViewProj;
 	float4 LightDiffuseColors[NUM_LIGHTS];
 	float4 LightPositions[NUM_LIGHTS];
 	float3 CameraPosition;
@@ -38,7 +39,7 @@ cbuffer Buf : register(b1) {
 };
 
 float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissive) {
-	const float3 amb = (1.0, 1.0, 1.0) * 0.00;
+	const float3 amb = (1.0, 1.0, 1.0) * 0.002;
 	float3 view = normalize(CameraPosition - position);
 	float3 col = float3(0, 0, 0);
 	for (int i = 0; i < NUM_LIGHTS; ++i) {
@@ -50,8 +51,11 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissiv
 		diff *= LightDiffuseColors[i].a / lightDist2;
 
 		float3 H = normalize(light + view);
-		float NdotH = max(dot(normal, H), 0.0);
-		float spec = pow(saturate(NdotH), 500.0);
+		float NdotH = dot(normal, H);
+		float spec = 0;
+		if (dot(light, normal) > 0) {
+			spec = pow(saturate(NdotH), 500.0);
+		}
 
 		col += lerp(
 			diff * LightDiffuseColors[i].rgb,
@@ -67,11 +71,23 @@ float4 getGbuf(Texture2D tex, float2 uv) {
 	return tex.Sample(samplerLinear, uv * float2(1.0, -1.0));
 }
 
+float linearizeDepth(float d) {
+	float f = 100.0;
+	float n = 0.1;
+	return (2 * n) / (f + n - d * (f - n));
+}
+
+float3 reconstructWorldPosition(float2 uv, float d) {
+	float4 p = float4(float3(uv, d) * 2.0 - 1.0, 1.0);
+	p = mul(InverseViewProj, p);
+	return float3(p.xyz / p.w);
+}
+
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
-	float4 albedo = getGbuf(texAlbedo, psIn.Uvs);
-	float3 normal = unpackNormal(getGbuf(texNormal, psIn.Uvs).rg).rgb;
 	float3 position = getGbuf(texPosition, psIn.Uvs).rgb;
+	float3 normal = unpackNormal(getGbuf(RT1, psIn.Uvs).rg).rgb;
+	float4 albedo = getGbuf(RT2, psIn.Uvs);
 	col = calcLighting(albedo.rgb, normal, position, albedo.a);
 	if (DrawGBuffers) {
 		const float numGbuf = 3.0;
@@ -79,14 +95,13 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 		if (psIn.Uvs.y < ratio) {
 			if (psIn.Uvs.x < ratio) {
 				float2 uv = psIn.Uvs / ratio;
-				//col = getGbuf(texPosition, uv).rgb;
-				col = getGbuf(GBufferRT2, uv).r;
+				col = linearizeDepth(getGbuf(RT0, uv).r);
 			} else if (psIn.Uvs.x < 2.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
-				col = getGbuf(texAlbedo, uv).rgb;
+				col = getGbuf(RT2, uv).rgb;
 			} else {
 				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
-				col = unpackNormal(getGbuf(texNormal, uv).rg).rgb;
+				col = unpackNormal(getGbuf(RT1, uv).rg).rgb * 0.5 + 0.5;
 			}
 		}
 	}

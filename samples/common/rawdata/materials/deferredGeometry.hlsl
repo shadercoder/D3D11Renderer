@@ -37,15 +37,15 @@ cbuffer Material : register(b1) {
 }
 
 struct PsOut {
-	float4 Albedo : SV_TARGET0;
-	float2 Normal : SV_TARGET1;
+	float2 RT1 : SV_TARGET0;
+	float4 RT2 : SV_TARGET1;
 	float4 Position : SV_TARGET2;
 };
 
 PsOut psMain(PsIn psIn) {
 	PsOut psOut;
-	psOut.Albedo = float4(DiffuseColor, Emissive);
-	psOut.Normal = packNormal(normalize(psIn.Normal));
+	psOut.RT1 = packNormal(normalize(psIn.Normal));
+	psOut.RT2 = float4(DiffuseColor, Emissive);
 	psOut.Position = float4(psIn.WorldPos, 1.0);
 	return psOut;
 }

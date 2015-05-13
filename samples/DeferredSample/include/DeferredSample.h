@@ -26,6 +26,7 @@ private:
 					  const Clair::Float4x4& transform);
 	void resetLights();
 
+	glm::mat4 mProjectionMat;
 	Clair::Scene* mScene {nullptr};
 	Clair::Scene* mLightDebugScene {nullptr};
 	Clair::Material* mGeometryMat {nullptr};
@@ -34,10 +35,10 @@ private:
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};
 
-	Clair::Texture* mGBufferRT0 {nullptr};
-	Clair::Texture* mGBufferRT1 {nullptr};
+	Clair::Texture* RT0 {nullptr};
+	Clair::Texture* RT1 {nullptr};
 	Clair::Texture* mGBufPosition {nullptr};
-	Clair::Texture* mGBufferRT2 {nullptr};
+	Clair::Texture* RT2 {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 
 	class Light {
@@ -51,4 +52,5 @@ private:
 		float offset {0.0f};
 	};
 	Light* mLights {nullptr};
+
 };
