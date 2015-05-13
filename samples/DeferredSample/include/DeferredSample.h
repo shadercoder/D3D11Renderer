@@ -37,7 +37,6 @@ private:
 
 	Clair::Texture* RT0 {nullptr};
 	Clair::Texture* RT1 {nullptr};
-	Clair::Texture* mGBufPosition {nullptr};
 	Clair::Texture* RT2 {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 

@@ -6,7 +6,6 @@
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
 #include "SampleFramework/Random.h"
-#include "SampleFramework/Input.h"
 #include "ImGui/imgui.h"
 #include "Clair/Material.h"
 #include "../../data/materials/deferredGeometry.h"
@@ -37,14 +36,10 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	RT2 = createGBufferTarget(
 		Clair::Texture::Format::R8G8B8A8_UNORM,
 		Clair::Texture::Type::RENDER_TARGET);
-	mGBufPosition = createGBufferTarget(
-		Clair::Texture::Format::R32G32B32A32_FLOAT,
-		Clair::Texture::Type::RENDER_TARGET);
-	mGBuffer = new Clair::RenderTargetGroup{3};
+	mGBuffer = new Clair::RenderTargetGroup{2};
 	mGBuffer->setDepthStencilTarget(RT0);
 	mGBuffer->setRenderTarget(0, RT1->getRenderTarget());
 	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
-	mGBuffer->setRenderTarget(2, mGBufPosition->getRenderTarget());
 
 	// Deferred composite material
 	auto compTexData = Loader::loadBinaryData("materials/deferredComposite.cmat");
@@ -58,8 +53,6 @@ bool DeferredSample::initialize(const HWND hwnd) {
 		1, RT1->getShaderResource());
 	mDeferredCompositeMat->setShaderResource(
 		2, RT2->getShaderResource());
-	mDeferredCompositeMat->setShaderResource(
-		3, mGBufPosition->getShaderResource());
 	mCompositeCBuffer = mDeferredCompositeMat->
 		getConstantBufferPs<Cb_materials_deferredComposite_Ps>();
 
@@ -161,7 +154,6 @@ void DeferredSample::onResize() {
 	RT0->resize(getWidth(), getHeight());
 	RT1->resize(getWidth(), getHeight());
 	RT2->resize(getWidth(), getHeight());
-	mGBufPosition->resize(getWidth(), getHeight());
 }
 
 void DeferredSample::update() {
@@ -205,7 +197,6 @@ void DeferredSample::render() {
 	RT0->clear({1.0f});
 	RT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	RT2->getRenderTarget()->clear({atan2f(0.0f, 0.0f), 0.0f, 0.0f, 1.0f});
-	mGBufPosition->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));

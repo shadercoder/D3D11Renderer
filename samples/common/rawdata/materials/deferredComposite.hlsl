@@ -4,7 +4,6 @@
 Texture2D RT0 : register(t0);
 Texture2D RT1 : register(t1);
 Texture2D RT2 : register(t2);
-Texture2D texPosition : register(t3);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -77,20 +76,20 @@ float linearizeDepth(float d) {
 	return (2 * n) / (f + n - d * (f - n));
 }
 
-float3 reconstructWorldPosition(float2 uv, float d) {
-	float4 p = float4(float3(uv, d) * 2.0 - 1.0, 1.0);
+float3 reconstructPos(float2 uv, float d) {
+	float4 p = float4(float3(uv * 2.0 - 1.0, d), 1.0);
 	p = mul(InverseViewProj, p);
-	return float3(p.xyz / p.w);
+	return p.xyz / p.w;
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
-	float3 position = getGbuf(texPosition, psIn.Uvs).rgb;
+	float3 position = reconstructPos(psIn.Uvs, getGbuf(RT0, psIn.Uvs).r);
 	float3 normal = unpackNormal(getGbuf(RT1, psIn.Uvs).rg).rgb;
 	float4 albedo = getGbuf(RT2, psIn.Uvs);
 	col = calcLighting(albedo.rgb, normal, position, albedo.a);
 	if (DrawGBuffers) {
-		const float numGbuf = 3.0;
+		const float numGbuf = 4.0;
 		const float ratio = 1.0 / numGbuf;
 		if (psIn.Uvs.y < ratio) {
 			if (psIn.Uvs.x < ratio) {
@@ -98,9 +97,12 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 				col = linearizeDepth(getGbuf(RT0, uv).r);
 			} else if (psIn.Uvs.x < 2.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
+				col = reconstructPos(uv, getGbuf(RT0, uv).r);
+			} else if (psIn.Uvs.x < 3.0 * ratio) {
+				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
 				col = getGbuf(RT2, uv).rgb;
 			} else {
-				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
+				float2 uv = (psIn.Uvs - float2(ratio * 3.0, 0.0)) / ratio;
 				col = unpackNormal(getGbuf(RT1, uv).rg).rgb * 0.5 + 0.5;
 			}
 		}
