@@ -32,6 +32,7 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 
 cbuffer Buf : register(b1) {
+	matrix ViewProj;
 	matrix InverseViewProj;
 	float3 CameraPosition;
 };
@@ -44,6 +45,12 @@ float3 reconstructPos(float2 uv, float d) {
 	float4 p = float4(float3(uv * 2.0 - 1.0, d), 1.0);
 	p = mul(InverseViewProj, p);
 	return p.xyz / p.w;
+}
+
+float linearizeDepth(float d) {
+	float f = 100.0;
+	float n = 0.1;
+	return (2 * n) / (f + n - d * (f - n));
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
@@ -62,10 +69,31 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float reflectivity = lerp(minReflectivity, 1.0, metalness);
 	float3 V = normalize(position - CameraPosition);
 	float3 refl = reflect(V, normal);
-	float autoMip = CubeMap.Sample(samplerLinear, refl).a;
-	float roughnessMip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
-	float mip = max(autoMip, roughnessMip);
+	float mip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
 	float3 reflCol = CubeMap.SampleLevel(samplerLinear, refl, mip).rgb;
+	float4 ssrvw = mul(ViewProj, float4(refl, 0.0));
+	float3 ssrv = ssrvw.xyz / ssrvw.w;
+	float3 ssrp = float3(psIn.Uvs * float2(1,1) * 0.5 + 0.5, linearizeDepth(depth));
+	float3 jitter = float3(normal.x * depth, normal.y * depth / 3.0, depth * depth);
+	ssrv = ssrp + ssrv;
+	ssrp += jitter / 1000.0;
+	ssrv = ssrv - ssrp;
+	ssrv /= 256.0;
+	for (int i = 0; i < 16; ++i) {
+		ssrp += ssrv;
+		float2 uv = ssrp.xy * float2(1,1) * 2.0 - 1.0;
+		if (ssrp.x >= 1.0 || ssrp.x <= -1.0 ||
+			ssrp.y >= 1.0 || ssrp.y <= -1.0 ||
+			ssrp.z >= 1.0 || ssrp.z <= 0.0) {
+			break;
+		}
+		float d = linearizeDepth(getGbuf(RT0, uv).r);
+		if (ssrp.z > d && ssrp.z < d + 0.1) {
+			//reflCol = getGbuf(RT2, uv).rgb;
+			reflCol = unpackNormal(getGbuf(RT1, uv).rg).rgb * 0.5 + 0.5;
+			break;
+		}
+	}
 
 	float3 ambient = CubeMap.SampleLevel(
 		samplerLinear, normal, float(NUM_ROUGHNESS_MIPS - 1)).rgb;

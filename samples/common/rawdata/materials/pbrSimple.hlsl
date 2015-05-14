@@ -57,7 +57,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 refl = reflect(V, n);
 	float actualMip = CubeMap.Sample(samplerLinear, refl).a;
 	float roughnessMip = Roughness * float(NUM_ROUGHNESS_MIPS - 1);
-	// TODO: probably should use max(actualMip, roughnessMip) but seems too blurry
+	float mip = max(actualMip, roughnessMip);
 	float3 reflCol =
 		CubeMap.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
 	reflCol = lerp(reflCol, reflCol * albedo, Metalness);

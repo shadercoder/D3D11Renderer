@@ -284,6 +284,7 @@ void IBLSample::render() {
 	// Composite
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
+	mCompositeCBuffer->ViewProj = value_ptr(mProjectionMat * viewMat);
 	mCompositeCBuffer->InverseViewProj =
 		value_ptr(inverse(mProjectionMat * viewMat));
 	Clair::Renderer::renderScreenQuad(mCompositeMat);

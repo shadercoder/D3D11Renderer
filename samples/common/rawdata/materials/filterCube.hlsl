@@ -83,11 +83,11 @@ PsOut psMain(PsIn psIn) {
 	const float3 ny = float3(0,-1,0);
 	const float3 pz = float3(0,0,1);
 	const float3 nz = float3(0,0,-1);
-	psOut.Face0 = float4(filter(psIn.Uvs, nz, py, px), Roughness);
-	psOut.Face1 = float4(filter(psIn.Uvs, pz, py, nx), Roughness);
-	psOut.Face2 = float4(filter(psIn.Uvs, px, nz, py), Roughness);
-	psOut.Face3 = float4(filter(psIn.Uvs, px, pz, ny), Roughness);
-	psOut.Face4 = float4(filter(psIn.Uvs, px, py, pz), Roughness);
-	psOut.Face5 = float4(filter(psIn.Uvs, nx, py, nz), Roughness);
+	psOut.Face0 = float4(filter(psIn.Uvs, nz, py, px), 1.0);
+	psOut.Face1 = float4(filter(psIn.Uvs, pz, py, nx), 1.0);
+	psOut.Face2 = float4(filter(psIn.Uvs, px, nz, py), 1.0);
+	psOut.Face3 = float4(filter(psIn.Uvs, px, pz, ny), 1.0);
+	psOut.Face4 = float4(filter(psIn.Uvs, px, py, pz), 1.0);
+	psOut.Face5 = float4(filter(psIn.Uvs, nx, py, nz), 1.0);
 	return psOut;
 }
