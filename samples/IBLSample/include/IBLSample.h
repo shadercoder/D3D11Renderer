@@ -26,11 +26,9 @@ private:
 	Clair::Texture* mSkyTexture {nullptr};
 	Clair::MaterialInstance* mPanoramaToCube {nullptr};
 	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
-	Cb_materials_pbr_pbrSky_Ps* mSkyConstBuffer {nullptr};
-
 	Clair::MaterialInstance* mFilterCubeMapMatInstance {nullptr};
 	class Cb_materials_filterCube_Ps* mFilterCubeMapCBuffer {nullptr};
-	class Cb_materials_pbr_pbrGeometry_Ps* mModelCBuffer {nullptr};
+	Cb_materials_pbr_pbrSky_Ps* mSkyConstBuffer {nullptr};
 
 	Clair::Texture* RT0 {nullptr};
 	Clair::Texture* RT1 {nullptr};
@@ -42,5 +40,6 @@ private:
 
 	float mFoV {60.0f};
 	float mGlossiness {1.0f};
-	float mMetalness {0.0f};
+	float mMetalness {1.0f};
+	class Cb_materials_pbr_pbrGeometry_Ps* mPlaneCBuffer {nullptr};
 };

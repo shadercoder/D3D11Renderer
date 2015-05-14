@@ -116,9 +116,13 @@ bool IBLSample::initialize(const HWND hwnd) {
 	auto sphereMesh = Clair::ResourceManager::createMesh();
 	sphereMesh->initialize(sphereMeshData.get());
 	
-	auto bunnyMeshData = Loader::loadBinaryData("models/plane.cmod");
+	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
 	bunnyMesh->initialize(bunnyMeshData.get());
+
+	auto planeMeshData = Loader::loadBinaryData("models/plane.cmod");
+	auto planeMesh = Clair::ResourceManager::createMesh();
+	planeMesh->initialize(planeMeshData.get());
 
 	auto matData = Loader::loadBinaryData("materials/pbr/pbrGeometry.cmat");
 	auto material = Clair::ResourceManager::createMaterial();
@@ -161,14 +165,28 @@ bool IBLSample::initialize(const HWND hwnd) {
 		cbuf->Glossiness = 1.0f - fi;
 		cbuf->Metalness = 1.0f;
 	}
-	Clair::Object* const obj = mScene->createObject();
-	obj->setMesh(bunnyMesh);
-	obj->setMatrix(value_ptr(
+	Clair::Object* const bunny = mScene->createObject();
+	bunny->setMesh(bunnyMesh);
+	bunny->setMatrix(value_ptr(
+		translate(vec3{1.1f, -5.05f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
+	auto bunnyMatInst = bunny->setMaterial(CLAIR_RENDER_PASS(0), material);
+	bunnyMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
+	auto cbuf =
+		bunnyMatInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+	cbuf->Albedo = {0.0f, 1.0f, 0.0f};
+	cbuf->Emissive = 0.0f;
+	cbuf->Glossiness = 0.5f;
+	cbuf->Metalness = 1.0f;
+
+	Clair::Object* const plane = mScene->createObject();
+	plane->setMesh(planeMesh);
+	plane->setMatrix(value_ptr(
 		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
-	auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-	matInst->setShaderResource(0, mSkyTexture->getShaderResource());
-	mModelCBuffer =
-		matInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+	auto planeMatInst = plane->setMaterial(CLAIR_RENDER_PASS(0), material);
+	planeMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
+	mPlaneCBuffer =
+		planeMatInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+	mPlaneCBuffer->Albedo = {1.0f, 0.1f, 1.0f};
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -194,6 +212,7 @@ void IBLSample::filterCubeMap() {
 		Clair::SubTextureOptions o;
 		o.arrayStartIndex = 0;
 		o.arraySize = 6;
+		o.mipStartIndex = i_mip - 1; // less accurate but converges faster
 		o.isCubeMap = true;
 		auto inputCube = mSkyTexture->createSubShaderResource(o);
 		mFilterCubeMapMatInstance->setShaderResource(0, inputCube);
@@ -244,8 +263,8 @@ void IBLSample::update() {
 	
 	ImGui::SliderFloat("Glossiness", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metalness", &mMetalness, 0.0f, 1.0f);
-	mModelCBuffer->Glossiness = mGlossiness;
-	mModelCBuffer->Metalness = mMetalness;
+	mPlaneCBuffer->Glossiness = mGlossiness;
+	mPlaneCBuffer->Metalness = mMetalness;
 }
 
 void IBLSample::render() {

@@ -53,12 +53,24 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 normal = unpackNormal(getGbuf(RT1, psIn.Uvs).rg).rgb;
 	float4 rt2 = getGbuf(RT2, psIn.Uvs);
 	float4 rt3 = getGbuf(RT3, psIn.Uvs);
+	float3 albedo = rt2.rgb;
+	float emissive = rt2.a;
+	float glossiness = rt3.r;
+	float metalness = rt3.g;
 
+	const float minReflectivity = 0.04;
+	float reflectivity = lerp(minReflectivity, 1.0, metalness);
 	float3 V = normalize(position - CameraPosition);
 	float3 refl = reflect(V, normal);
-	float roughnessMip = (1.0 - rt3.r) * float(NUM_ROUGHNESS_MIPS - 1);
-	float3 reflCol = CubeMap.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
-	col = reflCol;
+	float autoMip = CubeMap.Sample(samplerLinear, refl).a;
+	float roughnessMip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
+	float mip = max(autoMip, roughnessMip);
+	float3 reflCol = CubeMap.SampleLevel(samplerLinear, refl, mip).rgb;
+
+	float3 ambient = CubeMap.SampleLevel(
+		samplerLinear, normal, float(NUM_ROUGHNESS_MIPS - 1)).rgb;
+	reflCol *= lerp(float3(1,1,1), albedo, metalness);
+	col = lerp(albedo * ambient, reflCol, reflectivity);
 	if (depth == 1.0) {
 		col = rt2.rgb;
 	}
