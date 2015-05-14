@@ -9,9 +9,10 @@
 #include "Clair/Mesh.h"
 #include "Clair/Object.h"
 #include "Clair/RenderTargetGroup.h"
-#include "../../data/materials/pbrSimple.h"
 #include "../../data/materials/filterCube.h"
 #include "../../rawdata/materials/numRoughnessMips.h"
+#include "../../data/materials/pbr/pbrGeometry.h"
+#include "../../data/materials/pbr/pbrComposite.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -32,53 +33,33 @@ bool IBLSample::initialize(const HWND hwnd) {
 	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
 	mSkyTexture->initialize(texOptions);
 
-	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
-	auto sphereMesh = Clair::ResourceManager::createMesh();
-	sphereMesh->initialize(sphereMeshData.get());
-	
-	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
-	auto bunnyMesh = Clair::ResourceManager::createMesh();
-	bunnyMesh->initialize(bunnyMeshData.get());
-
-	auto matData = Loader::loadBinaryData("materials/pbrSimple.cmat");
-	auto material = Clair::ResourceManager::createMaterial();
-	material->initialize(matData.get());
-
-	auto skyMatData = Loader::loadBinaryData("materials/sky.cmat");
-	auto skyMaterial = Clair::ResourceManager::createMaterial();
-	skyMaterial->initialize(skyMatData.get());
-
-	mScene = Clair::ResourceManager::createScene();
-	const int size = 10;
-	const float fsize = static_cast<float>(size);
-	for (int i = 0; i < size; ++i) {
-		const float fi = static_cast<float>(i) / (fsize - 1);
-		Clair::Object* const obj = mScene->createObject();
-		obj->setMesh(sphereMesh);
-		obj->setMatrix(value_ptr(
-			translate(vec3{fi * fsize * 2.2f - fsize, 0, 0})));
-		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		matInst->setShaderResource(0, mSkyTexture->getShaderResource());
-		auto cbuf = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
-		cbuf->Reflectivity = 1.0f;
-		cbuf->Roughness = fi;
-		cbuf->Metalness = 0.0f;
-	}
-	Clair::Object* const obj = mScene->createObject();
-	obj->setMesh(bunnyMesh);
-	obj->setMatrix(value_ptr(
-		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
-	auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-	matInst->setShaderResource(0, mSkyTexture->getShaderResource());
-	mModelCBuffer = matInst->getConstantBufferPs<Cb_materials_pbrSimple_Ps>();
-
-	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
-	mSkyMaterialInstance->initialize(skyMaterial);
-	mSkyMaterialInstance->setShaderResource(
-		0, mSkyTexture->getShaderResource());
-		//0, mSkyTexture->createCustomShaderResource(0, 6, 2, 1, true));
-	mSkyConstBuffer =
-		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_sky_Ps>();
+	// Create G-buffer
+	//      |-------------------------------------------|
+	// RT0: |             depth              | stencil  | 32 bits
+	//      |-------------------------------------------|
+	// RT1: |      normal.r       |      normal.g       | 32 bits
+	//      |-------------------------------------------|
+	// RT2: | albedo.r | albedo.g | albedo.b | emissive | 32 bits
+	//      |-------------------------------------------|
+	// RT3: |  gloss   |  metal   |    -     |    -     | 32 bits
+	//      |-------------------------------------------|
+	RT0 = createGBufferTarget(
+		Clair::Texture::Format::D24_UNORM_S8_UINT,
+		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
+	RT1 = createGBufferTarget(
+		Clair::Texture::Format::R16G16_FLOAT,
+		Clair::Texture::Type::RENDER_TARGET);
+	RT2 = createGBufferTarget(
+		Clair::Texture::Format::R8G8B8A8_UNORM,
+		Clair::Texture::Type::RENDER_TARGET);
+	RT3 = createGBufferTarget(
+		Clair::Texture::Format::R8G8B8A8_UNORM,
+		Clair::Texture::Type::RENDER_TARGET);
+	mGBuffer = new Clair::RenderTargetGroup{3};
+	mGBuffer->setDepthStencilTarget(RT0);
+	mGBuffer->setRenderTarget(0, RT1->getRenderTarget());
+	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
+	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
 	// Creating cube map from HDR image
 	auto hdrSkyTexData = Loader::loadHDRImageData("textures/pisa.hdr");
@@ -108,7 +89,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	Clair::Renderer::renderScreenQuad(mPanoramaToCube);
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 
-	// filtering the cube map
+	// Filtering the cube map
 	auto filterMatData = Loader::loadBinaryData("materials/filterCube.cmat");
 	auto filterMaterial = Clair::ResourceManager::createMaterial();
 	filterMaterial->initialize(filterMatData.get());
@@ -118,6 +99,76 @@ bool IBLSample::initialize(const HWND hwnd) {
 	mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
 		Cb_materials_filterCube_Ps>();
 	filterCubeMap();
+
+	// Material for drawing the sky
+	auto skyMatData = Loader::loadBinaryData("materials/pbr/pbrSky.cmat");
+	auto skyMaterial = Clair::ResourceManager::createMaterial();
+	skyMaterial->initialize(skyMatData.get());
+	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
+	mSkyMaterialInstance->initialize(skyMaterial);
+	mSkyMaterialInstance->setShaderResource(
+		0, mSkyTexture->getShaderResource());
+	mSkyConstBuffer =
+		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbr_pbrSky_Ps>();
+
+	// Materials
+	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
+	auto sphereMesh = Clair::ResourceManager::createMesh();
+	sphereMesh->initialize(sphereMeshData.get());
+	
+	auto bunnyMeshData = Loader::loadBinaryData("models/plane.cmod");
+	auto bunnyMesh = Clair::ResourceManager::createMesh();
+	bunnyMesh->initialize(bunnyMeshData.get());
+
+	auto matData = Loader::loadBinaryData("materials/pbr/pbrGeometry.cmat");
+	auto material = Clair::ResourceManager::createMaterial();
+	material->initialize(matData.get());
+
+	// Deferred composite material
+	auto compTexData =
+		Loader::loadBinaryData("materials/pbr/pbrComposite.cmat");
+	auto compTex = Clair::ResourceManager::createMaterial();
+	compTex->initialize(compTexData.get());
+	mCompositeMat = Clair::ResourceManager::createMaterialInstance();
+	mCompositeMat->initialize(compTex);
+	mCompositeMat->setShaderResource(
+		0, RT0->getShaderResource());
+	mCompositeMat->setShaderResource(
+		1, RT1->getShaderResource());
+	mCompositeMat->setShaderResource(
+		2, RT2->getShaderResource());
+	mCompositeMat->setShaderResource(
+		3, RT3->getShaderResource());
+	mCompositeMat->setShaderResource(
+		4, mSkyTexture->getShaderResource());
+	mCompositeCBuffer = mCompositeMat->
+		getConstantBufferPs<Cb_materials_pbr_pbrComposite_Ps>();
+
+	mScene = Clair::ResourceManager::createScene();
+	const int size = 10;
+	const float fsize = static_cast<float>(size);
+	for (int i = 0; i < size; ++i) {
+		const float fi = static_cast<float>(i) / (fsize - 1);
+		Clair::Object* const obj = mScene->createObject();
+		obj->setMesh(sphereMesh);
+		obj->setMatrix(value_ptr(
+			translate(vec3{fi * fsize * 2.2f - fsize, 0, 0})));
+		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
+		auto cbuf =
+			matInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+		cbuf->Albedo = {1.0f, 1.0f, 1.0f};
+		cbuf->Emissive = 0.0f;
+		cbuf->Glossiness = 1.0f - fi;
+		cbuf->Metalness = 1.0f;
+	}
+	Clair::Object* const obj = mScene->createObject();
+	obj->setMesh(bunnyMesh);
+	obj->setMatrix(value_ptr(
+		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
+	auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
+	matInst->setShaderResource(0, mSkyTexture->getShaderResource());
+	mModelCBuffer =
+		matInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -154,6 +205,19 @@ void IBLSample::filterCubeMap() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
+Clair::Texture* IBLSample::createGBufferTarget(
+	Clair::Texture::Format format,
+	Clair::Texture::Type type) const {
+	auto tex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options texOptions;
+	texOptions.width = 960;
+	texOptions.height = 640;
+	texOptions.format = format;
+	texOptions.type = type;
+	tex->initialize(texOptions);
+	return tex;
+}
+
 void IBLSample::terminate() {
 	Clair::terminate();
 }
@@ -161,10 +225,14 @@ void IBLSample::terminate() {
 void IBLSample::onResize() {
 	Clair::Renderer::resizeSwapBuffer(getWidth(), getHeight());
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
-	Clair::Renderer::setProjectionMatrix(
-		value_ptr(perspectiveLH(radians(mFoV), getAspect(), 0.01f, 100.0f)));
+	mProjectionMat = perspectiveLH(radians(mFoV), getAspect(), 0.01f, 100.0f);
+	Clair::Renderer::setProjectionMatrix(value_ptr(mProjectionMat));
 	mSkyConstBuffer->Aspect = getAspect();
 	mSkyConstBuffer->FieldOfView = mFoV;
+	RT0->resize(getWidth(), getHeight());
+	RT1->resize(getWidth(), getHeight());
+	RT2->resize(getWidth(), getHeight());
+	RT3->resize(getWidth(), getHeight());
 }
 
 void IBLSample::update() {
@@ -172,22 +240,33 @@ void IBLSample::update() {
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
 	mSkyConstBuffer->CamForward = value_ptr(Camera::getForward());
+	mCompositeCBuffer->CameraPosition = value_ptr(Camera::getPosition());
 	
-	ImGui::SliderFloat("Reflectivity", &mReflectivity, 0.0f, 1.0f);
-	ImGui::SliderFloat("Roughness", &mRoughness, 0.0f, 1.0f);
+	ImGui::SliderFloat("Glossiness", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metalness", &mMetalness, 0.0f, 1.0f);
-	mModelCBuffer->Reflectivity = mReflectivity;
-	mModelCBuffer->Roughness = mRoughness;
+	mModelCBuffer->Glossiness = mGlossiness;
 	mModelCBuffer->Metalness = mMetalness;
 }
 
 void IBLSample::render() {
-	Clair::Renderer::setRenderTargetGroup(nullptr);
-	Clair::Renderer::setViewMatrix(value_ptr(Camera::getViewMatrix()));
-	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
-	Clair::Renderer::clearColor({0,0,0,0});
+	// Render to G-buffer
+	Clair::Renderer::setRenderTargetGroup(mGBuffer);
+	RT0->clear({1.0f});
+	RT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	RT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	RT3->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	Clair::Renderer::renderScreenQuad(mSkyMaterialInstance);
-	Clair::Renderer::clearDepthStencil(1.0f, 0);
+	RT0->clear({1.0f});
+	glm::mat4 viewMat = Camera::getViewMatrix();
+	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
+	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
+
+	// Composite
+	Clair::Renderer::setRenderTargetGroup(nullptr);
+	Clair::Renderer::clearDepthStencil(1.0f, 0);
+	mCompositeCBuffer->InverseViewProj =
+		value_ptr(inverse(mProjectionMat * viewMat));
+	Clair::Renderer::renderScreenQuad(mCompositeMat);
 	Clair::Renderer::finalizeFrame();
 }

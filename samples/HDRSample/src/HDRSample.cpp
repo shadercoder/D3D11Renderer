@@ -32,6 +32,29 @@ bool HDRSample::initialize(const HWND hwnd) {
 	texOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
 	mSkyTexture->initialize(texOptions);
 
+	// Create G-buffer
+	//      |-------------------------------------------|
+	// RT0: |              depth             | stencil  | 32 bits
+	//      |-------------------------------------------|
+	// RT1: |       normal.r      |       normal.g      | 32 bits
+	//      |-------------------------------------------|
+	// RT2: | albedo.r | albedo.g | albedo.b | emissive | 32 bits
+	//      |-------------------------------------------|
+	// RT3: |  gloss   |  metal   |    -     |    -     | 32 bits
+	//      |-------------------------------------------|
+	RT0 = createGBufferTarget(
+		Clair::Texture::Format::D24_UNORM_S8_UINT,
+		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
+	RT1 = createGBufferTarget(
+		Clair::Texture::Format::R16G16_FLOAT,
+		Clair::Texture::Type::RENDER_TARGET);
+	RT2 = createGBufferTarget(
+		Clair::Texture::Format::R8G8B8A8_UNORM,
+		Clair::Texture::Type::RENDER_TARGET);
+	mGBuffer = new Clair::RenderTargetGroup{2};
+	mGBuffer->setDepthStencilTarget(RT0);
+	mGBuffer->setRenderTarget(0, RT1->getRenderTarget());
+	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();
 	sphereMesh->initialize(sphereMeshData.get());
@@ -145,6 +168,19 @@ void HDRSample::filterCubeMap() {
 	}
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setRenderTargetGroup(nullptr);
+}
+
+Clair::Texture* HDRSample::createGBufferTarget(
+	Clair::Texture::Format format,
+	Clair::Texture::Type type) const {
+	auto tex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options texOptions;
+	texOptions.width = 960;
+	texOptions.height = 640;
+	texOptions.format = format;
+	texOptions.type = type;
+	tex->initialize(texOptions);
+	return tex;
 }
 
 void HDRSample::terminate() {

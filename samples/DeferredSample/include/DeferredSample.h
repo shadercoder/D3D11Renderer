@@ -1,13 +1,10 @@
 #pragma once
 #include "SampleFramework/SampleBase.h"
-#include <array>
 #include "Clair/Scene.h"
 #include "Clair/MaterialInstance.h"
 #include "Clair/RenderTargetGroup.h"
 #include "Clair/Mesh.h"
 #include "SampleFramework/GlmMath.h"
-#include "../../rawdata/materials/numLights.h"
-
 
 class DeferredSample : public SampleFramework::SampleBase {
 public:

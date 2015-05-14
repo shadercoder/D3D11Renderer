@@ -8,3 +8,4 @@ build
 # Don't commit bin folders (unless they have dlls in them then commit only those dlls).
 **/bin/*
 !**/bin/*.dll
+!**/bin/*.ini

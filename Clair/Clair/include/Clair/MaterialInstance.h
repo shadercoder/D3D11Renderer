@@ -33,7 +33,6 @@ namespace Clair {
 	inline T* MaterialInstance::getConstantBufferPs() const {
 		CLAIR_ASSERT(sizeof(T) == mCBufferData->getSizePs(), 
 					 "CBuffer data interpreted as class with wrong size");
-		//mCBufferData->getDataPs() = new char[sizeof(T)]();
 		return reinterpret_cast<T*>(mCBufferData->getDataPs());
 	}
 

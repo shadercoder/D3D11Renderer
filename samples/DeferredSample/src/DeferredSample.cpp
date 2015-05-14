@@ -10,6 +10,7 @@
 #include "Clair/Material.h"
 #include "../../data/materials/deferredGeometry.h"
 #include "../../data/materials/deferredComposite.h"
+#include "../../rawdata/materials/numLights.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -21,9 +22,9 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	}
 	// Create G-buffer
 	//      |-------------------------------------------|
-	// RT0: |              depth             | stencil  | 32 bits
+	// RT0: |             depth              | stencil  | 32 bits
 	//      |-------------------------------------------|
-	// RT1: |       normal.r      |       normal.g      | 32 bits
+	// RT1: |      normal.r       |      normal.g       | 32 bits
 	//      |-------------------------------------------|
 	// RT2: | albedo.r | albedo.g | albedo.b | emissive | 32 bits
 	//      |-------------------------------------------|
@@ -122,7 +123,7 @@ void DeferredSample::createObject(Clair::Mesh* mesh,
 	auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
 	auto cbuf =
 		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-	cbuf->DiffuseColor = color;
+	cbuf->Albedo = color;
 	cbuf->Emissive = 0.0f;
 }
 
@@ -181,7 +182,7 @@ void DeferredSample::update() {
 		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
 		auto cbuf =
 			matInst->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
-		cbuf->DiffuseColor = {col.r, col.g, col.b};
+		cbuf->Albedo = {col.r, col.g, col.b};
 		cbuf->Emissive = mLights[i].intensity;
 	}
 
@@ -196,7 +197,7 @@ void DeferredSample::render() {
 	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	RT0->clear({1.0f});
 	RT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	RT2->getRenderTarget()->clear({atan2f(0.0f, 0.0f), 0.0f, 0.0f, 1.0f});
+	RT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 0.0f, 1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));

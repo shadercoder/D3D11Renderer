@@ -1,0 +1,67 @@
+#include "../packNormal.h"
+#include "../numRoughnessMips.h"
+
+Texture2D RT0 : register(t0);
+Texture2D RT1 : register(t1);
+Texture2D RT2 : register(t2);
+Texture2D RT3 : register(t3);
+TextureCube CubeMap : register(t4);
+SamplerState samplerLinear : register(s0);
+
+struct VsIn {
+	float3 Position : POSITION;
+};
+
+struct PsIn {
+	float4 Position : SV_POSITION;
+	float2 Uvs : UVS;
+};
+
+// -----------------------------------------------------------------------------
+// VERTEX SHADER
+// -----------------------------------------------------------------------------
+PsIn vsMain(VsIn vsIn) {
+	PsIn psIn;
+	psIn.Position = float4(vsIn.Position.xy * 2.0 - 1.0, 0.0, 1.0);
+	psIn.Uvs = vsIn.Position.xy;// * 2.0 - 1.0;
+	return psIn;
+}
+
+// -----------------------------------------------------------------------------
+// PIXEL SHADER
+// -----------------------------------------------------------------------------
+
+cbuffer Buf : register(b1) {
+	matrix InverseViewProj;
+	float3 CameraPosition;
+};
+
+float4 getGbuf(Texture2D tex, float2 uv) {
+	return tex.Sample(samplerLinear, uv * float2(1.0, -1.0));
+}
+
+float3 reconstructPos(float2 uv, float d) {
+	float4 p = float4(float3(uv * 2.0 - 1.0, d), 1.0);
+	p = mul(InverseViewProj, p);
+	return p.xyz / p.w;
+}
+
+float4 psMain(PsIn psIn) : SV_TARGET {
+	float3 col;
+	float depth = getGbuf(RT0, psIn.Uvs).r;
+	float3 position = reconstructPos(psIn.Uvs, depth);
+	float3 normal = unpackNormal(getGbuf(RT1, psIn.Uvs).rg).rgb;
+	float4 rt2 = getGbuf(RT2, psIn.Uvs);
+	float4 rt3 = getGbuf(RT3, psIn.Uvs);
+
+	float3 V = normalize(position - CameraPosition);
+	float3 refl = reflect(V, normal);
+	float roughnessMip = (1.0 - rt3.r) * float(NUM_ROUGHNESS_MIPS - 1);
+	float3 reflCol = CubeMap.SampleLevel(samplerLinear, refl, roughnessMip).rgb;
+	col = reflCol;
+	if (depth == 1.0) {
+		col = rt2.rgb;
+	}
+	col = pow(col, 1.0 / 2.2);
+	return float4(col, 1.0);
+}
