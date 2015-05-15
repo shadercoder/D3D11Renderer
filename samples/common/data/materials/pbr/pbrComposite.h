@@ -8,4 +8,6 @@ public:
 	Clair::Float4x4 InverseViewProj;
 	Clair::Float3 CameraPosition;
 	float __padding0__[1];
+	Clair::Float2 ScreenDimensions;
+	float __padding1__[2];
 };

@@ -72,7 +72,7 @@ float4 getGbuf(Texture2D tex, float2 uv) {
 
 float linearizeDepth(float d) {
 	float f = 100.0;
-	float n = 0.1;
+	float n = 0.01;
 	return (2 * n) / (f + n - d * (f - n));
 }
 

@@ -38,6 +38,7 @@ cbuffer Buf : register(b1) {
 	matrix ViewProj;
 	matrix InverseViewProj;
 	float3 CameraPosition;
+	float2 ScreenDimensions;
 };
 
 float4 getGbuf(Texture2D tex, float2 uv) {
@@ -52,8 +53,18 @@ float3 reconstructPos(float2 uv, float d) {
 
 float linearizeDepth(float d) {
 	float f = 100.0;
-	float n = 0.1;
+	float n = 0.01;
 	return (2 * n) / (f + n - d * (f - n));
+}
+
+float rand(float2 uv){
+	return frac(sin(dot(uv.xy, float2(12.9898,78.233))) * 43758.5453);
+}
+
+float2 rayTraceGetUv(float3 v) {
+	float4 uv = mul(Proj, float4(v, 1.0));
+	uv.xy /= uv.w;
+	return uv.xy;// * 0.5 + 0.5;
 }
 
 float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
@@ -62,40 +73,52 @@ float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
 	float4 viewRayO = mul(View, float4(rayO, 1.0));
 	rayO = viewRayO.xyz;
 	float4 viewRayD = mul(View, float4(rayD, 0.0));
-	rayD = normalize(viewRayD.xyz);
+	rayD = normalize(viewRayD.xyz);// * 0.1;
+	// calc delta based on screen space direction
+	//float2 ssStart = rayTraceGetUv(rayO);
+	//float2 ssEnd = rayTraceGetUv(rayO + rayD);
+	//float ssDist = length(ssEnd - ssStart);// * ScreenDimensions);
+	//float delta = ssDist;
+	//if (ssStart.x >= 1.0 || ssStart.x <= -1.0 ||
+	//	ssStart.y >= 1.0 || ssStart.y <= -1.0 ||
+	//	ssEnd.x >= 1.0 || ssEnd.x <= -1.0 ||
+	//	ssEnd.y >= 1.0 || ssEnd.y <= -1.0) {
+	//	delta = 0.01;
+	//}
+	float delta = 0.1 * lerp(0.5, 1.0, rand(rayO.xy)) * length(rayO);
+	//delta *= 1;
+	//return float3(abs(ssStart - ssEnd), 0.0);
 	float3 pos = rayO;
-	float delta = 1.0;// + length(rayO) / 10.0;
-	float2 hitPoint = float2(0.0, 0.0);
-	bool isInside = false;
+	float2 hitUv;
+	float3 prevPos;
 	bool hasHitAtLeastOnce = false;
-	for (int i = 0; i < 16; ++i) {
+	for (float i = 0; i < 40.0; ++i) {
+		prevPos = pos;
 		pos += rayD * delta;
-		float4 uv = mul(Proj, float4(pos, 1.0));
-		uv.xy /= uv.w;
-		uv.xy = uv.xy * 0.5 + 0.5;
+		float2 uv = rayTraceGetUv(pos) * 0.5 + 0.5;
 		if (uv.x >= 1.0 || uv.x <= 0.0 ||
 			uv.y >= 1.0 || uv.y <= 0.0) {
 			return col;
 		}
-		float3 scenePos = reconstructPos(uv.xy, getGbuf(RT0, uv.xy));
+		float3 scenePos = reconstructPos(uv, getGbuf(RT0, uv));
 		float4 viewSceneZ = mul(View, float4(scenePos, 1.0));
 		scenePos = viewSceneZ.xyz;
-		// if hit
-		bool newIsInside = pos.z >= scenePos.z && pos.z <= scenePos.z + 3.0;
-		if ((!isInside && newIsInside) ||
-			(isInside && !newIsInside)) {
+		if (pos.z >= scenePos.z){// && pos.z <= scenePos.z + 1.0) {
 			hasHitAtLeastOnce = true;
-			isInside = newIsInside;
-			hitPoint = uv.xy;
-			delta = -0.3 * delta;
+			hitUv = uv;
+			pos = prevPos;
+			delta *= 0.3;
+			if (pos.z > scenePos.z + 1.0) return col;
 		}
 	}
 	if (hasHitAtLeastOnce) {
 		float fade = dot(float3(0,0,-1), rayD) * 2.0;
 		float maxLength = 0.7;
-		fade = max(fade, 4.0 * length(hitPoint - float2(0.5, 0.5)) - maxLength);
-		float3 rayCol = getGbuf(PreviousFrame, hitPoint);
+		fade = max(fade, 4.0 * length(hitUv - float2(0.5, 0.5)) - maxLength);
+		float3 rayCol = PreviousFrame.SampleLevel(
+			samplerLinear, hitUv * float2(1,-1), 0).rgb;//mip).rgb;
 		rayCol = pow(rayCol, 2.2);
+		fade = 0.0;
 		col = lerp(rayCol, col, saturate(fade));
 	}
 	return col;

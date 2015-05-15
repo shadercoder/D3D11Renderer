@@ -132,9 +132,14 @@ bool IBLSample::initialize(const HWND hwnd) {
 		Clair::Texture::Format::R16G16B16A16_FLOAT,
 		Clair::Texture::Type::RENDER_TARGET);
 	mCurrentFrame.setRenderTarget(0, mCurrentFrameTex->getRenderTarget());
-	mPreviousFrameTex = createGBufferTarget(
-		Clair::Texture::Format::R16G16B16A16_FLOAT,
-		Clair::Texture::Type::RENDER_TARGET);
+	mPreviousFrameTex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options prevFrameOption;
+	prevFrameOption.width = 960;
+	prevFrameOption.height = 640;
+	prevFrameOption.format = Clair::Texture::Format::R16G16B16A16_FLOAT;
+	prevFrameOption.type = Clair::Texture::Type::RENDER_TARGET;
+	prevFrameOption.maxMipLevels = NUM_ROUGHNESS_MIPS;
+	mPreviousFrameTex->initialize(prevFrameOption);
 	mPreviousFrame.setRenderTarget(0, mPreviousFrameTex->getRenderTarget());
 	auto drawBufMatData = Loader::loadBinaryData("materials/drawTexture.cmat");
 	auto drawBufMat = Clair::ResourceManager::createMaterial();
@@ -198,7 +203,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	Clair::Object* const plane = mScene->createObject();
 	plane->setMesh(planeMesh);
 	plane->setMatrix(value_ptr(
-		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
+		translate(vec3{1.1f, -5.0f, -5.0f}) * scale(vec3{5.0f})));
 	auto planeMatInst = plane->setMaterial(CLAIR_RENDER_PASS(0), material);
 	planeMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
 	mPlaneCBuffer =
@@ -284,6 +289,10 @@ void IBLSample::update() {
 	ImGui::SliderFloat("Metalness", &mMetalness, 0.0f, 1.0f);
 	mPlaneCBuffer->Glossiness = mGlossiness;
 	mPlaneCBuffer->Metalness = mMetalness;
+	mCompositeCBuffer->ScreenDimensions = {
+		static_cast<float>(getWidth()),
+		static_cast<float>(getHeight())
+	};
 }
 
 void IBLSample::render() {
