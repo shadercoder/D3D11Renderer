@@ -2,6 +2,8 @@
 
 class Cb_materials_pbr_pbrComposite_Ps {
 public:
+	Clair::Float4x4 View;
+	Clair::Float4x4 Proj;
 	Clair::Float4x4 ViewProj;
 	Clair::Float4x4 InverseViewProj;
 	Clair::Float3 CameraPosition;

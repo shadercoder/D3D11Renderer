@@ -34,9 +34,15 @@ private:
 	Clair::Texture* RT1 {nullptr};
 	Clair::Texture* RT2 {nullptr};
 	Clair::Texture* RT3 {nullptr};
-	Clair::RenderTargetGroup* mGBuffer {nullptr};
+	Clair::RenderTargetGroup mGBuffer {3};
 	Clair::MaterialInstance* mCompositeMat {nullptr};
 	class Cb_materials_pbr_pbrComposite_Ps* mCompositeCBuffer {nullptr};
+
+	Clair::Texture* mCurrentFrameTex {nullptr};
+	Clair::Texture* mPreviousFrameTex {nullptr};
+	Clair::RenderTargetGroup mCurrentFrame {1};
+	Clair::RenderTargetGroup mPreviousFrame {1};
+	Clair::MaterialInstance* mDrawBufferMat {nullptr};
 
 	float mFoV {60.0f};
 	float mGlossiness {1.0f};

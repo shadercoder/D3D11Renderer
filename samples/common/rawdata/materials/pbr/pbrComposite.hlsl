@@ -6,6 +6,7 @@ Texture2D RT1 : register(t1);
 Texture2D RT2 : register(t2);
 Texture2D RT3 : register(t3);
 TextureCube CubeMap : register(t4);
+Texture2D PreviousFrame : register(t5);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -32,6 +33,8 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 
 cbuffer Buf : register(b1) {
+	matrix View;
+	matrix Proj;
 	matrix ViewProj;
 	matrix InverseViewProj;
 	float3 CameraPosition;
@@ -53,6 +56,51 @@ float linearizeDepth(float d) {
 	return (2 * n) / (f + n - d * (f - n));
 }
 
+float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
+	float mip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
+	float3 col = CubeMap.SampleLevel(samplerLinear, rayD, mip).rgb;
+	float4 viewRayO = mul(View, float4(rayO, 1.0));
+	rayO = viewRayO.xyz;
+	float4 viewRayD = mul(View, float4(rayD, 0.0));
+	rayD = normalize(viewRayD.xyz);
+	float3 pos = rayO;
+	float delta = 1.0;// + length(rayO) / 10.0;
+	float2 hitPoint = float2(0.0, 0.0);
+	bool isInside = false;
+	bool hasHitAtLeastOnce = false;
+	for (int i = 0; i < 16; ++i) {
+		pos += rayD * delta;
+		float4 uv = mul(Proj, float4(pos, 1.0));
+		uv.xy /= uv.w;
+		uv.xy = uv.xy * 0.5 + 0.5;
+		if (uv.x >= 1.0 || uv.x <= 0.0 ||
+			uv.y >= 1.0 || uv.y <= 0.0) {
+			return col;
+		}
+		float3 scenePos = reconstructPos(uv.xy, getGbuf(RT0, uv.xy));
+		float4 viewSceneZ = mul(View, float4(scenePos, 1.0));
+		scenePos = viewSceneZ.xyz;
+		// if hit
+		bool newIsInside = pos.z >= scenePos.z && pos.z <= scenePos.z + 3.0;
+		if ((!isInside && newIsInside) ||
+			(isInside && !newIsInside)) {
+			hasHitAtLeastOnce = true;
+			isInside = newIsInside;
+			hitPoint = uv.xy;
+			delta = -0.3 * delta;
+		}
+	}
+	if (hasHitAtLeastOnce) {
+		float fade = dot(float3(0,0,-1), rayD) * 2.0;
+		float maxLength = 0.7;
+		fade = max(fade, 4.0 * length(hitPoint - float2(0.5, 0.5)) - maxLength);
+		float3 rayCol = getGbuf(PreviousFrame, hitPoint);
+		rayCol = pow(rayCol, 2.2);
+		col = lerp(rayCol, col, saturate(fade));
+	}
+	return col;
+}
+
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col;
 	float depth = getGbuf(RT0, psIn.Uvs).r;
@@ -69,31 +117,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float reflectivity = lerp(minReflectivity, 1.0, metalness);
 	float3 V = normalize(position - CameraPosition);
 	float3 refl = reflect(V, normal);
-	float mip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
-	float3 reflCol = CubeMap.SampleLevel(samplerLinear, refl, mip).rgb;
-	float4 ssrvw = mul(ViewProj, float4(refl, 0.0));
-	float3 ssrv = ssrvw.xyz / ssrvw.w;
-	float3 ssrp = float3(psIn.Uvs * float2(1,1) * 0.5 + 0.5, linearizeDepth(depth));
-	float3 jitter = float3(normal.x * depth, normal.y * depth / 3.0, depth * depth);
-	ssrv = ssrp + ssrv;
-	ssrp += jitter / 1000.0;
-	ssrv = ssrv - ssrp;
-	ssrv /= 256.0;
-	for (int i = 0; i < 16; ++i) {
-		ssrp += ssrv;
-		float2 uv = ssrp.xy * float2(1,1) * 2.0 - 1.0;
-		if (ssrp.x >= 1.0 || ssrp.x <= -1.0 ||
-			ssrp.y >= 1.0 || ssrp.y <= -1.0 ||
-			ssrp.z >= 1.0 || ssrp.z <= 0.0) {
-			break;
-		}
-		float d = linearizeDepth(getGbuf(RT0, uv).r);
-		if (ssrp.z > d && ssrp.z < d + 0.1) {
-			//reflCol = getGbuf(RT2, uv).rgb;
-			reflCol = unpackNormal(getGbuf(RT1, uv).rg).rgb * 0.5 + 0.5;
-			break;
-		}
-	}
+	float3 reflCol = rayTraceReflection(position, refl, glossiness);
 
 	float3 ambient = CubeMap.SampleLevel(
 		samplerLinear, normal, float(NUM_ROUGHNESS_MIPS - 1)).rgb;

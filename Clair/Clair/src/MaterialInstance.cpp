@@ -17,7 +17,7 @@ MaterialInstance::~MaterialInstance() {
 void MaterialInstance::setShaderResource(
 	const unsigned index, const ShaderResource* const resource) {
 	CLAIR_ASSERT(resource, "Texture shouldn't be null");
-	CLAIR_DEBUG_LOG_IF(mShaderResourceMap.count(index) != 0,
-					   "Overriding existing shader resource");
+	//CLAIR_DEBUG_LOG_IF(mShaderResourceMap.count(index) != 0,
+	//				   "Overriding existing shader resource");
 	mShaderResourceMap[index] = resource;
 }
