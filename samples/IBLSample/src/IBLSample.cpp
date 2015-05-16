@@ -18,6 +18,8 @@
 using namespace SampleFramework;
 using namespace glm;
 
+float gVoxelDepth = 1.0f;
+
 bool IBLSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
@@ -287,8 +289,10 @@ void IBLSample::update() {
 	
 	ImGui::SliderFloat("Glossiness", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metalness", &mMetalness, 0.0f, 1.0f);
+	ImGui::SliderFloat("Voxel depth", &gVoxelDepth, 0.0f, 10.0f);
 	mPlaneCBuffer->Glossiness = mGlossiness;
 	mPlaneCBuffer->Metalness = mMetalness;
+	mCompositeCBuffer->VoxelDepth = gVoxelDepth;
 	mCompositeCBuffer->ScreenDimensions = {
 		static_cast<float>(getWidth()),
 		static_cast<float>(getHeight())

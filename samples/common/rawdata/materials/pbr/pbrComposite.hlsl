@@ -38,6 +38,7 @@ cbuffer Buf : register(b1) {
 	matrix ViewProj;
 	matrix InverseViewProj;
 	float3 CameraPosition;
+	float VoxelDepth;
 	float2 ScreenDimensions;
 };
 
@@ -85,14 +86,14 @@ float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
 	//	ssEnd.y >= 1.0 || ssEnd.y <= -1.0) {
 	//	delta = 0.01;
 	//}
-	float delta = 0.1 * lerp(0.5, 1.0, rand(rayO.xy)) * length(rayO);
-	//delta *= 1;
-	//return float3(abs(ssStart - ssEnd), 0.0);
+	float delta = 0.5 + 0.5 * rand(rayO.xy);// * lerp(0.5, 1.0, rand(rayO.xy)) * length(rayO);
 	float3 pos = rayO;
 	float2 hitUv;
 	float3 prevPos;
-	bool hasHitAtLeastOnce = false;
-	for (float i = 0; i < 40.0; ++i) {
+	float lastSceneZ;
+	float lastPosZ;
+	bool hit = false;
+	for (float i = 0; i < 32.0; ++i) {
 		prevPos = pos;
 		pos += rayD * delta;
 		float2 uv = rayTraceGetUv(pos) * 0.5 + 0.5;
@@ -103,23 +104,24 @@ float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
 		float3 scenePos = reconstructPos(uv, getGbuf(RT0, uv));
 		float4 viewSceneZ = mul(View, float4(scenePos, 1.0));
 		scenePos = viewSceneZ.xyz;
-		if (pos.z >= scenePos.z){// && pos.z <= scenePos.z + 1.0) {
-			hasHitAtLeastOnce = true;
+		if (pos.z >= scenePos.z && pos.z <= scenePos.z + VoxelDepth) {
+			lastSceneZ = scenePos.z;
+			lastPosZ = pos.z;
+			hit = true;
 			hitUv = uv;
 			pos = prevPos;
-			delta *= 0.3;
-			if (pos.z > scenePos.z + 1.0) return col;
+			delta *= 0.5;
+			break;
 		}
 	}
-	if (hasHitAtLeastOnce) {
-		float fade = dot(float3(0,0,-1), rayD) * 2.0;
-		float maxLength = 0.7;
-		fade = max(fade, 4.0 * length(hitUv - float2(0.5, 0.5)) - maxLength);
+	if (hit) {// && lastPosZ < lastSceneZ + VoxelDepth) {
 		float3 rayCol = PreviousFrame.SampleLevel(
 			samplerLinear, hitUv * float2(1,-1), 0).rgb;//mip).rgb;
 		rayCol = pow(rayCol, 2.2);
-		fade = 0.0;
-		col = lerp(rayCol, col, saturate(fade));
+		col = rayCol;
+		//float d = lastPosZ - lastSceneZ;
+		//if (d < VoxelDepth * 10.0)
+		//return float3(1,1,1) * (lastPosZ - lastSceneZ) / 10.0;
 	}
 	return col;
 }
@@ -150,5 +152,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 		col = rt2.rgb;
 	}
 	col = pow(col, 1.0 / 2.2);
+	//col *= 0.00001;
+	//col += reflCol;
 	return float4(col, 1.0);
 }
