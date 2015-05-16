@@ -8,9 +8,9 @@
 #include "SampleFramework/Random.h"
 #include "ImGui/imgui.h"
 #include "Clair/Material.h"
-#include "../../data/materials/deferredGeometry.h"
-#include "../../data/materials/deferredComposite.h"
-#include "../../rawdata/materials/numLights.h"
+#include "../../data/materials/deferred/geometry.h"
+#include "../../data/materials/deferred/composite.h"
+#include "../../rawdata/materials/deferred/numLights.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -43,7 +43,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
 
 	// Deferred composite material
-	auto compTexData = Loader::loadBinaryData("materials/deferredComposite.cmat");
+	auto compTexData = Loader::loadBinaryData("materials/deferred/composite.cmat");
 	auto compTex = Clair::ResourceManager::createMaterial();
 	compTex->initialize(compTexData.get());
 	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
@@ -55,7 +55,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mDeferredCompositeMat->setShaderResource(
 		2, RT2->getShaderResource());
 	mCompositeCBuffer = mDeferredCompositeMat->
-		getConstantBufferPs<Cb_materials_deferredComposite_Ps>();
+		getConstantBufferPs<Cb_materials_deferred_composite_Ps>();
 
 	// Place some objects in the scene
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
@@ -65,7 +65,7 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	auto planeMesh = Clair::ResourceManager::createMesh();
 	planeMesh->initialize(planeMeshData.get());
 	auto geometryMatData =
-		Loader::loadBinaryData("materials/deferredGeometry.cmat");
+		Loader::loadBinaryData("materials/deferred/geometry.cmat");
 	mGeometryMat = Clair::ResourceManager::createMaterial();
 	mGeometryMat->initialize(geometryMatData.get());
 	mScene = Clair::ResourceManager::createScene();
@@ -122,7 +122,7 @@ void DeferredSample::createObject(Clair::Mesh* mesh,
 	obj->setMatrix(transform);
 	auto matInstance = obj->setMaterial(CLAIR_RENDER_PASS(0), mGeometryMat);
 	auto cbuf =
-		matInstance->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
+		matInstance->getConstantBufferPs<Cb_materials_deferred_geometry_Ps>();
 	cbuf->Albedo = color;
 	cbuf->Emissive = 0.0f;
 }
@@ -159,7 +159,6 @@ void DeferredSample::onResize() {
 
 void DeferredSample::update() {
 	Camera::update(getDeltaTime());
-	mCompositeCBuffer->CameraPosition = value_ptr(Camera::getPosition());
 
 	// Update lights
 	for (int i {0}; i < NUM_LIGHTS; ++i) {
@@ -181,7 +180,7 @@ void DeferredSample::update() {
 		obj->setMatrix(value_ptr(translate(lightPos) * scale(vec3{0.05f})));
 		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
 		auto cbuf =
-			matInst->getConstantBufferPs<Cb_materials_deferredGeometry_Ps>();
+			matInst->getConstantBufferPs<Cb_materials_deferred_geometry_Ps>();
 		cbuf->Albedo = {col.r, col.g, col.b};
 		cbuf->Emissive = mLights[i].intensity;
 	}
@@ -197,7 +196,7 @@ void DeferredSample::render() {
 	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	RT0->clear({1.0f});
 	RT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	RT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 0.0f, 1.0f});
+	RT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
@@ -210,8 +209,9 @@ void DeferredSample::render() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	mCompositeCBuffer->DrawGBuffers = mDrawGBuffers;
-	mCompositeCBuffer->InverseViewProj =
-		value_ptr(inverse(mProjectionMat * viewMat));
+	mCompositeCBuffer->InverseProj =
+		value_ptr(inverse(mProjectionMat));
+	mCompositeCBuffer->View = value_ptr(viewMat);
 	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
 	Clair::Renderer::finalizeFrame();
 }

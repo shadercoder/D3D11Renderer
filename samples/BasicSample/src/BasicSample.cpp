@@ -7,7 +7,7 @@
 #include "SampleFramework/Logger.h"
 #include "Clair/Material.h"
 #include "Clair/Mesh.h"
-#include "../../data/materials/default.h"
+#include "../../data/materials/basic.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -22,7 +22,7 @@ bool BasicSample::initialize(const HWND hwnd) {
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
 	bunnyMesh->initialize(bunnyMeshData.get());
 
-	auto defaultMatData = Loader::loadBinaryData("materials/default.cmat");
+	auto defaultMatData = Loader::loadBinaryData("materials/basic.cmat");
 	auto defaultMat = Clair::ResourceManager::createMaterial();
 	defaultMat->initialize(defaultMatData.get());
 
@@ -31,7 +31,7 @@ bool BasicSample::initialize(const HWND hwnd) {
 	mBunny->setMesh(bunnyMesh);
 	mBunny->setMatrix(value_ptr(translate(vec3{0.0f})));
 	auto matInstance = mBunny->setMaterial(CLAIR_RENDER_PASS(0), defaultMat);
-	mConstBuffer = matInstance->getConstantBufferPs<Cb_materials_default_Ps>();
+	mConstBuffer = matInstance->getConstantBufferPs<Cb_materials_basic_Ps>();
 	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
 
 	Camera::initialize({-0.27f, 1.64f, -1.79f}, 0.470f, 0.045f);

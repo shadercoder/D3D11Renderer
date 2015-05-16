@@ -5,7 +5,7 @@
 // http://www.crytek.com/cryengine/cryengine3/presentations/a-bit-more-deferred---cryengine3
 // I added an ugly if() because this packing doesn't support (0,0,1) or (0,0,-1)
 float2 packNormal(float3 n) {
-	if (n.x == 0.0 && n.y == 0.0) {
+	if (n.z == -1) {
 		n.x += 0.001;
 		n = normalize(n);
 	}

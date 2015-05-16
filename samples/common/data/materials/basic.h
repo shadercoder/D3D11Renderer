@@ -1,6 +1,6 @@
 #pragma once
 
-class Cb_materials_default_Ps {
+class Cb_materials_basic_Ps {
 public:
 	Clair::Float4 DiffuseColor;
 	float Time;
