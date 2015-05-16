@@ -6,8 +6,8 @@ typedef HWND__* HWND;
 namespace SampleFramework {
 	class SampleBase {
 	public:
-		SampleBase() = default;
-		virtual ~SampleBase() = default;
+		SampleBase() {};
+		virtual ~SampleBase() {};
 
 		virtual bool initialize(HWND hwnd) = 0;
 		virtual void terminate() = 0;

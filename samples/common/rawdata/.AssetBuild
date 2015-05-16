@@ -11,10 +11,10 @@
 /materials/filterScreen.hlsl|30445344|2893559183|1
 /materials/sampling.h|30445343|2631755450
 /materials/panoramaToCube.hlsl|30445167|1781923374
-/materials/pbr/pbrComposite.hlsl|30445545|1559764768|2
-/materials/pbr/packNormal.h|0|0
-/materials/pbr/numRoughnessMips.h|0|0
-/materials/pbr/pbrGeometry.hlsl|30445093|3115498872|1
+/materials/pbr/pbrComposite.hlsl|30445579|1889976430|2
+/materials/pbr/../packNormal.h|30445557|1409612684
+/materials/pbr/../numRoughnessMips.h|30444770|3828896937
+/materials/pbr/pbrGeometry.hlsl|30445576|3169818749|1
 /materials/pbr/packNormal.h|0|0
 /materials/pbr/pbrSky.hlsl|30445102|3454822663
 /materials/sky.hlsl|30444183|1573995809

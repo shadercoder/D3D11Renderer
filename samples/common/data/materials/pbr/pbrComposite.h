@@ -2,12 +2,6 @@
 
 class Cb_materials_pbr_pbrComposite_Ps {
 public:
-	Clair::Float4x4 View;
-	Clair::Float4x4 Proj;
-	Clair::Float4x4 ViewProj;
-	Clair::Float4x4 InverseViewProj;
-	Clair::Float3 CameraPosition;
-	float VoxelDepth;
-	Clair::Float2 ScreenDimensions;
-	float __padding0__[2];
+	Clair::Float4x4 InverseView;
+	Clair::Float4x4 InverseProj;
 };

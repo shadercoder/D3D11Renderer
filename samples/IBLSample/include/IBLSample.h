@@ -8,6 +8,7 @@
 
 class IBLSample : public SampleFramework::SampleBase {
 public:
+	~IBLSample() override;
 	bool initialize(HWND hwnd) override;
 	void terminate() override;
 
@@ -34,18 +35,12 @@ private:
 	Clair::Texture* RT1 {nullptr};
 	Clair::Texture* RT2 {nullptr};
 	Clair::Texture* RT3 {nullptr};
-	Clair::RenderTargetGroup mGBuffer {3};
+	Clair::RenderTargetGroup* mGBuffer {nullptr};
 	Clair::MaterialInstance* mCompositeMat {nullptr};
 	class Cb_materials_pbr_pbrComposite_Ps* mCompositeCBuffer {nullptr};
-
-	Clair::Texture* mCurrentFrameTex {nullptr};
-	Clair::Texture* mPreviousFrameTex {nullptr};
-	Clair::RenderTargetGroup mCurrentFrame {1};
-	Clair::RenderTargetGroup mPreviousFrame {1};
-	Clair::MaterialInstance* mDrawBufferMat {nullptr};
 
 	float mFoV {60.0f};
 	float mGlossiness {1.0f};
 	float mMetalness {1.0f};
-	class Cb_materials_pbr_pbrGeometry_Ps* mPlaneCBuffer {nullptr};
+	class Cb_materials_pbr_pbrGeometry_Ps* mTweakableCbuf {nullptr};
 };

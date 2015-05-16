@@ -11,16 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\HDRSample.cpp" />
+    <ClCompile Include="src\AdvancedSample.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\HDRSample.h" />
+    <ClInclude Include="include\AdvancedSample.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{920175AF-959D-4C26-A609-AED1F7FD715F}</ProjectGuid>
-    <RootNamespace>HDRSample</RootNamespace>
-    <ProjectName>HDRSample</ProjectName>
+    <ProjectGuid>{999712C1-0E7A-489A-A7BF-E816FCA30090}</ProjectGuid>
+    <RootNamespace>AdvancedSample</RootNamespace>
+    <ProjectName>AdvancedSample</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

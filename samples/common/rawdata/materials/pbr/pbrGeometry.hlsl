@@ -22,7 +22,7 @@ cbuffer Buf : register(b0) {
 PsIn vsMain(VsIn vsIn) {
 	PsIn psIn;
 	psIn.Position = mul(Projection, mul(View, mul(World, float4(vsIn.Position, 1.0))));
-	psIn.Normal = mul(World, float4(vsIn.Normal, 0.0)).xyz;;
+	psIn.Normal = mul(View, mul(World, float4(vsIn.Normal, 0.0))).xyz;;
 	return psIn;
 }
 
