@@ -1,6 +1,6 @@
 #pragma once
 
-class Cb_materials_pbr_pbrSky_Ps {
+class Cb_materials_pbrSky_Ps {
 public:
 	Clair::Float3 CamRight;
 	float __padding0__[1];

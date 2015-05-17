@@ -2,7 +2,6 @@
 #include "SampleFramework/SampleBase.h"
 #include "Clair/Scene.h"
 #include "Clair/MaterialInstance.h"
-#include "../../data/materials/pbr/pbrSky.h"
 #include "Clair/RenderTargetGroup.h"
 #include "SampleFramework/GlmMath.h"
 
@@ -29,7 +28,7 @@ private:
 	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
 	Clair::MaterialInstance* mFilterCubeMapMatInstance {nullptr};
 	class Cb_materials_filterCube_Ps* mFilterCubeMapCBuffer {nullptr};
-	Cb_materials_pbr_pbrSky_Ps* mSkyConstBuffer {nullptr};
+	class Cb_materials_pbrSky_Ps* mSkyConstBuffer {nullptr};
 
 	Clair::Texture* RT0 {nullptr};
 	Clair::Texture* RT1 {nullptr};
@@ -37,10 +36,10 @@ private:
 	Clair::Texture* RT3 {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 	Clair::MaterialInstance* mCompositeMat {nullptr};
-	class Cb_materials_pbr_pbrComposite_Ps* mCompositeCBuffer {nullptr};
+	class Cb_materials_ibl_composite_Ps* mCompositeCBuffer {nullptr};
 
 	float mFoV {60.0f};
 	float mGlossiness {1.0f};
 	float mMetalness {1.0f};
-	class Cb_materials_pbr_pbrGeometry_Ps* mTweakableCbuf {nullptr};
+	class Cb_materials_ibl_geometry_Ps* mTweakableCbuf {nullptr};
 };

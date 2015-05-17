@@ -1,4 +1,4 @@
-#include "sampling.h"
+#include "../sampling.h"
 
 Texture2D ScreenInput : register(t0);
 SamplerState SamplerLinear : register(s0);
@@ -31,20 +31,21 @@ cbuffer Buf : register(b1) {
 
 float3 filter(float2 uv, float3 right, float3 up, float3 forward) {
 	float3 col = float3(0, 0, 0);
-	float3 dir = normalize(forward + uv.x * right + uv.y * up);
-	const int NUM_SAMPLES = 128;
-	for (int i = 0; i < NUM_SAMPLES; ++i) {
-		float3 offset = hemisphereSample_uniform(hammersley2d(i, NUM_SAMPLES));
-		offset = normalize(offset);
-		if (dot(offset, dir) < 0) {
-			offset = -offset;
-		}
-		float3 sampDir = lerp(dir, offset, pow(Roughness, 2));
-		sampDir = normalize(sampDir);
-		//float4 sampUv = mul(Per
-		//col += CubeMapInput.Sample(SamplerLinear, sampDir).rgb;
-	}
-	col /= float(NUM_SAMPLES);
+	col += Roughness;
+	//float3 dir = normalize(forward + uv.x * right + uv.y * up);
+	//const int NUM_SAMPLES = 128;
+	//for (int i = 0; i < NUM_SAMPLES; ++i) {
+	//	float3 offset = hemisphereSample_uniform(hammersley2d(i, NUM_SAMPLES));
+	//	offset = normalize(offset);
+	//	if (dot(offset, dir) < 0) {
+	//		offset = -offset;
+	//	}
+	//	float3 sampDir = lerp(dir, offset, pow(Roughness, 2));
+	//	sampDir = normalize(sampDir);
+	//	//float4 sampUv = mul(Per
+	//	//col += CubeMapInput.Sample(SamplerLinear, sampDir).rgb;
+	//}
+	//col /= float(NUM_SAMPLES);
 	return col;
 }
 

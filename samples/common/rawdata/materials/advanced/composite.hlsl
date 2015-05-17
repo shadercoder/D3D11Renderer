@@ -34,6 +34,7 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	matrix InverseView;
 	matrix InverseProj;
+	bool SSREnabled;
 };
 
 float4 getGbuf(Texture2D tex, float2 uv) {
@@ -52,7 +53,7 @@ float linearizeDepth(float d) {
 	return (2 * n) / (f + n - d * (f - n));
 }
 
-float3 rayTraceReflection(float3 rayO, float3 rayD, float glossiness) {
+float3 getReflectionColor(float3 rayO, float3 rayD, float glossiness) {
 	float mip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
 	float4 wsRayD = mul(InverseView, float4(rayD, 0.0));
 	float3 col = CubeMap.SampleLevel(samplerLinear, wsRayD.xyz, mip).rgb;
@@ -75,7 +76,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	float reflectivity = lerp(minReflectivity, 1.0, metalness);
 	float3 V = normalize(-position);
 	float3 refl = reflect(-V, normal);
-	float3 reflCol = rayTraceReflection(position, refl, glossiness);
+	float3 reflCol = getReflectionColor(position, refl, glossiness);
 
 	float3 ambient = CubeMap.SampleLevel(
 		samplerLinear, normal, float(NUM_ROUGHNESS_MIPS - 1)).rgb;

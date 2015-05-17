@@ -321,7 +321,7 @@ void Renderer::resizeSwapBuffer(const int width, const int height) {
 
 void Renderer::setViewport(const int x, const int y,
 						   const int width, const int height) {
-	d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+	//d3dDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// new viewport
 	D3D11_VIEWPORT viewport = {0};
@@ -335,8 +335,8 @@ void Renderer::setViewport(const int x, const int y,
 	viewWidth = static_cast<float>(width);
 	viewHeight = static_cast<float>(height);
 
-	d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
-										 depthStencilView);
+	//d3dDeviceContext->OMSetRenderTargets(1, &renderTargetView,
+	//									 depthStencilView);
 }
 
 void Renderer::render(Scene* const scene) {

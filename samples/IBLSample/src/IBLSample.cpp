@@ -11,8 +11,9 @@
 #include "Clair/RenderTargetGroup.h"
 #include "../../data/materials/filterCube.h"
 #include "../../rawdata/materials/numRoughnessMips.h"
-#include "../../data/materials/pbr/pbrGeometry.h"
-#include "../../data/materials/pbr/pbrComposite.h"
+#include "../../data/materials/ibl/geometry.h"
+#include "../../data/materials/ibl/composite.h"
+#include "../../data/materials/pbrSky.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -105,7 +106,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	filterCubeMap();
 
 	// Material for drawing the sky
-	auto skyMatData = Loader::loadBinaryData("materials/pbr/pbrSky.cmat");
+	auto skyMatData = Loader::loadBinaryData("materials/pbrSky.cmat");
 	auto skyMaterial = Clair::ResourceManager::createMaterial();
 	skyMaterial->initialize(skyMatData.get());
 	mSkyMaterialInstance = Clair::ResourceManager::createMaterialInstance();
@@ -113,7 +114,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	mSkyMaterialInstance->setShaderResource(
 		0, mSkyTexture->getShaderResource());
 	mSkyConstBuffer =
-		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbr_pbrSky_Ps>();
+		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbrSky_Ps>();
 
 	// Materials
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
@@ -124,17 +125,13 @@ bool IBLSample::initialize(const HWND hwnd) {
 	auto bunnyMesh = Clair::ResourceManager::createMesh();
 	bunnyMesh->initialize(bunnyMeshData.get());
 
-	auto planeMeshData = Loader::loadBinaryData("models/plane.cmod");
-	auto planeMesh = Clair::ResourceManager::createMesh();
-	planeMesh->initialize(planeMeshData.get());
-
-	auto matData = Loader::loadBinaryData("materials/pbr/pbrGeometry.cmat");
+	auto matData = Loader::loadBinaryData("materials/ibl/geometry.cmat");
 	auto material = Clair::ResourceManager::createMaterial();
 	material->initialize(matData.get());
 
 	// Deferred composite material
 	auto compTexData =
-		Loader::loadBinaryData("materials/pbr/pbrComposite.cmat");
+		Loader::loadBinaryData("materials/ibl/composite.cmat");
 	auto compTex = Clair::ResourceManager::createMaterial();
 	compTex->initialize(compTexData.get());
 	mCompositeMat = Clair::ResourceManager::createMaterialInstance();
@@ -150,7 +147,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	mCompositeMat->setShaderResource(
 		4, mSkyTexture->getShaderResource());
 	mCompositeCBuffer = mCompositeMat->
-		getConstantBufferPs<Cb_materials_pbr_pbrComposite_Ps>();
+		getConstantBufferPs<Cb_materials_ibl_composite_Ps>();
 
 	mScene = Clair::ResourceManager::createScene();
 	const int size = 10;
@@ -163,7 +160,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 			translate(vec3{fi * fsize * 2.2f - fsize, 0, 0})));
 		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
 		auto cbuf =
-			matInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+			matInst->getConstantBufferPs<Cb_materials_ibl_geometry_Ps>();
 		cbuf->Albedo = {1.0f, 1.0f, 1.0f};
 		cbuf->Emissive = 0.0f;
 		cbuf->Glossiness = 1.0f - fi;
@@ -176,7 +173,7 @@ bool IBLSample::initialize(const HWND hwnd) {
 	auto bunnyMatInst = bunny->setMaterial(CLAIR_RENDER_PASS(0), material);
 	bunnyMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
 	auto cbuf =
-		bunnyMatInst->getConstantBufferPs<Cb_materials_pbr_pbrGeometry_Ps>();
+		bunnyMatInst->getConstantBufferPs<Cb_materials_ibl_geometry_Ps>();
 	cbuf->Albedo = {0.0f, 1.0f, 0.0f};
 	cbuf->Emissive = 0.0f;
 	cbuf->Glossiness = 0.5f;

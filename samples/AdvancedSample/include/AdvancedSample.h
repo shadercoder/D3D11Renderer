@@ -2,12 +2,12 @@
 #include "SampleFramework/SampleBase.h"
 #include "Clair/Scene.h"
 #include "Clair/MaterialInstance.h"
-#include "../../data/materials/pbr/pbrSky.h"
 #include "Clair/RenderTargetGroup.h"
 #include "SampleFramework/GlmMath.h"
 
 class AdvancedSample : public SampleFramework::SampleBase {
 public:
+	~AdvancedSample() override;
 	bool initialize(HWND hwnd) override;
 	void terminate() override;
 
@@ -17,6 +17,7 @@ public:
 
 private:
 	void filterCubeMap();
+	void filterFrame();
 	Clair::Texture* createGBufferTarget(
 		Clair::Texture::Format format,
 		Clair::Texture::Type type) const;
@@ -28,24 +29,23 @@ private:
 	Clair::MaterialInstance* mSkyMaterialInstance {nullptr};
 	Clair::MaterialInstance* mFilterCubeMapMatInstance {nullptr};
 	class Cb_materials_filterCube_Ps* mFilterCubeMapCBuffer {nullptr};
-	Cb_materials_pbr_pbrSky_Ps* mSkyConstBuffer {nullptr};
+	class Cb_materials_pbrSky_Ps* mSkyConstBuffer {nullptr};
 
 	Clair::Texture* RT0 {nullptr};
 	Clair::Texture* RT1 {nullptr};
 	Clair::Texture* RT2 {nullptr};
 	Clair::Texture* RT3 {nullptr};
-	Clair::RenderTargetGroup mGBuffer {3};
+	Clair::RenderTargetGroup* mGBuffer {nullptr};
 	Clair::MaterialInstance* mCompositeMat {nullptr};
-	class Cb_materials_pbr_pbrComposite_Ps* mCompositeCBuffer {nullptr};
+	class Cb_materials_advanced_composite_Ps* mCompositeCBuffer {nullptr};
 
-	Clair::Texture* mCurrentFrameTex {nullptr};
-	Clair::Texture* mPreviousFrameTex {nullptr};
-	Clair::RenderTargetGroup mCurrentFrame {1};
-	Clair::RenderTargetGroup mPreviousFrame {1};
-	Clair::MaterialInstance* mDrawBufferMat {nullptr};
+	Clair::Texture* mSavedFrameTex {nullptr};
+	Clair::RenderTargetGroup* mSavedFrame {nullptr};
+	Clair::MaterialInstance* mFilterFrameMatInstance {nullptr};
+	Clair::MaterialInstance* mDrawTextureMatInstance {nullptr};
 
-	float mFoV {60.0f};
+	float mFoV {80.0f};
 	float mGlossiness {1.0f};
 	float mMetalness {1.0f};
-	class Cb_materials_pbr_pbrGeometry_Ps* mPlaneCBuffer {nullptr};
+	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
 };
