@@ -1,12 +1,7 @@
 #include "../packNormal.h"
-#include "../numRoughnessMips.h"
 
 Texture2D RT0 : register(t0);
 Texture2D RT1 : register(t1);
-Texture2D RT2 : register(t2);
-Texture2D RT3 : register(t3);
-Texture2D PreviousFrame : register(t4);
-TextureCube CubeMap : register(t5);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
