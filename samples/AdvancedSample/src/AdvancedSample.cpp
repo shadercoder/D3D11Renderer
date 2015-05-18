@@ -22,7 +22,7 @@ using namespace glm;
 
 AdvancedSample::~AdvancedSample() {
 	delete mGBuffer;
-	delete mSavedFrame;
+	delete mPreviousFrame;
 }
 
 bool AdvancedSample::initialize(const HWND hwnd) {
@@ -108,14 +108,16 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	filterCubeMap();
 
 	// Saving frame so it can be filtered and reflected using SSR
-	mSavedFrameTex = Clair::ResourceManager::createTexture();
+	mPreviousFrameTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options savedFrameTexOptions {};
 	savedFrameTexOptions.width = 960;
 	savedFrameTexOptions.height = 640;
 	savedFrameTexOptions.maxMipLevels = NUM_ROUGHNESS_MIPS;
 	savedFrameTexOptions.type = Clair::Texture::Type::RENDER_TARGET;
 	savedFrameTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
-	mSavedFrameTex->initialize(savedFrameTexOptions);
+	mPreviousFrameTex->initialize(savedFrameTexOptions);
+	mPreviousFrame = new Clair::RenderTargetGroup{1};
+	mPreviousFrame->setRenderTarget(0, mPreviousFrameTex->getRenderTarget());
 	auto filterFrameMatData =
 		Loader::loadBinaryData("materials/advanced/filterFrame.cmat");
 	auto filterFrameMaterial = Clair::ResourceManager::createMaterial();
@@ -123,8 +125,18 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mFilterFrameMatInstance =
 		Clair::ResourceManager::createMaterialInstance();
 	mFilterFrameMatInstance->initialize(filterFrameMaterial);
-	mSavedFrame = new Clair::RenderTargetGroup{1};
-	mSavedFrame->setRenderTarget(0, mSavedFrameTex->getRenderTarget());
+
+	// Frame after deferred
+	mAfterDeferredTex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options afterDefTexOptions {};
+	afterDefTexOptions.width = 960;
+	afterDefTexOptions.height = 640;
+	afterDefTexOptions.maxMipLevels = NUM_ROUGHNESS_MIPS;
+	afterDefTexOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	afterDefTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	mAfterDeferredTex->initialize(afterDefTexOptions);
+	mAfterDeferred = new Clair::RenderTargetGroup{1};
+	mAfterDeferred->setRenderTarget(0, mAfterDeferredTex->getRenderTarget());
 
 	auto drawTexMatData =
 		Loader::loadBinaryData("materials/advanced/drawTexture.cmat");
@@ -133,7 +145,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mDrawTextureMatInstance = Clair::ResourceManager::createMaterialInstance();
 	mDrawTextureMatInstance->initialize(drawTexMat);
 	mDrawTextureMatInstance->setShaderResource(
-		0, mSavedFrameTex->getShaderResource());
+		0, mAfterDeferredTex->getShaderResource());
 
 	// Material for drawing the sky
 	auto skyMatData = Loader::loadBinaryData("materials/pbrSky.cmat");
@@ -179,7 +191,9 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mCompositeMat->setShaderResource(
 		3, RT3->getShaderResource());
 	mCompositeMat->setShaderResource(
-		4, mSkyTexture->getShaderResource());
+		4, mPreviousFrameTex->getShaderResource());
+	mCompositeMat->setShaderResource(
+		5, mSkyTexture->getShaderResource());
 	mCompositeCBuffer = mCompositeMat->
 		getConstantBufferPs<Cb_materials_advanced_composite_Ps>();
 
@@ -224,7 +238,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	planeCbuf->Emissive = 0.0f;
 	planeCbuf->Glossiness = 0.5f;
 	planeCbuf->Metalness = 1.0f;
-	mTweakableCbuf = cbuf;
+	mTweakableCbuf = planeCbuf;
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -258,35 +272,44 @@ void AdvancedSample::filterCubeMap() {
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
 		Clair::Renderer::renderScreenQuad(mFilterCubeMapMatInstance);
 	}
+	mSkyTexture->destroyAllSubRenderTargets();
+	mSkyTexture->destroyAllSubShaderResources();
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
 void AdvancedSample::filterFrame() {
 	int w, h;
-	mSavedFrameTex->getMipMapDimensions(1, &w, &h);
-	for (size_t i_mip {1}; i_mip < mSavedFrameTex->getNumMipMaps(); ++i_mip) {
-		Clair::SubTextureOptions inMipOptions;
-		inMipOptions.mipStartIndex = i_mip - 1;
-		auto inputMip = mSavedFrameTex->createSubShaderResource(inMipOptions);
+	mPreviousFrameTex->getMipMapDimensions(0, &w, &h);
+	for (size_t i_mip {0}; i_mip < mPreviousFrameTex->getNumMipMaps(); ++i_mip) {
+		Clair::ShaderResource* inTex {nullptr};
+		if (i_mip == 0) {
+			inTex = mAfterDeferredTex->getShaderResource();
+		} else {
+			Clair::SubTextureOptions inTexOptions;
+			inTexOptions.mipStartIndex = i_mip - 1;
+			inTex = mPreviousFrameTex->createSubShaderResource(inTexOptions);
+		}
 
-		Clair::SubTextureOptions outMipOptions;
-		outMipOptions.mipStartIndex = i_mip;
-		auto outputMip = mSavedFrameTex->createSubRenderTarget(outMipOptions);
+		Clair::SubTextureOptions outTexOptions;
+		outTexOptions.mipStartIndex = i_mip;
+		auto outTex = mPreviousFrameTex->createSubRenderTarget(outTexOptions);
 
-		mFilterFrameMatInstance->setShaderResource(0, inputMip);
+		mFilterFrameMatInstance->setShaderResource(0, inTex);
 		auto filterFrameCbuf = mFilterFrameMatInstance->getConstantBufferPs<
 			Cb_materials_advanced_filterFrame_Ps>();
 		filterFrameCbuf->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
 		auto renderTargets = Clair::RenderTargetGroup{1};
-		renderTargets.setRenderTarget(0, outputMip);
+		renderTargets.setRenderTarget(0, outTex);
 		Clair::Renderer::setRenderTargetGroup(&renderTargets);
 		Clair::Renderer::setViewport(0, 0, w, h);
 		Clair::Renderer::renderScreenQuad(mFilterFrameMatInstance);
 		w /= 2;
 		h /= 2;
 	}
+	mPreviousFrameTex->destroyAllSubRenderTargets();
+	mPreviousFrameTex->destroyAllSubShaderResources();
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
@@ -319,7 +342,8 @@ void AdvancedSample::onResize() {
 	RT1->resize(getWidth(), getHeight());
 	RT2->resize(getWidth(), getHeight());
 	RT3->resize(getWidth(), getHeight());
-	mSavedFrameTex->resize(getWidth(), getHeight());
+	mPreviousFrameTex->resize(getWidth(), getHeight());
+	mAfterDeferredTex->resize(getWidth(), getHeight());
 }
 
 void AdvancedSample::update() {
@@ -349,13 +373,14 @@ void AdvancedSample::render() {
 	Clair::Renderer::render(mScene);
 
 	// Deferred composite pass; renders to buffer
-	Clair::Renderer::setRenderTargetGroup(mSavedFrame);
+	Clair::Renderer::setRenderTargetGroup(mAfterDeferred);
 	mCompositeCBuffer->InverseView = value_ptr(inverse(viewMat));
 	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
+	mCompositeCBuffer->Proj = value_ptr(mProjectionMat);
 	Clair::Renderer::renderScreenQuad(mCompositeMat);
 
 	// Filter frame for next frame's reflections; post process
-	//filterFrame();
+	filterFrame();
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);

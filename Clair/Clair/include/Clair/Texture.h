@@ -53,6 +53,8 @@ namespace Clair {
 			const SubTextureOptions& options);
 		ShaderResource* createSubShaderResource(
 			const SubTextureOptions& options);
+		void destroyAllSubRenderTargets();
+		void destroyAllSubShaderResources();
 
 		bool isValid() const;
 		size_t getNumMipMaps() const;

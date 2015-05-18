@@ -5,7 +5,8 @@ Texture2D RT0 : register(t0);
 Texture2D RT1 : register(t1);
 Texture2D RT2 : register(t2);
 Texture2D RT3 : register(t3);
-TextureCube CubeMap : register(t4);
+Texture2D PreviousFrame : register(t4);
+TextureCube CubeMap : register(t5);
 SamplerState samplerLinear : register(s0);
 
 struct VsIn {
@@ -34,6 +35,7 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	matrix InverseView;
 	matrix InverseProj;
+	matrix Proj;
 	bool SSREnabled;
 };
 
@@ -53,10 +55,52 @@ float linearizeDepth(float d) {
 	return (2 * n) / (f + n - d * (f - n));
 }
 
+float rand(float2 uv){
+	return frac(sin(dot(uv.xy, float2(12.9898,78.233))) * 43758.5453);
+}
+
+float2 rayTraceGetUv(float3 v) {
+	float4 uv = mul(Proj, float4(v, 1.0));
+	uv.xy /= uv.w;
+	return uv.xy;// * 0.5 + 0.5;
+}
+
 float3 getReflectionColor(float3 rayO, float3 rayD, float glossiness) {
 	float mip = (1.0 - glossiness) * float(NUM_ROUGHNESS_MIPS - 1);
 	float4 wsRayD = mul(InverseView, float4(rayD, 0.0));
 	float3 col = CubeMap.SampleLevel(samplerLinear, wsRayD.xyz, mip).rgb;
+	float delta = 0.5 + 0.5 * rand(rayO.xy);// * lerp(0.5, 1.0, rand(rayO.xy)) * length(rayO);
+	float3 pos = rayO;
+	float2 hitUv;
+	float3 prevPos;
+	float lastSceneZ;
+	float lastPosZ;
+	bool hit = false;
+	for (float i = 0; i < 12 * saturate(glossiness); ++i) {
+		prevPos = pos;
+		pos += rayD * delta;
+		float2 uv = rayTraceGetUv(pos) * 0.5 + 0.5;
+		if (uv.x >= 1.0 || uv.x <= 0.0 ||
+			uv.y >= 1.0 || uv.y <= 0.0) {
+			return col;
+		}
+		float3 scenePos = reconstructPos(uv, getGbuf(RT0, uv).r);
+		if (pos.z >= scenePos.z && pos.z <= scenePos.z + 1.0) {
+			lastSceneZ = scenePos.z;
+			lastPosZ = pos.z;
+			hit = true;
+			hitUv = uv;
+			pos = prevPos;
+			delta *= 0.5;
+			break;
+		}
+	}
+	if (hit) {// && lastPosZ < lastSceneZ + VoxelDepth) {
+		float3 rayCol = PreviousFrame.SampleLevel(
+			samplerLinear, hitUv * float2(1,-1), mip).rgb;//mip).rgb;
+		rayCol = pow(rayCol, 2.2);
+		col = rayCol;
+	}
 	return col;
 }
 

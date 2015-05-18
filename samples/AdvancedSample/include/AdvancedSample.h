@@ -39,8 +39,10 @@ private:
 	Clair::MaterialInstance* mCompositeMat {nullptr};
 	class Cb_materials_advanced_composite_Ps* mCompositeCBuffer {nullptr};
 
-	Clair::Texture* mSavedFrameTex {nullptr};
-	Clair::RenderTargetGroup* mSavedFrame {nullptr};
+	Clair::Texture* mAfterDeferredTex {nullptr};
+	Clair::RenderTargetGroup* mAfterDeferred {nullptr};
+	Clair::Texture* mPreviousFrameTex {nullptr};
+	Clair::RenderTargetGroup* mPreviousFrame {nullptr};
 	Clair::MaterialInstance* mFilterFrameMatInstance {nullptr};
 	Clair::MaterialInstance* mDrawTextureMatInstance {nullptr};
 

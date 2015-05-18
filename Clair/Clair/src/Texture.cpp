@@ -223,6 +223,20 @@ ShaderResource* Texture::createSubShaderResource(const SubTextureOptions& s) {
 	return newCustomShadResView;
 }
 
+void Texture::destroyAllSubRenderTargets() {
+	for (const auto& it : mSubRenderTargets) {
+		delete it;
+	}
+	mSubRenderTargets.clear();
+}
+
+void Texture::destroyAllSubShaderResources() {
+	for (const auto& it : mSubShaderResources) {
+		delete it;
+	}
+	mSubShaderResources.clear();
+}
+
 void Texture::destroyD3dObjects() {
 	//if (!mIsValid) return;
 	if (mD3dDepthStencilTargetView) {
