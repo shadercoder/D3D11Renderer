@@ -41,14 +41,14 @@ struct PsOut {
 float3 filter(float2 uv, float3 right, float3 up, float3 forward) {
 	float3 col = float3(0, 0, 0);
 	float3 dir = normalize(forward + uv.x * right + uv.y * up);
-	const float NUM_SAMPLES = 128.0;
+	const float NUM_SAMPLES = 512.0;
 	for (float i = 0; i < NUM_SAMPLES; ++i) {
 		float3 offset = hemisphereSample_uniform(hammersley2d(i, NUM_SAMPLES));
 		offset = normalize(offset);
 		if (dot(offset, dir) < 0) {
 			offset = -offset;
 		}
-		float3 sampDir = lerp(dir, offset, pow(Roughness, 2) * 0.7);
+		float3 sampDir = lerp(dir, offset, pow(Roughness, 3) * 0.7);
 		sampDir = normalize(sampDir);
 		col += CubeMapInput.Sample(SamplerLinear, sampDir).rgb;
 	}

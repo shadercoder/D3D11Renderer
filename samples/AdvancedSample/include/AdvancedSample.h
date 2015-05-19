@@ -17,7 +17,7 @@ public:
 
 private:
 	void filterCubeMap();
-	void filterFrame();
+	void filterReflectionBuffer();
 	Clair::Texture* createGBufferTarget(
 		Clair::Texture::Format format,
 		Clair::Texture::Type type) const;
@@ -39,15 +39,19 @@ private:
 	Clair::MaterialInstance* mCompositeMat {nullptr};
 	class Cb_materials_advanced_composite_Ps* mCompositeCBuffer {nullptr};
 
-	Clair::Texture* mAfterDeferredTex {nullptr};
-	Clair::RenderTargetGroup* mAfterDeferred {nullptr};
-	Clair::Texture* mPreviousFrameTex {nullptr};
-	Clair::RenderTargetGroup* mPreviousFrame {nullptr};
-	Clair::MaterialInstance* mFilterFrameMatInstance {nullptr};
+	Clair::Texture* mReflectionTex {nullptr};
+	Clair::RenderTargetGroup* mReflectionBuffer {nullptr};
+	Clair::Texture* mSavedFrameTex {nullptr};
+	Clair::RenderTargetGroup* mSavedFrameBuffer {nullptr};
+	Clair::MaterialInstance* mReflectionMatInstance {nullptr};
+	Clair::MaterialInstance* mFilterReflectionMatInstance {nullptr};
 	Clair::MaterialInstance* mDrawTextureMatInstance {nullptr};
+	class Cb_materials_advanced_ssr_Ps* mReflectionCbuffer {nullptr};
 
 	float mFoV {80.0f};
 	float mGlossiness {1.0f};
 	float mMetalness {1.0f};
 	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
+
+	bool mSSREnabled {true};
 };
