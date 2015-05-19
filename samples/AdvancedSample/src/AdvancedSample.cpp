@@ -398,15 +398,12 @@ void AdvancedSample::render() {
 	Clair::Renderer::setRenderTargetGroup(mSavedFrameBuffer);
 	mCompositeCBuffer->InverseView = value_ptr(inverse(viewMat));
 	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
-	mCompositeCBuffer->Proj = value_ptr(mProjectionMat);
 	mCompositeCBuffer->SSREnabled = mSSREnabled;
 	Clair::Renderer::renderScreenQuad(mCompositeMat);
 
 	// Filter frame for next frame's reflections; post process
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
-	//mDrawTextureMatInstance->setShaderResource(
-	//	0, mReflectionTex->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
 }

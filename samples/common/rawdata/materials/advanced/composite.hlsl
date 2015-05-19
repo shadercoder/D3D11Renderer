@@ -35,7 +35,6 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	matrix InverseView;
 	matrix InverseProj;
-	matrix Proj;
 	bool SSREnabled;
 };
 

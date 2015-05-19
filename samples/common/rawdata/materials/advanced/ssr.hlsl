@@ -48,54 +48,41 @@ float rand(float2 uv){
 float2 rayTraceGetUv(float3 v) {
 	float4 uv = mul(Proj, float4(v, 1.0));
 	uv.xy /= uv.w;
-	return uv.xy *float2(1,-1)* 0.5 + 0.5;
+	return uv.xy *float2(1,1)* 0.5 + 0.5;
 }
 
 float4 getReflectionColor(float3 rayO, float3 rayD) {
 	float3 col = float4(0,0,0,0);
-	float delta = 0.4 + 0.4 * rand(rayO.xy);// * lerp(0.5, 1.0, rand(rayO.xy)) * length(rayO);
+	float delta = 0.4;// + 0.4 * rand(rayO.xy);
 	float3 pos = rayO;
 	float2 hitUv = float2(0,0);
-	float3 prevPos;
-	float lastSceneZ;
-	float lastPosZ;
 	bool hit = false;
 	float t = 0.0;
-	float prevT = 0.0;
 	for (float i = 0; i < 32; ++i) {
-		prevT = t;
+		pos = rayO + rayD * t;
 		t += delta;
-		pos = rayO + rayD * (t + delta * 0.5);
 		float2 uv = rayTraceGetUv(pos);
-		if (uv.x >= 1.0 || uv.x <= 0.0 ||
-			uv.y >= 1.0 || uv.y <= 0.0) {
+		if (uv.x > 1.0 || uv.x < 0.0 ||
+			uv.y > 1.0 || uv.y < 0.0) {
 			break;
 		}
 		float depth = RT0.Sample(samplerLinear, uv).r;
+		return float4(uv, 0, 1);
 		float3 scenePos = reconstructPos(uv, depth);
+		//return float4(scenePos, 1);
 		if (pos.z >= scenePos.z) {//&& pos.z <= scenePos.z + 2.0) {
-			lastSceneZ = scenePos.z;
-			lastPosZ = pos.z;
 			hit = true;
 			hitUv = uv;
-			t = prevT;
-			delta *= 0.5;
+			break;
 		}
 	}
 	float a = 0;
-	if (hit && lastPosZ < lastSceneZ + 0.1) {
-		//mip = max(0, mip - float(NUM_ROUGHNESS_MIPS) * (1.0 - t / 5.0));
+	if (hit){// && lastPosZ < lastSceneZ + 0.1) {
 		float3 rayCol = PreviousFrame.SampleLevel(
 			samplerLinear, hitUv, 0).rgb;
 		col = rayCol;
-		//rayCol = pow(rayCol, 2.2);
-		//float fade = 0.0;//t * 0.1;// * (1.0 - glossiness);//length(float2(0.5,0.5) - hitUv) * 2.0 * (4.0 - glossiness * 4.0);
-		//col = lerp(rayCol, col, saturate(fade));
 		a = 1;
 	}
-	//float l = length(float2(0.5,0.5) - rayTraceGetUv(rayO));
-	//col = lerp(col, reflCol, saturate(l));
-	//col = float3(rayTraceGetUv(rayO), 0.0);//col.z);
 	return float4(col, a);
 }
 
