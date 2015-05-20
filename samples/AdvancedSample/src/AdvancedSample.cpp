@@ -70,7 +70,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
 	// Creating cube map from HDR image
-	auto hdrSkyTexData = Loader::loadHDRImageData("textures/pisa.hdr");
+	auto hdrSkyTexData = Loader::loadHDRImageData("textures/stadium.hdr");
 	auto hdrSkyTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options hdrTexOptions {};
 	hdrTexOptions.width = hdrSkyTexData.width;
@@ -357,6 +357,8 @@ void AdvancedSample::onResize() {
 	mReflectionTex->resize(getWidth(), getHeight());
 }
 
+float gTweak = 0.5f;
+
 void AdvancedSample::update() {
 	Camera::update(getDeltaTime());
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
@@ -365,6 +367,7 @@ void AdvancedSample::update() {
 	
 	ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
+	ImGui::SliderFloat("Tweak", &gTweak, 0.0f, 1.0f);
 	ImGui::Checkbox("Screen-space reflections", &mSSREnabled);
 	mTweakableCbuf->Glossiness = mGlossiness;
 	mTweakableCbuf->Metalness = mMetalness;
@@ -390,6 +393,7 @@ void AdvancedSample::render() {
 		mReflectionCbuffer->InverseView = value_ptr(inverse(viewMat));
 		mReflectionCbuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 		mReflectionCbuffer->Proj = value_ptr(mProjectionMat);
+		mReflectionCbuffer->Tweak = gTweak;
 		Clair::Renderer::renderScreenQuad(mReflectionMatInstance);
 		filterReflectionBuffer();
 	}
@@ -404,6 +408,8 @@ void AdvancedSample::render() {
 	// Filter frame for next frame's reflections; post process
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
+	//mDrawTextureMatInstance->setShaderResource(
+	//	0, mReflectionTex->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
 }

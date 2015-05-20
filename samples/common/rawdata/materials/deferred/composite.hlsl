@@ -98,7 +98,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 				col = linearizeDepth(getGbuf(RT0, uv).r);
 			} else if (psIn.Uvs.x < 2.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio, 0.0)) / ratio;
-				col = reconstructPos(uv, getGbuf(RT0, uv).r) / 5.0;
+				col = reconstructPos(uv, getGbuf(RT0, uv).r) / 2.0;
 			} else if (psIn.Uvs.x < 3.0 * ratio) {
 				float2 uv = (psIn.Uvs - float2(ratio * 2.0, 0.0)) / ratio;
 				col = getGbuf(RT2, uv).rgb;

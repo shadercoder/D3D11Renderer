@@ -53,5 +53,5 @@ private:
 	float mMetalness {1.0f};
 	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
 
-	bool mSSREnabled {false};
+	bool mSSREnabled {true};
 };
