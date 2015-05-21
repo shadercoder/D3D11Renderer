@@ -62,64 +62,69 @@ float linearizeDepth(float d) {
 	return (2 * n) / (f + n - d * (f - n));
 }
 
-float4 getReflectionColor(float3 rayO, float3 rayD) {
-	float3 col = float3(0,0,0);
-	float2 startUv = rayTraceGetUv(rayO);
-	float2 endUv = rayTraceGetUv(rayO + rayD);
-	float startDepth = linearizeDepth(textureSample(RT0, startUv).r);
+float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
+	float4 col = float4(0,0,0,0);
+	float4 startPos4D = mul(Proj, float4(rayO, 1));
 	float4 endPos4D = mul(Proj, float4(rayO + rayD, 1));
-	endPos4D.xyz /= endPos4D.w;
-	float endDepth = linearizeDepth(endPos4D.z);
-	float3 start = float3(startUv, startDepth);
-	float3 end = float3(endUv, endDepth);
-	//return float4(float3(1,1,1) * endDepth, 1);
-	//return float4(end - start, 1);
-	
-	//return float4(float3(1,1,1) * startDepth, 1);
-	//return float4(end.xy,0, 1);
-	float delta = 1 / length(endUv - startUv);
-	float3 pos = start;
+
+	float delta = 0.2 + 0.02 * rand(startPos4D.xy);
+	float4 pos4D = startPos4D;
 	float2 hitUv = float2(0,0);
 	bool hit = false;
-	float t = 0.0;
-	for (float i = 0; i < 32; ++i) {
-		t += delta * 0.01;
-		pos = start + (end - start) * t;
-		//pos = start;
-		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || start.y > 1.0) break;
+	float t = 0 + delta * 0.01;
+	float prevT = t;
+	for (float i = 0; i < 40; ++i) {
+		prevT = t;
+		t += delta;
+		pos4D = startPos4D + (endPos4D - startPos4D) * t;
+		float3 pos = pos4D.xyz / pos4D.w;
+		pos.xy = pos.xy * .5 + .5;
+		pos.z = linearizeDepth(pos.z);
+		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
 		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-		//if (rayO.x < 0) {
-		//	//return float4(float3(1,1,1) * sceneZ, 1);
-		//	//return float4(pos.xy,0, 1);
-		//	return float4(float3(1,1,1) * start.z, 1);
-		//} else {
-		//	return float4(float3(1,1,1) * pos.z, 1);
-		//}
-		//return float4(PreviousFrame.Sample(samplerLinear, float2(pos.x, 1 - pos.y)).rgb, 1);
-		if (pos.z > sceneZ && pos.z <= sceneZ + 0.01) {
+		if (pos.z >= sceneZ && pos.z <= sceneZ + 0.01) {
 			hit = true;
 			hitUv = pos.xy;
 			break;
 		}
 	}
-	float a = 0;
 	if (hit) {
-		float3 rayCol = PreviousFrame.SampleLevel(
-			samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
-		col = rayCol;
-		a = 1;
+		hit = false;
+		t = prevT;
+		delta *= 0.05;
+		for (float i = 0; i < 40; ++i) {
+			t += delta;
+			pos4D = startPos4D + (endPos4D - startPos4D) * t;
+			float3 pos = pos4D.xyz / pos4D.w;
+			pos.xy = pos.xy * .5 + .5;
+			pos.z = linearizeDepth(pos.z);
+			if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
+			float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
+			if (pos.z >= sceneZ && pos.z <= sceneZ + 0.01) {
+				hit = true;
+				hitUv = pos.xy;
+				break;
+			}
+		}
+		if (hit) {
+			float3 rayCol = PreviousFrame.SampleLevel(
+				samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
+			col = float4(rayCol, 1);
+		}
 	}
-	return float4(col, a);
+	return col;
 }
 
 float4 psMain(PsIn psIn) : SV_TARGET {
+	float2 uv = psIn.Uvs;
+	//psIn.Uvs = float2(.5,.5);
 	float depth = textureSample(RT0, psIn.Uvs).r;
 	float3 position = reconstructPos(psIn.Uvs, depth);
 	float3 normal = unpackNormal(textureSample(RT1, psIn.Uvs).rg).rgb;
 
 	float3 V = normalize(-position);
 	float3 refl = reflect(-V, normal);
-	float4 reflCol = getReflectionColor(position, refl);
+	float4 reflCol = getReflectionColor(position, refl, uv);
 	float4 col = pow(reflCol, 1.0 / 2.2);
 	//float2 testUv = rayTraceGetUv(reconstructPos(psIn.Uvs, depth));
 	//if (psIn.Uvs.y > 0.0)
