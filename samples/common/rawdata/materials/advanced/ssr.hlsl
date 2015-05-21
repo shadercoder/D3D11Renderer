@@ -67,50 +67,56 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 	float4 startPos4D = mul(Proj, float4(rayO, 1));
 	float4 endPos4D = mul(Proj, float4(rayO + rayD, 1));
 
-	float delta = 0.2 + 0.02 * rand(startPos4D.xy);
 	float4 pos4D = startPos4D;
+	float3 pos = pos4D.xyz / pos4D.w;
+	float delta = 1;
 	float2 hitUv = float2(0,0);
 	bool hit = false;
-	float t = 0 + delta * 0.01;
-	float prevT = t;
-	for (float i = 0; i < 40; ++i) {
-		prevT = t;
+	float t = 0.01;
+	for (float i = 0; i < 32; ++i) {
 		t += delta;
 		pos4D = startPos4D + (endPos4D - startPos4D) * t;
-		float3 pos = pos4D.xyz / pos4D.w;
+		pos = pos4D.xyz / pos4D.w;
 		pos.xy = pos.xy * .5 + .5;
 		pos.z = linearizeDepth(pos.z);
 		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
 		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-		if (pos.z >= sceneZ && pos.z <= sceneZ + 0.01) {
-			hit = true;
-			hitUv = pos.xy;
+		if (pos.z > sceneZ) {
+			if (pos.z <= sceneZ + 0.02) {
+				hit = true;
+				hitUv = pos.xy;
+			}
 			break;
 		}
 	}
 	if (hit) {
 		hit = false;
-		t = prevT;
-		delta *= 0.05;
-		for (float i = 0; i < 40; ++i) {
+		t -= delta;
+		delta *= 0.1;
+		for (float i2 = 0; i2 < 10; ++i2) {
 			t += delta;
 			pos4D = startPos4D + (endPos4D - startPos4D) * t;
-			float3 pos = pos4D.xyz / pos4D.w;
+			pos = pos4D.xyz / pos4D.w;
 			pos.xy = pos.xy * .5 + .5;
 			pos.z = linearizeDepth(pos.z);
 			if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
 			float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-			if (pos.z >= sceneZ && pos.z <= sceneZ + 0.01) {
-				hit = true;
-				hitUv = pos.xy;
+			if (pos.z > sceneZ) {
+				if (pos.z <= sceneZ + 0.01) {
+					hit = true;
+					hitUv = pos.xy;
+				}
 				break;
 			}
 		}
-		if (hit) {
-			float3 rayCol = PreviousFrame.SampleLevel(
-				samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
-			col = float4(rayCol, 1);
-		}
+	}
+	if (hit) {
+		float3 rayCol = PreviousFrame.SampleLevel(
+			samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
+		//float3 rayCol = linearizeDepth(RT0.SampleLevel(
+		//	samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).r);//gb;
+		float fade = -1.5 + 5.0 * length(float2(.5, .5) - pos.xy);
+		col = float4(rayCol, saturate(1.0 - fade));
 	}
 	return col;
 }

@@ -6,7 +6,7 @@
 /materials/advanced/sampling.h|0|0
 /materials/advanced/geometry.hlsl|30445576|3169818749|1
 /materials/advanced/packNormal.h|0|0
-/materials/advanced/ssr.hlsl|30446532|2909438426|1
+/materials/advanced/ssr.hlsl|30446589|2831485528|1
 /materials/advanced/../packNormal.h|30445557|1409612684
 /materials/basic.hlsl|30442699|4020432316
 /materials/bloomSimple.hlsl|30444572|2462942713
@@ -18,8 +18,8 @@
 /materials/filterCube.hlsl|30446160|2488805454|1
 /materials/sampling.h|30445343|2631755450
 /materials/ibl/composite.hlsl|30445729|1866969375|2
-/materials/ibl/../packNormal.h|30445557|1409612684
-/materials/ibl/../numRoughnessMips.h|30446159|3136598824
+/materials/ibl/packNormal.h|0|0
+/materials/ibl/numRoughnessMips.h|0|0
 /materials/ibl/geometry.hlsl|30445576|3169818749|1
 /materials/ibl/packNormal.h|0|0
 /materials/panoramaToCube.hlsl|30445167|1781923374

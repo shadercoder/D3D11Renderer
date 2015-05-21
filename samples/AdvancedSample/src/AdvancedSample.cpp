@@ -70,7 +70,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
 	// Creating cube map from HDR image
-	auto hdrSkyTexData = Loader::loadHDRImageData("textures/stadium.hdr");
+	auto hdrSkyTexData = Loader::loadHDRImageData("textures/pisa.hdr");
 	auto hdrSkyTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options hdrTexOptions {};
 	hdrTexOptions.width = hdrSkyTexData.width;
@@ -250,7 +250,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	planeMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
 	auto planeCbuf =
 		planeMatInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
-	planeCbuf->Albedo = {1.0f, 1.0f, 1.0f};
+	planeCbuf->Albedo = {1.0f, 0.0f, 0.0f};
 	planeCbuf->Emissive = 0.0f;
 	planeCbuf->Glossiness = 0.5f;
 	planeCbuf->Metalness = 1.0f;
