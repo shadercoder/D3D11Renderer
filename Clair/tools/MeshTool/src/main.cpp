@@ -39,7 +39,8 @@ int main(int argc, char* argv[]) {
 int convertMesh(const std::string& inFile, const std::string& outFile) {
 	Importer importer;
 	const aiScene* const scene = importer.ReadFile(inFile,
-												   aiProcess_Triangulate);
+												   aiProcess_Triangulate |
+												   aiProcess_CalcTangentSpace);
 	if (!scene) {
 		if (!gSilentMode) {
 			std::cout << "Couldn't load " << inFile << std::endl;
@@ -67,6 +68,19 @@ int convertMesh(const std::string& inFile, const std::string& outFile) {
 								Clair::VertexAttribute::Format::FLOAT3});
 		stride += sizeof(float) * 3;
 	}
+	if (mesh.HasTextureCoords(0)) {
+		vertexLayout.push_back({"TEXCOORDS",
+								Clair::VertexAttribute::Format::FLOAT2});
+		stride += sizeof(float) * 2;
+		if (mesh.HasTangentsAndBitangents()) {
+			vertexLayout.push_back({"TANGENT",
+									Clair::VertexAttribute::Format::FLOAT3});
+			stride += sizeof(float) * 3;
+			vertexLayout.push_back({"BITANGENT",
+									Clair::VertexAttribute::Format::FLOAT3});
+			stride += sizeof(float) * 3;
+		}
+	}
 	Clair::Serialization::writeVertexLayoutToFile(file, vertexLayout);
 	fwrite(&stride, sizeof(unsigned), 1, file);
 
@@ -83,6 +97,28 @@ int convertMesh(const std::string& inFile, const std::string& outFile) {
 					   mesh.mNormals[j].z };
 		if (gBlenderObjMode) n[2] = -n[2];
 		fwrite(n, sizeof(float), 3, file);
+		if (mesh.HasTextureCoords(0)) {
+			float uv0[2] = { mesh.mTextureCoords[0][j].x,
+							 mesh.mTextureCoords[0][j].y };
+			fwrite(uv0, sizeof(float), 2, file);
+			if (mesh.HasTangentsAndBitangents()) {
+				float t[3] = { mesh.mTangents[j].x,
+							   mesh.mTangents[j].y,
+							   mesh.mTangents[j].z };
+				if (gBlenderObjMode) t[2] = -t[2];
+				fwrite(t, sizeof(float), 3, file);
+				float b[3] = { mesh.mBitangents[j].x,
+							   mesh.mBitangents[j].y,
+							   mesh.mBitangents[j].z };
+				if (gBlenderObjMode) b[2] = -b[2];
+				fwrite(b, sizeof(float), 3, file);
+			}
+		}
+		//if (mesh.HasTextureCoords(1)) {
+		//	float uv1[2] = { mesh.mTextureCoords[1][j].x,
+		//					 mesh.mTextureCoords[1][j].y };
+		//	fwrite(uv1, sizeof(float), 2, file);
+		//}
 	}
 	const unsigned numIndices = mesh.mNumFaces * 3;
 	fwrite(&numIndices, sizeof(unsigned), 1, file);

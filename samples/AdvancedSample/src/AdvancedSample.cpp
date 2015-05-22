@@ -12,6 +12,7 @@
 #include "../../data/materials/filterCube.h"
 #include "../../rawdata/materials/numRoughnessMips.h"
 #include "../../data/materials/advanced/geometry.h"
+#include "../../data/materials/advanced/geometryTextured.h"
 #include "../../data/materials/advanced/composite.h"
 #include "../../data/materials/advanced/filterFrame.h"
 #include "../../data/materials/advanced/ssr.h"
@@ -174,22 +175,45 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mSkyConstBuffer =
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbrSky_Ps>();
 
-	// Materials
+	// Models
 	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
 	auto sphereMesh = Clair::ResourceManager::createMesh();
 	sphereMesh->initialize(sphereMeshData.get());
 	
-	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
-	auto bunnyMesh = Clair::ResourceManager::createMesh();
-	bunnyMesh->initialize(bunnyMeshData.get());
+	auto bunnyMeshData = Loader::loadBinaryData("models/cerberus.cmod");
+	auto gunMesh = Clair::ResourceManager::createMesh();
+	gunMesh->initialize(bunnyMeshData.get());
 
 	auto planeMeshData = Loader::loadBinaryData("models/plane.cmod");
 	auto planeMesh = Clair::ResourceManager::createMesh();
 	planeMesh->initialize(planeMeshData.get());
 
+	// Materials
 	auto matData = Loader::loadBinaryData("materials/advanced/geometry.cmat");
 	auto material = Clair::ResourceManager::createMaterial();
 	material->initialize(matData.get());
+	auto gunMatData =
+		Loader::loadBinaryData("materials/advanced/geometryTextured.cmat");
+	auto gunMat = Clair::ResourceManager::createMaterial();
+	gunMat->initialize(gunMatData.get());
+
+	// Cerberus gun model
+	auto gunAlbedoMetalData = Loader::loadImageData("textures/cerberus_a_m.png");
+	auto gunAMTex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options gunAMTexOptions {};
+	gunAMTexOptions.width = gunAlbedoMetalData.width;
+	gunAMTexOptions.height = gunAlbedoMetalData.height;
+	gunAMTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
+	gunAMTexOptions.initialData = gunAlbedoMetalData.data;
+	gunAMTex->initialize(gunAMTexOptions);
+	auto gunNormalGlossData = Loader::loadImageData("textures/cerberus_n_g.png");
+	auto gunNGTex = Clair::ResourceManager::createTexture();
+	Clair::Texture::Options gunNGTexOptions {};
+	gunNGTexOptions.width = gunNormalGlossData.width;
+	gunNGTexOptions.height = gunNormalGlossData.height;
+	gunNGTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
+	gunNGTexOptions.initialData = gunNormalGlossData.data;
+	gunNGTex->initialize(gunNGTexOptions);
 
 	// Deferred composite material
 	auto compTexData =
@@ -230,18 +254,16 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		cbuf->Glossiness = 1.0f - fi;
 		cbuf->Metalness = 1.0f;
 	}
-	Clair::Object* const bunny = mScene->createObject();
-	bunny->setMesh(bunnyMesh);
-	bunny->setMatrix(value_ptr(
-		translate(vec3{1.1f, -5.05f, -5.0f}) * scale(vec3{1.0f} * 2.0f)));
-	auto bunnyMatInst = bunny->setMaterial(CLAIR_RENDER_PASS(0), material);
-	bunnyMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
+	Clair::Object* const gun = mScene->createObject();
+	gun->setMesh(gunMesh);
+	gun->setMatrix(value_ptr(
+		translate(vec3{1.1f, -5.05f, -5.0f}) * scale(vec3{1.0f} * 4.0f)));
+	auto gunMatInst = gun->setMaterial(CLAIR_RENDER_PASS(0), gunMat);
+	gunMatInst->setShaderResource(0, gunAMTex->getShaderResource());
+	gunMatInst->setShaderResource(1, gunNGTex->getShaderResource());
 	auto cbuf =
-		bunnyMatInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
-	cbuf->Albedo = {1.0f, 1.0f, 0.0f};
+		gunMatInst->getConstantBufferPs<Cb_materials_advanced_geometryTextured_Ps>();
 	cbuf->Emissive = 0.0f;
-	cbuf->Glossiness = 0.5f;
-	cbuf->Metalness = 1.0f;
 	Clair::Object* const plane = mScene->createObject();
 	plane->setMesh(planeMesh);
 	plane->setMatrix(value_ptr(
