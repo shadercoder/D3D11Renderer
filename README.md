@@ -13,3 +13,30 @@ Draws a mesh with a simple animated material. | Uses features such as RTT, MRT a
 :--|:--
 Uses an HDR image to create a pre-filtered cube map to do image-based lighting with. | Combines techniques from all previous samples and adds some extra effects such as SSR.
 <a href="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/IBLSample"><img src="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/IBLSample/screenshot.png" width="100%" height="auto"></a> | <a href="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/AdvancedSample"><img src="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/AdvancedSample/screenshot.png" width="100%" height="auto"></a>
+
+###Credits
+####Libraries
+- [Assimp](http://assimp.sourceforge.net/)
+
+- [GLM](https://github.com/g-truc/glm)
+
+- [SDL2](https://www.libsdl.org/index.php)
+
+- [stb_image.h](https://github.com/nothings/stb)
+
+- [ImGui](https://github.com/ocornut/imgui)
+
+####Assets
+Models/textures:
+
+- ["Stanford Bunny"](http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj)
+
+- ["Cerberus" - Andrew Maximov](http://artisaverb.info/Cerberus.html)
+
+- ["Pbr Textured Steampunkisch Blade" - dutchallians](https://sketchfab.com/models/783be5c1643c4f439eb5ae8112f083d7#)
+
+HDR probes:
+
+- http://www.hdrlabs.com/sibl/archive.html
+
+- http://gl.ict.usc.edu/Data/HighResProbes

@@ -10,8 +10,8 @@
 
 using namespace Assimp;
 
-static std::string gInFileName {"../../../samples/common/rawdata/materials/default.hlsl"};
-static std::string gOutFileName {"../../../samples/common/data/test/bla.cmat"};
+static std::string gInFileName {"../../../samples/common/rawdata/models/sword.obj"};
+static std::string gOutFileName {"../../../samples/common/data/models/sword.cmod"};
 static bool gSilentMode {false};
 static bool gBlenderObjMode {false};
 
