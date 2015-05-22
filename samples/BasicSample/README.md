@@ -3,7 +3,9 @@
 ![](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/BasicSample/screenshot.png)
 
 ###Credits
-####Libraries
+####Code
+Libraries:
+
 - [Assimp](http://assimp.sourceforge.net/)
 
 - [GLM](https://github.com/g-truc/glm)

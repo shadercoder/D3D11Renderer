@@ -15,7 +15,9 @@ Uses an HDR image to create a pre-filtered cube map to do image-based lighting w
 <a href="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/IBLSample"><img src="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/IBLSample/screenshot.png" width="100%" height="auto"></a> | <a href="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/AdvancedSample"><img src="https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/AdvancedSample/screenshot.png" width="100%" height="auto"></a>
 
 ###Credits
-####Libraries
+####Code
+Libraries:
+
 - [Assimp](http://assimp.sourceforge.net/)
 
 - [GLM](https://github.com/g-truc/glm)
