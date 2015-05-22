@@ -71,7 +71,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
 	// Creating cube map from HDR image
-	auto hdrSkyTexData = Loader::loadHDRImageData("textures/pisa.hdr");
+	auto hdrSkyTexData = Loader::loadHDRImageData("textures/bridge.hdr");
 	auto hdrSkyTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options hdrTexOptions {};
 	hdrTexOptions.width = hdrSkyTexData.width;
@@ -176,13 +176,9 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbrSky_Ps>();
 
 	// Models
-	auto sphereMeshData = Loader::loadBinaryData("models/sphere.cmod");
-	auto sphereMesh = Clair::ResourceManager::createMesh();
-	sphereMesh->initialize(sphereMeshData.get());
-	
-	auto bunnyMeshData = Loader::loadBinaryData("models/cerberus.cmod");
+	auto gunMeshData = Loader::loadBinaryData("models/cerberus.cmod");
 	auto gunMesh = Clair::ResourceManager::createMesh();
-	gunMesh->initialize(bunnyMeshData.get());
+	gunMesh->initialize(gunMeshData.get());
 
 	auto planeMeshData = Loader::loadBinaryData("models/plane.cmod");
 	auto planeMesh = Clair::ResourceManager::createMesh();
@@ -238,26 +234,12 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		getConstantBufferPs<Cb_materials_advanced_composite_Ps>();
 
 	mScene = Clair::ResourceManager::createScene();
-	const int size = 10;
-	const float fsize = static_cast<float>(size);
-	for (int i = 0; i < size; ++i) {
-		const float fi = static_cast<float>(i) / (fsize - 1);
-		Clair::Object* const obj = mScene->createObject();
-		obj->setMesh(sphereMesh);
-		obj->setMatrix(value_ptr(
-			translate(vec3{fi * fsize * 2.2f - fsize, 0, 0})));
-		auto matInst = obj->setMaterial(CLAIR_RENDER_PASS(0), material);
-		auto cbuf =
-			matInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
-		cbuf->Albedo = {1.0f, 1.0f, 1.0f};
-		cbuf->Emissive = 0.0f;
-		cbuf->Glossiness = 1.0f - fi;
-		cbuf->Metalness = 1.0f;
-	}
 	Clair::Object* const gun = mScene->createObject();
 	gun->setMesh(gunMesh);
 	gun->setMatrix(value_ptr(
-		translate(vec3{1.1f, -5.05f, -5.0f}) * scale(vec3{1.0f} * 4.0f)));
+		translate(vec3{1.1f, -3.05f, -5.0f}) *
+		rotate(pi<float>() / 2.0f, vec3(0,1,0)) *
+		scale(vec3{1.0f} * 10.0f)));
 	auto gunMatInst = gun->setMaterial(CLAIR_RENDER_PASS(0), gunMat);
 	gunMatInst->setShaderResource(0, gunAMTex->getShaderResource());
 	gunMatInst->setShaderResource(1, gunNGTex->getShaderResource());
@@ -272,11 +254,11 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	planeMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
 	auto planeCbuf =
 		planeMatInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
-	planeCbuf->Albedo = {1.0f, 0.0f, 0.0f};
+	planeCbuf->Albedo = {1.0f, 0.5f, 0.2f};
 	planeCbuf->Emissive = 0.0f;
 	planeCbuf->Glossiness = 0.5f;
 	planeCbuf->Metalness = 1.0f;
-	mTweakableCbuf = planeCbuf;
+	//mTweakableCbuf = planeCbuf;
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -387,12 +369,12 @@ void AdvancedSample::update() {
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
 	mSkyConstBuffer->CamForward = value_ptr(Camera::getForward());
 	
-	ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
-	ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
-	ImGui::SliderFloat("Tweak", &gTweak, 0.0f, 1.0f);
+	//ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
+	//ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
+	//ImGui::SliderFloat("Tweak", &gTweak, 0.0f, 1.0f);
 	ImGui::Checkbox("Screen-space reflections", &mSSREnabled);
-	mTweakableCbuf->Glossiness = mGlossiness;
-	mTweakableCbuf->Metalness = mMetalness;
+	//mTweakableCbuf->Glossiness = mGlossiness;
+	//mTweakableCbuf->Metalness = mMetalness;
 }
 
 void AdvancedSample::render() {

@@ -22,7 +22,8 @@ void Camera::initialize(const glm::vec3& position,
 }
 
 void Camera::update(const float deltaTime) {
-	const float speed {(Input::getKey(SDL_SCANCODE_LSHIFT) ? 20.0f : 5.0f) *
+	const float speed {2.0f *
+					   (Input::getKey(SDL_SCANCODE_LSHIFT) ? 4.0f : 1.0f) *
 					   deltaTime};
 	if (Input::getKey(SDL_SCANCODE_W)) msPosition += msForward * speed;
 	if (Input::getKey(SDL_SCANCODE_S)) msPosition -= msForward * speed;

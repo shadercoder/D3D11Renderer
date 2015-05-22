@@ -48,7 +48,7 @@ float3 filter(float2 uv, float3 right, float3 up, float3 forward) {
 		if (dot(offset, dir) < 0) {
 			offset = -offset;
 		}
-		float3 sampDir = lerp(dir, offset, pow(Roughness, 3) * 0.7);
+		float3 sampDir = lerp(dir, offset, pow(Roughness, 2) * 1.0);
 		sampDir = normalize(sampDir);
 		col += CubeMapInput.Sample(SamplerLinear, sampDir).rgb;
 	}

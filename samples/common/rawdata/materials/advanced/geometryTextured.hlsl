@@ -61,17 +61,14 @@ PsOut psMain(PsIn psIn) {
 
 	float3 albedo = pow(albedo_metal.rgb, 2.2);
 	float metal = pow(albedo_metal.a, 2.2);
-	float gloss = pow(normal_gloss.a, 2.2);
-	float3 normal = normalize(psIn.Normal);
-	normal = normal_gloss.rgb * 2 - 1;
+	float gloss = pow(normal_gloss.a, 2);
+	float3 texNormal = normal_gloss.rgb * 2 - 1;
+	texNormal.y *= -1;
 	float3 t = psIn.Tangent;
 	float3 b = psIn.Bitangent;
 	float3 n = psIn.Normal;
-	float3x3 tangentToView = float3x3(
-		t.x, b.x, n.x,
-		t.y, b.y, n.y,
-		t.z, b.z, n.z);
-	normal = normalize(mul(tangentToView, normal));
+	float3x3 tangentToView = float3x3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
+	float3 normal = normalize(mul(tangentToView, texNormal));
 	PsOut psOut;
 	psOut.RT1 = packNormal(normal);
 	psOut.RT2 = float4(albedo, Emissive);

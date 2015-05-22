@@ -91,6 +91,14 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	if (depth == 1.0) {
 		col = rt2.rgb;
 	}
+	//if (psIn.Uvs.y < -0.5) {
+	//	col *= 0.000001;
+	//	if (psIn.Uvs.x < .5) {
+	//		col += glossiness;
+	//	} else {
+	//		col += metalness;
+	//	}
+	//}
 	col = pow(col, 1.0 / 2.2);
 	return float4(col, 1.0);
 }

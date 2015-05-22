@@ -72,8 +72,8 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 	float delta = 1;
 	float2 hitUv = float2(0,0);
 	bool hit = false;
-	float t = 0.01;
-	for (float i = 0; i < 32; ++i) {
+	float t = 0;
+	for (float i = 0; i < 16; ++i) {
 		t += delta;
 		pos4D = startPos4D + (endPos4D - startPos4D) * t;
 		pos = pos4D.xyz / pos4D.w;
@@ -81,35 +81,35 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 		pos.z = linearizeDepth(pos.z);
 		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
 		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-		if (pos.z > sceneZ) {
-			if (pos.z <= sceneZ + 0.02) {
-				hit = true;
-				hitUv = pos.xy;
-			}
-			break;
+		if (pos.z > sceneZ && pos.z <= sceneZ + 0.02) {
+			hit = true;
+			hitUv = pos.xy;
+			t -= delta;
+			delta *= .5;
+			//break;
 		}
 	}
-	if (hit) {
-		hit = false;
-		t -= delta;
-		delta *= 0.1;
-		for (float i2 = 0; i2 < 10; ++i2) {
-			t += delta;
-			pos4D = startPos4D + (endPos4D - startPos4D) * t;
-			pos = pos4D.xyz / pos4D.w;
-			pos.xy = pos.xy * .5 + .5;
-			pos.z = linearizeDepth(pos.z);
-			if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
-			float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-			if (pos.z > sceneZ) {
-				if (pos.z <= sceneZ + 0.01) {
-					hit = true;
-					hitUv = pos.xy;
-				}
-				break;
-			}
-		}
-	}
+	//if (hit) {
+	//	hit = false;
+	//	t -= delta;
+	//	delta *= 0.1;
+	//	for (float i2 = 0; i2 < 10; ++i2) {
+	//		t += delta;
+	//		pos4D = startPos4D + (endPos4D - startPos4D) * t;
+	//		pos = pos4D.xyz / pos4D.w;
+	//		pos.xy = pos.xy * .5 + .5;
+	//		pos.z = linearizeDepth(pos.z);
+	//		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
+	//		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
+	//		if (pos.z > sceneZ) {
+	//			if (pos.z <= sceneZ + 0.01) {
+	//				hit = true;
+	//				hitUv = pos.xy;
+	//			}
+	//			break;
+	//		}
+	//	}
+	//}
 	if (hit) {
 		float3 rayCol = PreviousFrame.SampleLevel(
 			samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
