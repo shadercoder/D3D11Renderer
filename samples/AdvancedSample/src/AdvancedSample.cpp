@@ -35,7 +35,8 @@ using namespace glm;
 
 AdvancedSample::~AdvancedSample() {
 	delete mGBuffer;
-	delete mSavedFrameBuffer;
+	delete mPostProcessBuffer[0];
+	delete mPostProcessBuffer[1];
 }
 
 bool AdvancedSample::initialize(const HWND hwnd) {
@@ -120,17 +121,19 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		Cb_materials_filterCube_Ps>();
 	filterCubeMap();
 
-	// Saving frame so it can be reflected and filtered for SSR
-	mSavedFrameTex = Clair::ResourceManager::createTexture();
-	Clair::Texture::Options savedFrameTexOptions {};
-	savedFrameTexOptions.width = 960;
-	savedFrameTexOptions.height = 640;
-	savedFrameTexOptions.maxMipLevels = NUM_ROUGHNESS_MIPS;
-	savedFrameTexOptions.type = Clair::Texture::Type::RENDER_TARGET;
-	savedFrameTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
-	mSavedFrameTex->initialize(savedFrameTexOptions);
-	mSavedFrameBuffer = new Clair::RenderTargetGroup{1};
-	mSavedFrameBuffer->setRenderTarget(0, mSavedFrameTex->getRenderTarget());
+	// Post process textures
+	Clair::Texture::Options postProcTexOptions {};
+	postProcTexOptions.width = 960;
+	postProcTexOptions.height = 640;
+	postProcTexOptions.type = Clair::Texture::Type::RENDER_TARGET;
+	postProcTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
+	for (int i {0}; i < 2; ++i) {
+		mPostProcessTex[i] = Clair::ResourceManager::createTexture();
+		mPostProcessTex[i]->initialize(postProcTexOptions);
+		mPostProcessBuffer[i] = new Clair::RenderTargetGroup{1};
+		mPostProcessBuffer[i]->setRenderTarget(
+			0, mPostProcessTex[i]->getRenderTarget());
+	}
 
 	mReflectionTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options afterDefTexOptions {};
@@ -153,8 +156,6 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		0, RT0->getShaderResource());
 	mReflectionMatInstance->setShaderResource(
 		1, RT1->getShaderResource());
-	mReflectionMatInstance->setShaderResource(
-		2, mSavedFrameTex->getShaderResource());
 	mReflectionCbuffer = mReflectionMatInstance->
 		getConstantBufferPs<Cb_materials_advanced_ssr_Ps>();
 	auto filterReflectionMatData =
@@ -172,8 +173,6 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	drawTexMat->initialize(drawTexMatData.get());
 	mDrawTextureMatInstance = Clair::ResourceManager::createMaterialInstance();
 	mDrawTextureMatInstance->initialize(drawTexMat);
-	mDrawTextureMatInstance->setShaderResource(
-		0, mSavedFrameTex->getShaderResource());
 
 	// Material for drawing the sky
 	auto skyMatData = Loader::loadBinaryData("materials/pbrSky.cmat");
@@ -370,7 +369,8 @@ void AdvancedSample::onResize() {
 	RT1->resize(getWidth(), getHeight());
 	RT2->resize(getWidth(), getHeight());
 	RT3->resize(getWidth(), getHeight());
-	mSavedFrameTex->resize(getWidth(), getHeight());
+	mPostProcessTex[0]->resize(getWidth(), getHeight());
+	mPostProcessTex[1]->resize(getWidth(), getHeight());
 	mReflectionTex->resize(getWidth(), getHeight());
 }
 
@@ -405,7 +405,7 @@ void AdvancedSample::render() {
 	Clair::Renderer::render(mScene);
 
 	// Deferred composite pass; renders to buffer
-	Clair::Renderer::setRenderTargetGroup(mSavedFrameBuffer);
+	Clair::Renderer::setRenderTargetGroup(mPostProcessBuffer[0]);
 	mCompositeCBuffer->InverseView = value_ptr(inverse(viewMat));
 	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 	mCompositeCBuffer->SSREnabled = mSSREnabled;
@@ -418,15 +418,19 @@ void AdvancedSample::render() {
 		mReflectionCbuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 		mReflectionCbuffer->Proj = value_ptr(mProjectionMat);
 		mReflectionCbuffer->StepSize = gSsrStepSize;
+		mReflectionMatInstance->setShaderResource(
+			2, mPostProcessTex[0]->getShaderResource());
 		Clair::Renderer::renderScreenQuad(mReflectionMatInstance);
 		filterReflectionBuffer();
 	}
 
-	// Filter frame for next frame's reflections; post process
+	// Post process
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	//mDrawTextureMatInstance->setShaderResource(
 	//	0, mReflectionTex->getShaderResource());
+	mDrawTextureMatInstance->setShaderResource(
+		0, mPostProcessTex[0]->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
 

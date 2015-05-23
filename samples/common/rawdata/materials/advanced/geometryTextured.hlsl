@@ -1,4 +1,6 @@
 #include "../packNormal.h"
+#include "../numRoughnessMips.h"
+
 Texture2D Albedo_Metal : register(t0);
 Texture2D Normal_Gloss : register(t1);
 SamplerState SamplerLinear : register(s0);
@@ -61,7 +63,7 @@ PsOut psMain(PsIn psIn) {
 
 	float3 albedo = pow(albedo_metal.rgb, 2.2);
 	float metal = pow(albedo_metal.a, 2.2);
-	float gloss = pow(normal_gloss.a, 2);
+	float gloss = normal_gloss.a;
 	float3 texNormal = normal_gloss.rgb * 2 - 1;
 	texNormal.y *= -1;
 	float3 t = psIn.Tangent;
@@ -69,6 +71,18 @@ PsOut psMain(PsIn psIn) {
 	float3 n = psIn.Normal;
 	float3x3 tangentToView = float3x3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
 	float3 normal = normalize(mul(tangentToView, texNormal));
+
+	// Changing normal and gloss based on mip, this should be implemented using
+	// something like Toksvig describes in this paper:
+	// ftp://download.nvidia.com/developer/Papers/Mipmapping_Normal_Maps.pdf
+	// But because I didn't have time I quickly hardcoded an estimation to make
+	// the sample look a little smoother.
+	float texX, texY;
+	Albedo_Metal.GetDimensions(texX, texY);
+	float mip = log2(max(ddx(psIn.Uvs.x) * texX, ddy(psIn.Uvs.y) * texY));
+	normal = normalize(lerp(normal, n, saturate(mip / 20 - .5)));
+	gloss = lerp(gloss, 0, saturate(mip / 100));
+
 	PsOut psOut;
 	psOut.RT1 = packNormal(normal);
 	psOut.RT2 = float4(albedo, Emissive);

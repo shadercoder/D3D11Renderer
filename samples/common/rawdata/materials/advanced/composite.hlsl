@@ -100,5 +100,7 @@ float4 psMain(PsIn psIn) : SV_TARGET {
 	//	}
 	//}
 	col = pow(col, 1.0 / 2.2);
+	//float3 x = max(0, col - .004);
+	//col = (x * (6.2 * x + .5)) / (x * (6.2 * x + 1.7) + .06);
 	return float4(col, 1.0);
 }

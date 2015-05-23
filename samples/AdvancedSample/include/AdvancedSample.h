@@ -41,12 +41,12 @@ private:
 
 	Clair::Texture* mReflectionTex {nullptr};
 	Clair::RenderTargetGroup* mReflectionBuffer {nullptr};
-	Clair::Texture* mSavedFrameTex {nullptr};
-	Clair::RenderTargetGroup* mSavedFrameBuffer {nullptr};
 	Clair::MaterialInstance* mReflectionMatInstance {nullptr};
 	Clair::MaterialInstance* mFilterReflectionMatInstance {nullptr};
 	Clair::MaterialInstance* mDrawTextureMatInstance {nullptr};
 	class Cb_materials_advanced_ssr_Ps* mReflectionCbuffer {nullptr};
+	Clair::Texture* mPostProcessTex[2];
+	Clair::RenderTargetGroup* mPostProcessBuffer[2];
 
 	float mFoV {80.0f};
 	float mGlossiness {0.8f};
