@@ -46,6 +46,7 @@ void Texture::initialize(const Options& options) {
 	mNumMips =
 		maxPossibleMips(options.width, options.height, options.maxMipLevels);
 	auto const d3dDevice = D3dDevice::getD3dDevice();
+	auto const d3dDeviceContext = D3dDevice::getD3dDeviceContext();
 	D3D11_TEXTURE2D_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 	texDesc.Width = static_cast<UINT>(options.width);
@@ -75,6 +76,10 @@ void Texture::initialize(const Options& options) {
 		CLAIR_ASSERT(options.arraySize == 6,
 			"Cube map requires texture array size of 6");
 		texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+	}
+	if (options.generateMips) {
+		texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+		texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 	}
 
 	Byte*** texData = new Byte**[options.arraySize]();
@@ -174,6 +179,9 @@ void Texture::initialize(const Options& options) {
 		o.numMips = mNumMips;
 		mRenderTarget->terminate();
 		mRenderTarget->initialize(newRenderTargetView, o);
+	}
+	if (options.generateMips) {
+		d3dDeviceContext->GenerateMips(newShaderResView);
 	}
 }
 

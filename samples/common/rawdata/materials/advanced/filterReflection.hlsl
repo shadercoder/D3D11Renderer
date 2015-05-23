@@ -31,13 +31,13 @@ cbuffer Buf : register(b1) {
 
 float4 filter(float2 uv, float3 right, float3 up, float3 forward) {
 	float4 col = float4(0, 0, 0, 0);
-	const int NUM_SAMPLES = 128;
+	const int NUM_SAMPLES = 32;
 	float sampleCount = Roughness * 0.00000000001;
 	float4 ms = InputTexture.Sample(SamplerLinear, float2(uv.x, uv.y));
 	float4 midSample = float4(pow(ms.rgb, 2.2), ms.a);
 	for (int i = 0; i < NUM_SAMPLES; ++i) {
 		float2 offset = hammersley2d(i, NUM_SAMPLES) - 0.5;
-		float2 u = uv + offset * 1.0 * pow(Roughness, 3);
+		float2 u = uv + offset * 1.0 * pow(Roughness, 2);
 		u.x = saturate(u.x);
 		u.y = saturate(-u.y);
 		float4 c = InputTexture.Sample(SamplerLinear, float2(u.x, -u.y));

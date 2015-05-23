@@ -49,8 +49,8 @@ private:
 	class Cb_materials_advanced_ssr_Ps* mReflectionCbuffer {nullptr};
 
 	float mFoV {80.0f};
-	float mGlossiness {0.5f};
-	float mMetalness {0.5f};
+	float mGlossiness {0.8f};
+	float mMetalness {1.0f};
 	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
 
 	bool mSSREnabled {true};

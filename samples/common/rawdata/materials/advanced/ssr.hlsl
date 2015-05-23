@@ -32,7 +32,7 @@ cbuffer Buf : register(b1) {
 	matrix InverseView;
 	matrix InverseProj;
 	matrix Proj;
-	float Tweak;
+	float StepSize;
 };
 
 float4 textureSample(Texture2D tex, float2 uv) {
@@ -69,11 +69,11 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 
 	float4 pos4D = startPos4D;
 	float3 pos = pos4D.xyz / pos4D.w;
-	float delta = 1;
+	float delta = .4 + 0.1 * rand(rayO.xy);
 	float2 hitUv = float2(0,0);
 	bool hit = false;
 	float t = 0;
-	for (float i = 0; i < 16; ++i) {
+	for (float i = 0; i < 20; ++i) {
 		t += delta;
 		pos4D = startPos4D + (endPos4D - startPos4D) * t;
 		pos = pos4D.xyz / pos4D.w;
@@ -81,7 +81,7 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 		pos.z = linearizeDepth(pos.z);
 		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
 		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-		if (pos.z > sceneZ && pos.z <= sceneZ + 0.02) {
+		if (pos.z > sceneZ && pos.z <= sceneZ + 0.01 + delta / 40) {
 			hit = true;
 			hitUv = pos.xy;
 			t -= delta;
@@ -89,33 +89,11 @@ float4 getReflectionColor(float3 rayO, float3 rayD, float2 gUv) {
 			//break;
 		}
 	}
-	//if (hit) {
-	//	hit = false;
-	//	t -= delta;
-	//	delta *= 0.1;
-	//	for (float i2 = 0; i2 < 10; ++i2) {
-	//		t += delta;
-	//		pos4D = startPos4D + (endPos4D - startPos4D) * t;
-	//		pos = pos4D.xyz / pos4D.w;
-	//		pos.xy = pos.xy * .5 + .5;
-	//		pos.z = linearizeDepth(pos.z);
-	//		if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1.0) break;
-	//		float sceneZ = linearizeDepth(textureSample(RT0, pos.xy).r);
-	//		if (pos.z > sceneZ) {
-	//			if (pos.z <= sceneZ + 0.01) {
-	//				hit = true;
-	//				hitUv = pos.xy;
-	//			}
-	//			break;
-	//		}
-	//	}
-	//}
 	if (hit) {
 		float3 rayCol = PreviousFrame.SampleLevel(
 			samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).rgb;
-		//float3 rayCol = linearizeDepth(RT0.SampleLevel(
-		//	samplerLinear, float2(hitUv.x, 1 - hitUv.y), 0).r);//gb;
 		float fade = -1.5 + 5.0 * length(float2(.5, .5) - pos.xy);
+		//fade = max(fade, lerp(0, 1.0, t / (.4 * 32)));
 		col = float4(rayCol, saturate(1.0 - fade));
 	}
 	return col;

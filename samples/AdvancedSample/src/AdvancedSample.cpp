@@ -82,7 +82,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
 	// Creating cube map from HDR image
-	auto hdrSkyTexData = Loader::loadHDRImageData("textures/bridge.hdr");
+	auto hdrSkyTexData = Loader::loadHDRImageData("textures/mill.hdr");
 	auto hdrSkyTex = Clair::ResourceManager::createTexture();
 	Clair::Texture::Options hdrTexOptions {};
 	hdrTexOptions.width = hdrSkyTexData.width;
@@ -187,7 +187,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 		mSkyMaterialInstance->getConstantBufferPs<Cb_materials_pbrSky_Ps>();
 
 	// Models
-	auto gunMeshData = Loader::loadBinaryData("models/cerberus.cmod");
+	auto gunMeshData = Loader::loadBinaryData("models/cerberus2.cmod");
 	auto gunMesh = Clair::ResourceManager::createMesh();
 	gunMesh->initialize(gunMeshData.get());
 
@@ -212,6 +212,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	gunAMTexOptions.height = gunAlbedoMetalData.height;
 	gunAMTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
 	gunAMTexOptions.initialData = gunAlbedoMetalData.data;
+	gunAMTexOptions.generateMips = true;
 	gunAMTex->initialize(gunAMTexOptions);
 	auto gunNormalGlossData = Loader::loadImageData("textures/cerberus_n_g.png");
 	auto gunNGTex = Clair::ResourceManager::createTexture();
@@ -220,6 +221,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	gunNGTexOptions.height = gunNormalGlossData.height;
 	gunNGTexOptions.format = Clair::Texture::Format::R8G8B8A8_UNORM;
 	gunNGTexOptions.initialData = gunNormalGlossData.data;
+	gunNGTexOptions.generateMips = true;
 	gunNGTex->initialize(gunNGTexOptions);
 
 	// Deferred composite material
@@ -248,9 +250,9 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	Clair::Object* const gun = mScene->createObject();
 	gun->setMesh(gunMesh);
 	gun->setMatrix(value_ptr(
-		translate(vec3{1.1f, -3.05f, -5.0f}) *
+		translate(vec3{1.1f, -2.05f, -5.0f}) *
 		rotate(pi<float>() / 2.0f, vec3(0,1,0)) *
-		scale(vec3{1.0f} * 10.0f)));
+		scale(vec3{1.0f} * 6.0f)));
 	auto gunMatInst = gun->setMaterial(CLAIR_RENDER_PASS(0), gunMat);
 	gunMatInst->setShaderResource(0, gunAMTex->getShaderResource());
 	gunMatInst->setShaderResource(1, gunNGTex->getShaderResource());
@@ -269,7 +271,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	planeCbuf->Emissive = 0.0f;
 	planeCbuf->Glossiness = 0.5f;
 	planeCbuf->Metalness = 1.0f;
-	//mTweakableCbuf = planeCbuf;
+	mTweakableCbuf = planeCbuf;
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -372,7 +374,7 @@ void AdvancedSample::onResize() {
 	mReflectionTex->resize(getWidth(), getHeight());
 }
 
-float gTweak = 0.5f;
+float gSsrStepSize = 0.5f;
 
 void AdvancedSample::update() {
 	Camera::update(getDeltaTime());
@@ -380,12 +382,12 @@ void AdvancedSample::update() {
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
 	mSkyConstBuffer->CamForward = value_ptr(Camera::getForward());
 	
-	//ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
-	//ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
-	//ImGui::SliderFloat("Tweak", &gTweak, 0.0f, 1.0f);
+	ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
+	ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
+	ImGui::SliderFloat("SSR step size", &gSsrStepSize, 0.0f, 1.0f);
 	ImGui::Checkbox("Screen-space reflections", &mSSREnabled);
-	//mTweakableCbuf->Glossiness = mGlossiness;
-	//mTweakableCbuf->Metalness = mMetalness;
+	mTweakableCbuf->Glossiness = mGlossiness;
+	mTweakableCbuf->Metalness = mMetalness;
 }
 
 void AdvancedSample::render() {
@@ -402,23 +404,23 @@ void AdvancedSample::render() {
 	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
 
-	// Reflections
-	if (mSSREnabled) {
-		Clair::Renderer::setRenderTargetGroup(mReflectionBuffer);
-		mReflectionCbuffer->InverseView = value_ptr(inverse(viewMat));
-		mReflectionCbuffer->InverseProj = value_ptr(inverse(mProjectionMat));
-		mReflectionCbuffer->Proj = value_ptr(mProjectionMat);
-		mReflectionCbuffer->Tweak = gTweak;
-		Clair::Renderer::renderScreenQuad(mReflectionMatInstance);
-		filterReflectionBuffer();
-	}
-
 	// Deferred composite pass; renders to buffer
 	Clair::Renderer::setRenderTargetGroup(mSavedFrameBuffer);
 	mCompositeCBuffer->InverseView = value_ptr(inverse(viewMat));
 	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 	mCompositeCBuffer->SSREnabled = mSSREnabled;
 	Clair::Renderer::renderScreenQuad(mCompositeMat);
+
+	// Reflections
+	if (mSSREnabled) {
+		Clair::Renderer::setRenderTargetGroup(mReflectionBuffer);
+		mReflectionCbuffer->InverseView = value_ptr(inverse(viewMat));
+		mReflectionCbuffer->InverseProj = value_ptr(inverse(mProjectionMat));
+		mReflectionCbuffer->Proj = value_ptr(mProjectionMat);
+		mReflectionCbuffer->StepSize = gSsrStepSize;
+		Clair::Renderer::renderScreenQuad(mReflectionMatInstance);
+		filterReflectionBuffer();
+	}
 
 	// Filter frame for next frame's reflections; post process
 	Clair::Renderer::setRenderTargetGroup(nullptr);
@@ -427,4 +429,5 @@ void AdvancedSample::render() {
 	//	0, mReflectionTex->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
+
 }

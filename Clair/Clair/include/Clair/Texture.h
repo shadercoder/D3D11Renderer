@@ -43,6 +43,7 @@ namespace Clair {
 			bool isCubeMap {false};
 			size_t arraySize {1};
 			size_t maxMipLevels {1};
+			bool generateMips {false};
 		};
 
 		void initialize(const Options& options);
