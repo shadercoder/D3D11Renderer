@@ -17,6 +17,7 @@ public:
 
 private:
 	void filterCubeMap();
+	void loadAndSetNewCubeMap(const std::string& filename);
 	void filterReflectionBuffer();
 	Clair::Texture* createGBufferTarget(
 		Clair::Texture::Format format,
@@ -54,4 +55,6 @@ private:
 	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
 
 	bool mSSREnabled {true};
+	int mEnvironmentMap {0};
+	Clair::Texture* mHdrSkyTex {nullptr};
 };

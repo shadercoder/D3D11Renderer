@@ -32,7 +32,6 @@ cbuffer Buf : register(b1) {
 	matrix InverseView;
 	matrix InverseProj;
 	matrix Proj;
-	float StepSize;
 };
 
 float4 textureSample(Texture2D tex, float2 uv) {

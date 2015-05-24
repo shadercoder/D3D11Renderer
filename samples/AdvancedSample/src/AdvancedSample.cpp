@@ -33,6 +33,14 @@
 using namespace SampleFramework;
 using namespace glm;
 
+static const char* gHdrImageNames[] {
+	"mill",
+	"bridge",
+	"pisa",
+	"lake",
+	"stadium"
+};
+
 AdvancedSample::~AdvancedSample() {
 	delete mGBuffer;
 	delete mPostProcessBuffer[0];
@@ -82,34 +90,6 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
 	mGBuffer->setRenderTarget(2, RT3->getRenderTarget());
 
-	// Creating cube map from HDR image
-	auto hdrSkyTexData = Loader::loadHDRImageData("textures/mill.hdr");
-	auto hdrSkyTex = Clair::ResourceManager::createTexture();
-	Clair::Texture::Options hdrTexOptions {};
-	hdrTexOptions.width = hdrSkyTexData.width;
-	hdrTexOptions.height = hdrSkyTexData.height;
-	hdrTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
-	hdrTexOptions.initialData = hdrSkyTexData.data;
-	hdrSkyTex->initialize(hdrTexOptions);
-	auto panCubeData = Loader::loadBinaryData("materials/panoramaToCube.cmat");
-	auto panCubeMat = Clair::ResourceManager::createMaterial();
-	panCubeMat->initialize(panCubeData.get());
-	mPanoramaToCube = Clair::ResourceManager::createMaterialInstance();
-	mPanoramaToCube->initialize(panCubeMat);
-	mPanoramaToCube->setShaderResource(0, hdrSkyTex->getShaderResource());
-	auto renderTargets = Clair::RenderTargetGroup{6};
-	for (int i_face {0}; i_face < 6; ++i_face) {
-		Clair::SubTextureOptions o;
-		o.arrayStartIndex = i_face;
-		o.arraySize = 1;
-		auto outFace = mSkyTexture->createSubRenderTarget(o);
-		renderTargets.setRenderTarget(i_face, outFace);
-	}
-	Clair::Renderer::setViewport(0, 0, 512, 512);
-	Clair::Renderer::setRenderTargetGroup(&renderTargets);
-	Clair::Renderer::renderScreenQuad(mPanoramaToCube);
-	Clair::Renderer::setRenderTargetGroup(nullptr);
-
 	// Filtering the cube map
 	auto filterMatData = Loader::loadBinaryData("materials/filterCube.cmat");
 	auto filterMaterial = Clair::ResourceManager::createMaterial();
@@ -119,7 +99,16 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mFilterCubeMapMatInstance->initialize(filterMaterial);
 	mFilterCubeMapCBuffer = mFilterCubeMapMatInstance->getConstantBufferPs<
 		Cb_materials_filterCube_Ps>();
-	filterCubeMap();
+
+	// Creating cube map from HDR image
+	mHdrSkyTex = Clair::ResourceManager::createTexture();
+	auto panCubeData = Loader::loadBinaryData("materials/panoramaToCube.cmat");
+	auto panCubeMat = Clair::ResourceManager::createMaterial();
+	panCubeMat->initialize(panCubeData.get());
+	mPanoramaToCube = Clair::ResourceManager::createMaterialInstance();
+	mPanoramaToCube->initialize(panCubeMat);
+	mPanoramaToCube->setShaderResource(0, mHdrSkyTex->getShaderResource());
+	loadAndSetNewCubeMap("mill");
 
 	// Post process textures
 	Clair::Texture::Options postProcTexOptions {};
@@ -310,6 +299,31 @@ void AdvancedSample::filterCubeMap() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
+void AdvancedSample::loadAndSetNewCubeMap(const std::string& filename) {
+	auto hdrSkyTexData =
+		Loader::loadHDRImageData("textures/" + filename + ".hdr");
+	Clair::Texture::Options hdrTexOptions {};
+	hdrTexOptions.width = hdrSkyTexData.width;
+	hdrTexOptions.height = hdrSkyTexData.height;
+	hdrTexOptions.format = Clair::Texture::Format::R32G32B32A32_FLOAT;
+	hdrTexOptions.initialData = hdrSkyTexData.data;
+	mHdrSkyTex->initialize(hdrTexOptions);
+	auto renderTargets = Clair::RenderTargetGroup{6};
+	for (int i_face {0}; i_face < 6; ++i_face) {
+		Clair::SubTextureOptions o;
+		o.arrayStartIndex = i_face;
+		o.arraySize = 1;
+		auto outFace = mSkyTexture->createSubRenderTarget(o);
+		renderTargets.setRenderTarget(i_face, outFace);
+	}
+	Clair::Renderer::setViewport(0, 0, 512, 512);
+	Clair::Renderer::setRenderTargetGroup(&renderTargets);
+	Clair::Renderer::renderScreenQuad(mPanoramaToCube);
+	Clair::Renderer::setRenderTargetGroup(nullptr);
+
+	filterCubeMap();
+}
+
 void AdvancedSample::filterReflectionBuffer() {
 	int w, h;
 	mReflectionTex->getMipMapDimensions(1, &w, &h);
@@ -374,17 +388,17 @@ void AdvancedSample::onResize() {
 	mReflectionTex->resize(getWidth(), getHeight());
 }
 
-float gSsrStepSize = 0.5f;
-
 void AdvancedSample::update() {
 	Camera::update(getDeltaTime());
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
 	mSkyConstBuffer->CamForward = value_ptr(Camera::getForward());
 	
+	if (ImGui::Combo("Sky", &mEnvironmentMap, gHdrImageNames, 5)) {
+		loadAndSetNewCubeMap(gHdrImageNames[mEnvironmentMap]);
+	}
 	ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
-	ImGui::SliderFloat("SSR step size", &gSsrStepSize, 0.0f, 1.0f);
 	ImGui::Checkbox("Screen-space reflections", &mSSREnabled);
 	mTweakableCbuf->Glossiness = mGlossiness;
 	mTweakableCbuf->Metalness = mMetalness;
@@ -417,7 +431,6 @@ void AdvancedSample::render() {
 		mReflectionCbuffer->InverseView = value_ptr(inverse(viewMat));
 		mReflectionCbuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 		mReflectionCbuffer->Proj = value_ptr(mProjectionMat);
-		mReflectionCbuffer->StepSize = gSsrStepSize;
 		mReflectionMatInstance->setShaderResource(
 			2, mPostProcessTex[0]->getShaderResource());
 		Clair::Renderer::renderScreenQuad(mReflectionMatInstance);
