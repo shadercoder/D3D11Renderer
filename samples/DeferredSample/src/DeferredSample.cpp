@@ -16,6 +16,19 @@
 using namespace SampleFramework;
 using namespace glm;
 
+Clair::Texture* DeferredSample::createGBufferTarget(
+	Clair::Texture::Format format,
+	Clair::Texture::Type type) const {
+	Clair::Texture* tex {Clair::ResourceManager::createTexture()};
+	Clair::Texture::Options texOptions;
+	texOptions.width = 960;
+	texOptions.height = 640;
+	texOptions.format = format;
+	texOptions.type = type;
+	tex->initialize(texOptions);
+	return tex;
+}
+
 bool DeferredSample::initialize(const HWND hwnd) {
 	if (!Clair::initialize(hwnd, Logger::log)) {
 		return false;
@@ -42,20 +55,22 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mGBuffer->setRenderTarget(0, mRT1->getRenderTarget());
 	mGBuffer->setRenderTarget(1, mRT2->getRenderTarget());
 
-	// Deferred composite material
-	auto compTexData = Loader::loadBinaryData("materials/deferred/composite.cmat");
-	auto compTex = Clair::ResourceManager::createMaterial();
-	compTex->initialize(compTexData.get());
-	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
-	mDeferredCompositeMat->initialize(compTex);
-	mDeferredCompositeMat->setShaderResource(
-		0, mRT0->getShaderResource());
-	mDeferredCompositeMat->setShaderResource(
-		1, mRT1->getShaderResource());
-	mDeferredCompositeMat->setShaderResource(
-		2, mRT2->getShaderResource());
-	mCompositeCBuffer = mDeferredCompositeMat->
+	// Deferred materials
+	auto geometryMatData =
+		Loader::loadBinaryData("materials/deferred/geometry.cmat");
+	mGeometryMat = Clair::ResourceManager::createMaterial();
+	mGeometryMat->initialize(geometryMatData.get());
+	auto compositeMatData =
+		Loader::loadBinaryData("materials/deferred/composite.cmat");
+	Clair::Material* compositeMat {Clair::ResourceManager::createMaterial()};
+	compositeMat->initialize(compositeMatData.get());
+	mCompositeMatInstance = Clair::ResourceManager::createMaterialInstance();
+	mCompositeMatInstance->initialize(compositeMat);
+	mCompositeCBuffer = mCompositeMatInstance->
 		getConstantBufferPs<Cb_materials_deferred_composite_Ps>();
+	mCompositeMatInstance->setShaderResource(0, mRT0->getShaderResource());
+	mCompositeMatInstance->setShaderResource(1, mRT1->getShaderResource());
+	mCompositeMatInstance->setShaderResource(2, mRT2->getShaderResource());
 
 	// Place some objects in the scene
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
@@ -64,10 +79,6 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	auto planeMeshData = Loader::loadBinaryData("models/plane.cmod");
 	auto planeMesh = Clair::ResourceManager::createMesh();
 	planeMesh->initialize(planeMeshData.get());
-	auto geometryMatData =
-		Loader::loadBinaryData("materials/deferred/geometry.cmat");
-	mGeometryMat = Clair::ResourceManager::createMaterial();
-	mGeometryMat->initialize(geometryMatData.get());
 	mScene = Clair::ResourceManager::createScene();
 	createObject(planeMesh, {1.0f, 1.0f, 1.0f},
 				value_ptr(scale(vec3{2.0f})));
@@ -99,19 +110,6 @@ bool DeferredSample::initialize(const HWND hwnd) {
 
 	Camera::initialize({0.0f, 5.5f, -4.0f}, 1.14f, 0.0f);
 	return true;
-}
-
-Clair::Texture* DeferredSample::createGBufferTarget(
-	Clair::Texture::Format format,
-	Clair::Texture::Type type) const {
-	auto tex = Clair::ResourceManager::createTexture();
-	Clair::Texture::Options texOptions;
-	texOptions.width = 960;
-	texOptions.height = 640;
-	texOptions.format = format;
-	texOptions.type = type;
-	tex->initialize(texOptions);
-	return tex;
 }
 
 void DeferredSample::createObject(Clair::Mesh* mesh,
@@ -211,6 +209,6 @@ void DeferredSample::render() {
 	mCompositeCBuffer->InverseProj =
 		value_ptr(inverse(mProjectionMat));
 	mCompositeCBuffer->View = value_ptr(viewMat);
-	Clair::Renderer::renderScreenQuad(mDeferredCompositeMat);
+	Clair::Renderer::renderScreenQuad(mCompositeMatInstance);
 	Clair::Renderer::finalizeFrame();
 }

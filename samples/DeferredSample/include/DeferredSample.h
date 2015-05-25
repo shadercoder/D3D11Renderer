@@ -27,7 +27,7 @@ private:
 	Clair::Scene* mScene {nullptr};
 	Clair::Scene* mLightDebugScene {nullptr};
 	Clair::Material* mGeometryMat {nullptr};
-	Clair::MaterialInstance* mDeferredCompositeMat {nullptr};
+	Clair::MaterialInstance* mCompositeMatInstance {nullptr};
 	class Cb_materials_deferred_composite_Ps* mCompositeCBuffer {nullptr};
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};

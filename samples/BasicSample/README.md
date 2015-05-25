@@ -23,7 +23,7 @@ auto defaultMatData = Loader::loadBinaryData("materials/basic.cmat");
 Clair::Material* defaultMat = Clair::ResourceManager::createMaterial();
 defaultMat->initialize(defaultMatData.get());
 ```
-Then, a scene with an object are created. A mesh and a transformation matrix are assigned to the object. 
+Then, a scene with an object is created. A mesh and a transformation matrix are assigned to the object. 
 ```C++
 mScene = Clair::ResourceManager::createScene();
 mBunny = mScene->createObject();
@@ -77,4 +77,4 @@ Clair::Renderer::finalizeFrame();
 ![](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/BasicSample/screenshot.png)
 
 ###Credits
-See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/README.md).
+See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer#credits).

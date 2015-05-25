@@ -10,4 +10,4 @@ TODO
 ![](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/IBLSample/screenshot.png)
 
 ###Credits
-See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/README.md).
+See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer#credits).
