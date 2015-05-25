@@ -73,6 +73,7 @@ Clair::Renderer::render(mScene);
 Clair::Renderer::finalizeFrame();
 ```
 
+###Final result
 ![](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/BasicSample/screenshot.png)
 
 ###Credits
