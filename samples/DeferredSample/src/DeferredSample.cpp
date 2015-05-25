@@ -28,19 +28,19 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	//      |-------------------------------------------|
 	// RT2: | albedo.r | albedo.g | albedo.b | emissive | 32 bits
 	//      |-------------------------------------------|
-	RT0 = createGBufferTarget(
+	mRT0 = createGBufferTarget(
 		Clair::Texture::Format::D24_UNORM_S8_UINT,
 		Clair::Texture::Type::DEPTH_STENCIL_TARGET);
-	RT1 = createGBufferTarget(
+	mRT1 = createGBufferTarget(
 		Clair::Texture::Format::R16G16_FLOAT,
 		Clair::Texture::Type::RENDER_TARGET);
-	RT2 = createGBufferTarget(
+	mRT2 = createGBufferTarget(
 		Clair::Texture::Format::R8G8B8A8_UNORM,
 		Clair::Texture::Type::RENDER_TARGET);
 	mGBuffer = new Clair::RenderTargetGroup{2};
-	mGBuffer->setDepthStencilTarget(RT0);
-	mGBuffer->setRenderTarget(0, RT1->getRenderTarget());
-	mGBuffer->setRenderTarget(1, RT2->getRenderTarget());
+	mGBuffer->setDepthStencilTarget(mRT0);
+	mGBuffer->setRenderTarget(0, mRT1->getRenderTarget());
+	mGBuffer->setRenderTarget(1, mRT2->getRenderTarget());
 
 	// Deferred composite material
 	auto compTexData = Loader::loadBinaryData("materials/deferred/composite.cmat");
@@ -49,11 +49,11 @@ bool DeferredSample::initialize(const HWND hwnd) {
 	mDeferredCompositeMat = Clair::ResourceManager::createMaterialInstance();
 	mDeferredCompositeMat->initialize(compTex);
 	mDeferredCompositeMat->setShaderResource(
-		0, RT0->getShaderResource());
+		0, mRT0->getShaderResource());
 	mDeferredCompositeMat->setShaderResource(
-		1, RT1->getShaderResource());
+		1, mRT1->getShaderResource());
 	mDeferredCompositeMat->setShaderResource(
-		2, RT2->getShaderResource());
+		2, mRT2->getShaderResource());
 	mCompositeCBuffer = mDeferredCompositeMat->
 		getConstantBufferPs<Cb_materials_deferred_composite_Ps>();
 
@@ -152,9 +152,9 @@ void DeferredSample::onResize() {
 	Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
 	mProjectionMat = perspectiveLH(radians(90.0f), getAspect(), 0.01f, 100.0f);
 	Clair::Renderer::setProjectionMatrix(value_ptr(mProjectionMat));
-	RT0->resize(getWidth(), getHeight());
-	RT1->resize(getWidth(), getHeight());
-	RT2->resize(getWidth(), getHeight());
+	mRT0->resize(getWidth(), getHeight());
+	mRT1->resize(getWidth(), getHeight());
+	mRT2->resize(getWidth(), getHeight());
 }
 
 void DeferredSample::update() {
@@ -194,12 +194,11 @@ void DeferredSample::update() {
 void DeferredSample::render() {
 	// Render to G-buffer
 	Clair::Renderer::setRenderTargetGroup(mGBuffer);
-	RT0->clear({1.0f});
-	RT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	RT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mRT0->clear({1.0f});
+	mRT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+	mRT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
-	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
 	if (mDrawLightDebugCubes) {
 		Clair::Renderer::render(mLightDebugScene);

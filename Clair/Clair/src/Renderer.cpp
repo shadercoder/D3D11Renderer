@@ -40,15 +40,12 @@ namespace {
 
 	Float4x4 cameraView {};
 	Float4x4 cameraProjection {};
-	Float3 cameraPosition {};
 	RenderPass gRenderPass {};
 
 	struct ConstantBufferTemp {
 		Float4x4 world;
 		Float4x4 view;
 		Float4x4 projection;
-		Float3 camPos;
-		float padding;
 	};
 	ID3D11Buffer* constantBuffer = nullptr;
 
@@ -66,6 +63,8 @@ namespace {
 	VertexBuffer* gQuadVertexBuffer {nullptr};
 	IndexBuffer* gQuadIndexBuffer {nullptr};
 	InputLayout* gQuadInputLayout {nullptr};
+
+	const RenderTargetGroup* gCurrentRTGroup {nullptr};
 }
 
 RenderTargetGroup* Renderer::msDefaultRenderTargetGroup {nullptr};
@@ -218,6 +217,7 @@ bool Renderer::initialize(const HWND hwnd) {
 	//delete defRenTarget;
 	//delete depthTex;
 	//delete defTex;
+	setRenderTargetGroup(nullptr);
 	
 	return true;
 }
@@ -271,6 +271,7 @@ void Renderer::setRenderTargetGroup(const RenderTargetGroup* targets) {
 	}
 	d3dDeviceContext->OMSetRenderTargets(numTargets, targetArray,
 		d3dDepthStencil);
+	gCurrentRTGroup = targets;
 }
 
 static float viewWidth = 640.0f;
@@ -317,6 +318,9 @@ void Renderer::resizeSwapBuffer(const int width, const int height) {
 	result = d3dDevice->CreateDepthStencilView(depthStencilBuffer, nullptr,
 											   &depthStencilView);
 	CLAIR_ASSERT(!FAILED(result), "Viewport resize error");
+	if (gCurrentRTGroup == nullptr) {
+		setRenderTargetGroup(nullptr);
+	}
 }
 
 void Renderer::setViewport(const int x, const int y,
@@ -347,7 +351,6 @@ void Renderer::render(Scene* const scene) {
 	ConstantBufferTemp cb;
 	cb.view = cameraView;
 	cb.projection = cameraProjection;
-	cb.camPos = cameraPosition;
 
 	//int iteration {0};
 	for (const auto& it : scene->mObjects) {
@@ -413,10 +416,6 @@ void Renderer::setProjectionMatrix(const Float4x4& projection) {
 
 void Renderer::setRenderPass(const RenderPass pass) {
 	gRenderPass = pass;
-}
-
-void Renderer::setCameraPosition(const Float3& position) {
-	cameraPosition = position;
 }
 
 void Renderer::renderScreenQuad(

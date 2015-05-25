@@ -19,20 +19,22 @@ bool BasicSample::initialize(const HWND hwnd) {
 	}
 
 	auto bunnyMeshData = Loader::loadBinaryData("models/bunny.cmod");
-	auto bunnyMesh = Clair::ResourceManager::createMesh();
+	Clair::Mesh* bunnyMesh {Clair::ResourceManager::createMesh()};
 	bunnyMesh->initialize(bunnyMeshData.get());
 
-	auto defaultMatData = Loader::loadBinaryData("materials/basic.cmat");
-	auto defaultMat = Clair::ResourceManager::createMaterial();
-	defaultMat->initialize(defaultMatData.get());
+	auto materialData = Loader::loadBinaryData("materials/basic.cmat");
+	Clair::Material* material {Clair::ResourceManager::createMaterial()};
+	material->initialize(materialData.get());
 
 	mScene = Clair::ResourceManager::createScene();
 	mBunny = mScene->createObject();
 	mBunny->setMesh(bunnyMesh);
-	mBunny->setMatrix(value_ptr(translate(vec3{0.0f})));
-	auto matInstance = mBunny->setMaterial(CLAIR_RENDER_PASS(0), defaultMat);
+	mBunny->setMatrix(glm::value_ptr(glm::translate(glm::vec3{0.0f})));
+
+	Clair::MaterialInstance* matInstance {
+		mBunny->setMaterial(CLAIR_RENDER_PASS(0), material)};
 	mConstBuffer = matInstance->getConstantBufferPs<Cb_materials_basic_Ps>();
-	mConstBuffer->DiffuseColor = Clair::Float4{0.8f, 0.2f, 0.1f, 1.0f};
+	mConstBuffer->DiffuseColor = {0.8f, 0.2f, 0.1f, 1.0f};
 
 	Camera::initialize({-0.27f, 1.64f, -1.79f}, 0.470f, 0.045f);
 	return true;

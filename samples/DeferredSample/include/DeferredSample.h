@@ -32,9 +32,9 @@ private:
 	bool mDrawLightDebugCubes {true};
 	bool mDrawGBuffers {true};
 
-	Clair::Texture* RT0 {nullptr};
-	Clair::Texture* RT1 {nullptr};
-	Clair::Texture* RT2 {nullptr};
+	Clair::Texture* mRT0 {nullptr};
+	Clair::Texture* mRT1 {nullptr};
+	Clair::Texture* mRT2 {nullptr};
 	Clair::RenderTargetGroup* mGBuffer {nullptr};
 
 	class Light {
