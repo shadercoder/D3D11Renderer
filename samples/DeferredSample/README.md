@@ -95,9 +95,69 @@ mCompositeMatInstance->setShaderResource(1, mRT1->getShaderResource());
 mCompositeMatInstance->setShaderResource(2, mRT2->getShaderResource());
 ```
 Besides the texture's default shader resource, you can also make a shader resource from only part of a texture. This sample does not need that functionality, but the AdvancedSample, for example, uses this to filter cube maps (and a screen-space reflection buffer) into higher mips for physically-based rendering.
+##### DeferredSample::onResize()
+Same as in the previous sample, the swap buffer, viewport and projection matrix have to be adjusted when the window has been resized.
+```C++
+Clair::Renderer::resizeSwapBuffer(getWidth(), getHeight());
+Clair::Renderer::setViewport(0, 0, getWidth(), getHeight());
+mProjectionMat = perspectiveLH(radians(90.0f), getAspect(), 0.01f, 100.0f);
+Clair::Renderer::setProjectionMatrix(value_ptr(mProjectionMat));
+```
+In this sample, however, there are also some textures that need to be resized: the textures that make up the G-buffer. In Direct3D you would have to recreate the texture and the objects that use it, but I decided to abstract that away into the `Clair::Texture::resize()` function. This function resizes the texture and updates all objects that point to (part of) it. This means that the texture, the shader resources, the render targets and by extension the render target groups all remain valid.
+```C++
+mRT0->resize(getWidth(), getHeight());
+mRT1->resize(getWidth(), getHeight());
+mRT2->resize(getWidth(), getHeight());
+```
+#####DeferredSample::render()
+First, the G-buffer targets are cleared and the scene geometry is rendered to the G-buffer.
+```C++
+mRT0->clear({1.0f});
+mRT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+mRT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
+Clair::Renderer::setRenderTargetGroup(mGBuffer);
+Clair::Renderer::setViewMatrix(value_ptr(viewMat));
+Clair::Renderer::render(mScene);
+```
+The `Clair::Renderer::setRenderTargetGroup()` function takes as parameter the render target group that the `Clair::Renderer::render()` function should render to. To go back to rendering to the swap chain's back buffer, a `nullptr` is passed to the function, as shown in the code below.
+
+The `Clair::Renderer::renderScreenQuad()` takes as parameter a material instance which will get excecuted on a fullscreen quad. This is used for post-process effects, the deferred compositing pass in this case.
+```C++
+Clair::Renderer::setRenderTargetGroup(nullptr);
+Clair::Renderer::clearDepthStencil(1.0f, 0);
+mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
+mCompositeCBuffer->View = value_ptr(viewMat);
+Clair::Renderer::renderScreenQuad(mCompositeMatInstance);
+Clair::Renderer::finalizeFrame();
+```
+#####Shaders
+The code for the material that handles the initial geometry pass is defined in [geometry.hlsl](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/common/rawdata/materials/deferred/geometry.hlsl). This shader renders to multiple render targets (MRT): the G-buffer.
+```C
+struct PsOut {
+	// The depth/stencil target (RT0) is implicit
+	float2 RT1 : SV_TARGET0; // Normal is packed as 2 spherical coordinates
+	float4 RT2 : SV_TARGET1; // 3 floats for the albedo color and 1 float for the emissive term
+};
+
+PsOut psMain(PsIn psIn) {
+	PsOut psOut;
+	psOut.RT1 = packNormal(normalize(psIn.Normal));
+	psOut.RT2 = float4(Albedo, Emissive);
+	return psOut;
+}
+```
+The code for the compositing pass is defined in [composite.hlsl](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/common/rawdata/materials/deferred/composite.hlsl). This material takes as input the G-buffer textures and the constant buffer that defines the lights. It uses these input to calculate the lighting per pixel by looping through the lights.
+```C
+for (int i = 0; i < NUM_LIGHTS; ++i) {
+	// Calculate Blinn-Phong lighting for this pixel/light combination
+}
+```
+As the code above shows, this sample loops through the entire list of lights per pixel, which could be optimized by culling lights (for example, using tiled or clustered rendering).
+
+All lighting happens in linear space. This is achieved by transform between gamma space and linear space where appropriate. Right now, the shader takes care of this using `pow(color, 2.2)` to go from gamma to linear and `pow(color, 1 / 2.2)` to go from linear back to gamma. Alternatively, this can be done by telling the graphics API which textures and render targets are in sRGB space, but I think the shader version demonstrates clearly where the transformations happen.
 
 ###Final result
 ![](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/DeferredSample/screenshot.png)
 
 ###Credits
-See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/README.md).
+See the main [README](https://github.com/TomVeltmeijer/D3D11Renderer#credits).

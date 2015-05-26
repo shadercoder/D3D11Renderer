@@ -190,12 +190,12 @@ void DeferredSample::update() {
 }
 
 void DeferredSample::render() {
+	const mat4 viewMat = Camera::getViewMatrix();
 	// Render to G-buffer
-	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	mRT0->clear({1.0f});
 	mRT1->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
 	mRT2->getRenderTarget()->clear({0.0f, 0.0f, 0.0f, 1.0f});
-	glm::mat4 viewMat = Camera::getViewMatrix();
+	Clair::Renderer::setRenderTargetGroup(mGBuffer);
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
 	Clair::Renderer::render(mScene);
 	if (mDrawLightDebugCubes) {
@@ -206,8 +206,7 @@ void DeferredSample::render() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	mCompositeCBuffer->DrawGBuffers = mDrawGBuffers;
-	mCompositeCBuffer->InverseProj =
-		value_ptr(inverse(mProjectionMat));
+	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
 	mCompositeCBuffer->View = value_ptr(viewMat);
 	Clair::Renderer::renderScreenQuad(mCompositeMatInstance);
 	Clair::Renderer::finalizeFrame();
