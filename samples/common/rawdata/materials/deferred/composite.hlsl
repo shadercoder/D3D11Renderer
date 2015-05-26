@@ -48,13 +48,18 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissiv
 		light = normalize(light);
 
 		float diff = saturate(dot(light, normal));
-		diff *= LightDiffuseColors[i].a / lightDist2;
+		float intensity = LightDiffuseColors[i].a;
+		diff *= intensity / lightDist2;
 
 		float3 H = normalize(light + view);
 		float NdotH = dot(normal, H);
 		float spec = 0;
 		if (dot(light, normal) > 0) {
-			spec = pow(saturate(NdotH), 500.0);
+			const float a = 200;
+			spec = pow(saturate(NdotH), a);
+			spec *= intensity;
+			// Normalization factor for energy conservation
+			spec *= (a + 8) / (8 * 3.1415);
 		}
 
 		col += lerp(

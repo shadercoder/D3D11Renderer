@@ -149,7 +149,7 @@ PsOut psMain(PsIn psIn) {
 The code for the compositing pass is defined in [composite.hlsl](https://github.com/TomVeltmeijer/D3D11Renderer/blob/master/samples/common/rawdata/materials/deferred/composite.hlsl). This material takes as input the G-buffer textures and the constant buffer that defines the lights. It uses these input to calculate the lighting per pixel by looping through the lights.
 ```C
 for (int i = 0; i < NUM_LIGHTS; ++i) {
-	// Calculate Blinn-Phong lighting for this pixel/light combination
+	// Calculate energy-conserving Blinn-Phong lighting for this pixel/light combination
 }
 ```
 As the code above shows, this sample loops through the entire list of lights per pixel, which could be optimized by culling lights (for example, using tiled or clustered rendering).
