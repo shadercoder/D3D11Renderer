@@ -95,6 +95,8 @@ mCompositeMatInstance->setShaderResource(1, mRT1->getShaderResource());
 mCompositeMatInstance->setShaderResource(2, mRT2->getShaderResource());
 ```
 Besides the texture's default shader resource, you can also make a shader resource from only part of a texture. This sample does not need that functionality, but the AdvancedSample, for example, uses this to filter cube maps (and a screen-space reflection buffer) into higher mips for physically-based rendering.
+
+Then, some objects are placed in the scene and the geometry pass material is assigned to them. This works the same way as in the BasicSample so it is not repeated here.
 ##### DeferredSample::onResize()
 Same as in the previous sample, the swap buffer, viewport and projection matrix have to be adjusted when the window has been resized.
 ```C++
