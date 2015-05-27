@@ -14,6 +14,7 @@
 #include "SampleFramework/Camera.h"
 #include "SampleFramework/Loader.h"
 #include "SampleFramework/Logger.h"
+#include "SampleFramework/Random.h"
 #include "ImGui/imgui.h"
 #include "Clair/Clair.h"
 #include "Clair/Material.h"
@@ -28,6 +29,7 @@
 #include "../../data/materials/advanced/filterFrame.h"
 #include "../../data/materials/advanced/ssr.h"
 #include "../../data/materials/pbrSky.h"
+#include "../../rawdata/materials/advanced/numLights.h"
 //#include "vld.h"
 
 using namespace SampleFramework;
@@ -108,7 +110,7 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	mPanoramaToCube = Clair::ResourceManager::createMaterialInstance();
 	mPanoramaToCube->initialize(panCubeMat);
 	mPanoramaToCube->setShaderResource(0, mHdrSkyTex->getShaderResource());
-	loadAndSetNewCubeMap("mill");
+	loadAndSetNewCubeMap(gHdrImageNames[mEnvironmentMap]);
 
 	// Post process textures
 	Clair::Texture::Options postProcTexOptions {};
@@ -184,9 +186,10 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	planeMesh->initialize(planeMeshData.get());
 
 	// Materials
-	auto matData = Loader::loadBinaryData("materials/advanced/geometry.cmat");
-	auto material = Clair::ResourceManager::createMaterial();
-	material->initialize(matData.get());
+	auto geometryMatData =
+		Loader::loadBinaryData("materials/advanced/geometry.cmat");
+	auto geometryMat = Clair::ResourceManager::createMaterial();
+	geometryMat->initialize(geometryMatData.get());
 	auto gunMatData =
 		Loader::loadBinaryData("materials/advanced/geometryTextured.cmat");
 	auto gunMat = Clair::ResourceManager::createMaterial();
@@ -238,9 +241,9 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	Clair::Object* const gun = mScene->createObject();
 	gun->setMesh(gunMesh);
 	gun->setMatrix(value_ptr(
-		translate(vec3{1.1f, -2.05f, -5.0f}) *
+		translate(vec3{0.0f, 3.0f, -1.0f}) *
 		rotate(pi<float>() / 2.0f, vec3(0,1,0)) *
-		scale(vec3{1.0f} * 6.0f)));
+		scale(vec3{6.0f})));
 	auto gunMatInst = gun->setMaterial(CLAIR_RENDER_PASS(0), gunMat);
 	gunMatInst->setShaderResource(0, gunAMTex->getShaderResource());
 	gunMatInst->setShaderResource(1, gunNGTex->getShaderResource());
@@ -250,16 +253,33 @@ bool AdvancedSample::initialize(const HWND hwnd) {
 	Clair::Object* const plane = mScene->createObject();
 	plane->setMesh(planeMesh);
 	plane->setMatrix(value_ptr(
-		translate(vec3{1.1f, -5.05f, -5.0f}) * scale(vec3{1.0f} * 5.0f)));
-	auto planeMatInst = plane->setMaterial(CLAIR_RENDER_PASS(0), material);
+		translate(vec3{0.0f}) * scale(vec3{5.0f})));
+	auto planeMatInst = plane->setMaterial(CLAIR_RENDER_PASS(0), geometryMat);
 	planeMatInst->setShaderResource(0, mSkyTexture->getShaderResource());
 	auto planeCbuf =
 		planeMatInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
-	planeCbuf->Albedo = {1.0f, 1.0f, 1.0f};
+	planeCbuf->Albedo = {0.8f, 0.8f, 0.8f};
 	planeCbuf->Emissive = 0.0f;
 	planeCbuf->Glossiness = 0.5f;
 	planeCbuf->Metalness = 1.0f;
 	mTweakableCbuf = planeCbuf;
+
+	mLights = new Light[NUM_LIGHTS];
+	resetLights();
+
+	// Light debug objects
+	auto cubeMeshData = Loader::loadBinaryData("models/cube.cmod");
+	auto cubeMesh = Clair::ResourceManager::createMesh();
+	cubeMesh->initialize(cubeMeshData.get());
+	mLightDebugScene = Clair::ResourceManager::createScene();
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto& light = mLights[i];
+		light.debugObj = mLightDebugScene->createObject();
+		light.debugObj->setMesh(cubeMesh);
+		light.debugObj->setMaterial(CLAIR_RENDER_PASS(0), geometryMat);
+		light.debugObj->setMatrix(value_ptr(translate(vec3{light.rotationRadius,
+			light.height, light.rotationRadius}) * scale(vec3{0.05f})));
+	}
 
 	Camera::initialize({1.0f, 1.1f, -15.0f}, 0.265f, 0.0f);
 	return true;
@@ -355,6 +375,20 @@ void AdvancedSample::filterReflectionBuffer() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 }
 
+void AdvancedSample::resetLights() {
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto& light = mLights[i];
+		light.color = vec3{Random::randomFloat(), Random::randomFloat(),
+					   Random::randomFloat()};
+		light.intensity = Random::randomFloat(3.0f, 10.0f) /
+			(0.2f * static_cast<float>(NUM_LIGHTS));
+		light.height = Random::randomFloat(1.0f, 5.0f);
+		light.rotationRadius = Random::randomFloat(1.0f, 14.0f);
+		light.rotationSpeed = Random::randomFloat(-1.0f, 1.0f);
+		light.offset = Random::randomFloat(0.0f, 2.0f * glm::pi<float>());
+	}
+}
+
 Clair::Texture* AdvancedSample::createGBufferTarget(
 	Clair::Texture::Format format,
 	Clair::Texture::Type type) const {
@@ -393,6 +427,30 @@ void AdvancedSample::update() {
 	mSkyConstBuffer->CamRight = value_ptr(Camera::getRight());
 	mSkyConstBuffer->CamUp = value_ptr(Camera::getUp());
 	mSkyConstBuffer->CamForward = value_ptr(Camera::getForward());
+
+	// Update lights
+	for (int i {0}; i < NUM_LIGHTS; ++i) {
+		auto col = mLights[i].color;
+		mCompositeCBuffer->LightColors[i] = {
+			col.r, col.g, col.b, mLights[i].intensity };
+		const float p {
+			getRunningTime() * mLights[i].rotationSpeed + mLights[i].offset};
+		const vec3 lightPos {
+			cosf(p) * mLights[i].rotationRadius,
+			cosf(p * 3.0f) * 0.2f + mLights[i].height,
+			sinf(p) * mLights[i].rotationRadius
+		};
+		mCompositeCBuffer->LightPositions[i] = {
+			lightPos.x, lightPos.y, lightPos.z, 0.0f};
+		// Light debug objects
+		auto obj = mLights[i].debugObj;
+		obj->setMatrix(value_ptr(translate(lightPos) * scale(vec3{0.05f})));
+		auto matInst = obj->getMaterial(CLAIR_RENDER_PASS(0));
+		auto cbuf =
+			matInst->getConstantBufferPs<Cb_materials_advanced_geometry_Ps>();
+		cbuf->Albedo = {col.r, col.g, col.b};
+		cbuf->Emissive = mLights[i].intensity;
+	}
 	
 	if (ImGui::Combo("Sky", &mEnvironmentMap, gHdrImageNames, 5)) {
 		loadAndSetNewCubeMap(gHdrImageNames[mEnvironmentMap]);
@@ -400,6 +458,8 @@ void AdvancedSample::update() {
 	ImGui::SliderFloat("Gloss", &mGlossiness, 0.0f, 1.0f);
 	ImGui::SliderFloat("Metal", &mMetalness, 0.0f, 1.0f);
 	ImGui::Checkbox("Screen-space reflections", &mSSREnabled);
+	ImGui::SliderFloat("Ambient", &mAmbient, 0.0f, 5.0f);
+	ImGui::Checkbox("Lights enabled", &mLightsEnabled);
 	mTweakableCbuf->Glossiness = mGlossiness;
 	mTweakableCbuf->Metalness = mMetalness;
 }
@@ -415,14 +475,19 @@ void AdvancedSample::render() {
 	RT0->clear({1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
-	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
+	if (mDrawLightDebugCubes && mLightsEnabled) {
+		Clair::Renderer::render(mLightDebugScene);
+	}
 
 	// Deferred composite pass; renders to buffer
 	Clair::Renderer::setRenderTargetGroup(mPostProcessBuffer[0]);
 	mCompositeCBuffer->InverseView = value_ptr(inverse(viewMat));
 	mCompositeCBuffer->InverseProj = value_ptr(inverse(mProjectionMat));
+	mCompositeCBuffer->View = value_ptr(viewMat);
+	mCompositeCBuffer->Ambient = mAmbient;
 	mCompositeCBuffer->SSREnabled = mSSREnabled;
+	mCompositeCBuffer->LightsEnabled = mLightsEnabled;
 	Clair::Renderer::renderScreenQuad(mCompositeMat);
 
 	// Reflections

@@ -39,7 +39,7 @@ struct PsOut {
 static const float PI = 3.14159265358979;
 float3 panoramaToCube(float2 uv, float3 right, float3 up, float3 forward) {
 	float3 dir = normalize(forward + uv.x * right + uv.y * up);
-	float u = fmod(0.5 * (1.0 + atan2(dir.x, -dir.z) * (1.0 / PI)) + 0.0, 1.0);
+	float u = fmod(0.5 * (1.0 + atan2(dir.x, -dir.z) * (1.0 / PI)) + 0.0, 1.0) + 0.3;
 	float v = saturate(fmod(acos(dir.y) * (1.0 / PI), 1.0));
 	float3 col = PanoramaInput.Sample(SamplerLinear, float2(1 - u, v)).rgb;
 	return col;

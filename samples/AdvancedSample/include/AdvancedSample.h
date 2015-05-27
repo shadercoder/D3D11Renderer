@@ -19,6 +19,7 @@ private:
 	void filterCubeMap();
 	void loadAndSetNewCubeMap(const std::string& filename);
 	void filterReflectionBuffer();
+	void resetLights();
 	Clair::Texture* createGBufferTarget(
 		Clair::Texture::Format format,
 		Clair::Texture::Type type) const;
@@ -51,10 +52,26 @@ private:
 
 	float mFoV {80.0f};
 	float mGlossiness {0.8f};
-	float mMetalness {1.0f};
+	float mMetalness {0.8f};
 	class Cb_materials_advanced_geometry_Ps* mTweakableCbuf {nullptr};
 
 	bool mSSREnabled {true};
 	int mEnvironmentMap {0};
 	Clair::Texture* mHdrSkyTex {nullptr};
+	float mAmbient {0.8f};
+	
+	bool mDrawLightDebugCubes {true};
+	bool mLightsEnabled {false};
+	Clair::Scene* mLightDebugScene {nullptr};
+	class Light {
+	public:
+		glm::vec3 color {};
+		Clair::Object* debugObj {nullptr};
+		float intensity {1.0f};
+		float height {0.0f};
+		float rotationRadius {0.0f};
+		float rotationSpeed {1.0f};
+		float offset {0.0f};
+	};
+	Light* mLights {nullptr};
 };
