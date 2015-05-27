@@ -32,7 +32,7 @@ PsIn vsMain(VsIn vsIn) {
 cbuffer Buf : register(b1) {
 	matrix InverseProj;
 	matrix View;
-	float4 LightDiffuseColors[NUM_LIGHTS];
+	float4 LightColors[NUM_LIGHTS];
 	float4 LightPositions[NUM_LIGHTS];
 	bool DrawGBuffers;
 };
@@ -48,7 +48,7 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissiv
 		light = normalize(light);
 
 		float diff = saturate(dot(light, normal));
-		float intensity = LightDiffuseColors[i].a;
+		float intensity = LightColors[i].a;
 		diff *= intensity / lightDist2;
 
 		float3 H = normalize(light + view);
@@ -63,8 +63,8 @@ float3 calcLighting(float3 albedo, float3 normal, float3 position, float emissiv
 		}
 
 		col += lerp(
-			diff * LightDiffuseColors[i].rgb,
-			spec * LightDiffuseColors[i].rgb,
+			diff * LightColors[i].rgb,
+			spec * LightColors[i].rgb,
 			0.50);
 	}
 	col = col * albedo + amb * albedo;

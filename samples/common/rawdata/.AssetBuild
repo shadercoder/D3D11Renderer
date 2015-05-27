@@ -14,9 +14,9 @@
 /materials/advanced/packNormal.h|0|0
 /materials/basic.hlsl|30442699|4020432316
 /materials/bloomSimple.hlsl|30444572|2462942713
-/materials/deferred/composite.hlsl|30447537|1890689419|2
+/materials/deferred/composite.hlsl|30447802|4021962245|2
 /materials/deferred/numLights.h|30445554|4176821532
-/materials/deferred/../packNormal.h|30445557|1409612684
+/materials/deferred/packNormal.h|0|0
 /materials/deferred/geometry.hlsl|30445555|4137901519|1
 /materials/deferred/../packNormal.h|30445557|1409612684
 /materials/filterCube.hlsl|30446964|2978348504|1

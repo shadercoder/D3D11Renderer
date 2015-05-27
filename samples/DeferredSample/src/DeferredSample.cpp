@@ -161,7 +161,7 @@ void DeferredSample::update() {
 	// Update lights
 	for (int i {0}; i < NUM_LIGHTS; ++i) {
 		auto col = mLights[i].color;
-		mCompositeCBuffer->LightDiffuseColors[i] = {
+		mCompositeCBuffer->LightColors[i] = {
 			col.r, col.g, col.b, mLights[i].intensity };
 		const float p {
 			getRunningTime() * mLights[i].rotationSpeed + mLights[i].offset};
