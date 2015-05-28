@@ -18,7 +18,7 @@ struct PsIn {
 PsIn vsMain(VsIn vsIn) {
 	PsIn psIn;
 	psIn.Position = float4(vsIn.Position.xy * 2.0 - 1.0, 0.0, 1.0);
-	psIn.Uvs = vsIn.Position.xy * float2(1,-1);// * 2.0 - 1.0;
+	psIn.Uvs = vsIn.Position.xy * 2.0 - 1.0;
 	return psIn;
 }
 
@@ -26,18 +26,24 @@ PsIn vsMain(VsIn vsIn) {
 // PIXEL SHADER
 // -----------------------------------------------------------------------------
 cbuffer Buf : register(b1) {
+	matrix ViewProj;
+	float3 CamRight;
+	float3 CamUp;
+	float3 CamForward;
 	float Roughness;
+	float Aspect;
+	float FieldOfView;
 };
 
-float4 filter(float2 uv, float3 right, float3 up, float3 forward) {
+float4 psMain(PsIn psIn) : SV_TARGET0 {
 	float4 col = float4(0, 0, 0, 0);
 	const int NUM_SAMPLES = 32;
 	float sampleCount = Roughness * 0.00000000001;
-	float4 ms = InputTexture.Sample(SamplerLinear, float2(uv.x, uv.y));
+	float4 ms = InputTexture.Sample(SamplerLinear, float2(psIn.Uvs.x, psIn.Uvs.y));
 	float4 midSample = float4(pow(ms.rgb, 2.2), ms.a);
 	for (int i = 0; i < NUM_SAMPLES; ++i) {
 		float2 offset = hammersley2d(i, NUM_SAMPLES) - 0.5;
-		float2 u = uv + offset * 1.0 * pow(Roughness, 2);
+		float2 u = psIn.Uvs + offset * 1.0 * pow(Roughness, 2);
 		u.x = saturate(u.x);
 		u.y = saturate(-u.y);
 		float4 c = InputTexture.Sample(SamplerLinear, float2(u.x, -u.y));
@@ -46,18 +52,19 @@ float4 filter(float2 uv, float3 right, float3 up, float3 forward) {
 	}
 	col /= sampleCount;
 	col = float4(pow(col.rgb, 1 / 2.2), col.a);
-	return col;
-}
 
-float4 psMain(PsIn psIn) : SV_TARGET0 {
-	const float3 px = float3(1,0,0);
-	const float3 nx = float3(-1,0,0);
-	const float3 py = float3(0,1,0);
-	const float3 ny = float3(0,-1,0);
-	const float3 pz = float3(0,0,1);
-	const float3 nz = float3(0,0,-1);
-	//float4 col = InputTexture.Sample(SamplerLinear,
-	//	psIn.Uvs * (1.0 + pow(Roughness, 2) / 10000.0)).rgba;
-	//return col;
-	return filter(psIn.Uvs, nz, py, px);
+	float dist = 1.0 / tan(FieldOfView / 2.0 * 3.14 / 180.0);
+	float3 dir = CamForward * dist +
+			   (CamRight * psIn.Uvs.x * Aspect) +
+			   (CamUp * psIn.Uvs.y);
+	dir = normalize(dir);
+	//float3 dir = normalize(CamForward + psIn.Uvs.x * CamRight + psIn.Uvs.y * CamUp);
+	float4 finalUv = mul(ViewProj, float4(dir, 0));
+	finalUv /= finalUv.w;
+	finalUv = finalUv * .5 + .5;
+	col.rgb = InputTexture.Sample(SamplerLinear, float2(finalUv.x, 1 - finalUv.y));
+	//col *= .0000001;
+	//col.rg += finalUv.xy;
+	//col.a = 1.0;
+	return col;
 }

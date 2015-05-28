@@ -26,7 +26,7 @@
 #include "../../data/materials/advanced/geometry.h"
 #include "../../data/materials/advanced/geometryTextured.h"
 #include "../../data/materials/advanced/composite.h"
-#include "../../data/materials/advanced/filterFrame.h"
+#include "../../data/materials/advanced/filterReflection.h"
 #include "../../data/materials/advanced/ssr.h"
 #include "../../data/materials/pbrSky.h"
 #include "../../rawdata/materials/advanced/numLights.h"
@@ -347,6 +347,16 @@ void AdvancedSample::loadAndSetNewCubeMap(const std::string& filename) {
 void AdvancedSample::filterReflectionBuffer() {
 	int w, h;
 	mReflectionTex->getMipMapDimensions(1, &w, &h);
+	auto filterReflCbuf = mFilterReflectionMatInstance->getConstantBufferPs<
+			Cb_materials_advanced_filterReflection_Ps>();
+	filterReflCbuf->CamRight = value_ptr(Camera::getRight());
+	filterReflCbuf->CamUp = value_ptr(Camera::getUp());
+	filterReflCbuf->CamForward = value_ptr(Camera::getForward());
+	filterReflCbuf->ViewProj =
+		value_ptr(mProjectionMat * Camera::getViewMatrix());
+	filterReflCbuf->Aspect = getAspect();
+	filterReflCbuf->FieldOfView = mFoV;
+
 	for (size_t i_mip {1}; i_mip < mReflectionTex->getNumMipMaps(); ++i_mip) {
 		Clair::SubTextureOptions inTexOptions;
 		inTexOptions.mipStartIndex = i_mip - 1;
@@ -357,9 +367,7 @@ void AdvancedSample::filterReflectionBuffer() {
 		auto outTex = mReflectionTex->createSubRenderTarget(outTexOptions);
 
 		mFilterReflectionMatInstance->setShaderResource(0, inTex);
-		auto filterFrameCbuf = mFilterReflectionMatInstance->getConstantBufferPs<
-			Cb_materials_advanced_filterFrame_Ps>();
-		filterFrameCbuf->Roughness = static_cast<float>(i_mip) /
+		filterReflCbuf->Roughness = static_cast<float>(i_mip) /
 			static_cast<float>(NUM_ROUGHNESS_MIPS - 1);
 		auto renderTargets = Clair::RenderTargetGroup{1};
 		renderTargets.setRenderTarget(0, outTex);
@@ -505,10 +513,9 @@ void AdvancedSample::render() {
 	// Post process
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
-	//mDrawTextureMatInstance->setShaderResource(
-	//	0, mReflectionTex->getShaderResource());
 	mDrawTextureMatInstance->setShaderResource(
-		0, mPostProcessTex[0]->getShaderResource());
+	//	0, mPostProcessTex[0]->getShaderResource());
+		0, mReflectionTex->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
 

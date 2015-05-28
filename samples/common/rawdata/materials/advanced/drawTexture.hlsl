@@ -25,7 +25,7 @@ PsIn vsMain(VsIn vsIn) {
 // -----------------------------------------------------------------------------
 float4 psMain(PsIn psIn) : SV_TARGET {
 	float3 col = InputTexture.SampleLevel(
-		samplerLinear, psIn.Uvs * float2(1.0, -1.0), 0);
+		samplerLinear, psIn.Uvs * float2(1.0, -1.0), 1);
 	
 	/*float3 bloom = float3(0,0,0);
 	const float numSamples = 4;
