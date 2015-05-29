@@ -514,9 +514,8 @@ void AdvancedSample::render() {
 	Clair::Renderer::setRenderTargetGroup(nullptr);
 	Clair::Renderer::clearDepthStencil(1.0f, 0);
 	mDrawTextureMatInstance->setShaderResource(
-	//	0, mPostProcessTex[0]->getShaderResource());
-		0, mReflectionTex->getShaderResource());
+		0, mPostProcessTex[0]->getShaderResource());
+	//	0, mReflectionTex->getShaderResource());
 	Clair::Renderer::renderScreenQuad(mDrawTextureMatInstance);
 	Clair::Renderer::finalizeFrame();
-
 }

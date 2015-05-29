@@ -18,7 +18,7 @@ struct PsIn {
 PsIn vsMain(VsIn vsIn) {
 	PsIn psIn;
 	psIn.Position = float4(vsIn.Position.xy * 2.0 - 1.0, 0.0, 1.0);
-	psIn.Uvs = vsIn.Position.xy * 2.0 - 1.0;
+	psIn.Uvs = vsIn.Position.xy;// * 2.0 - 1.0;
 	return psIn;
 }
 
@@ -37,34 +37,34 @@ cbuffer Buf : register(b1) {
 
 float4 psMain(PsIn psIn) : SV_TARGET0 {
 	float4 col = float4(0, 0, 0, 0);
-	const int NUM_SAMPLES = 32;
-	float sampleCount = Roughness * 0.00000000001;
-	float4 ms = InputTexture.Sample(SamplerLinear, float2(psIn.Uvs.x, psIn.Uvs.y));
-	float4 midSample = float4(pow(ms.rgb, 2.2), ms.a);
-	for (int i = 0; i < NUM_SAMPLES; ++i) {
-		float2 offset = hammersley2d(i, NUM_SAMPLES) - 0.5;
-		float2 u = psIn.Uvs + offset * 1.0 * pow(Roughness, 2);
-		u.x = saturate(u.x);
-		u.y = saturate(-u.y);
-		float4 c = InputTexture.Sample(SamplerLinear, float2(u.x, -u.y));
-		col += lerp(midSample, float4(pow(c.rgb, 2.2), c.a), 1);//saturate(1 - c.a));
-		++sampleCount;
-	}
-	col /= sampleCount;
-	col = float4(pow(col.rgb, 1 / 2.2), col.a);
-
+	psIn.Uvs = psIn.Uvs * 2 - 1;
 	float dist = 1.0 / tan(FieldOfView / 2.0 * 3.14 / 180.0);
 	float3 dir = CamForward * dist +
 			   (CamRight * psIn.Uvs.x * Aspect) +
 			   (CamUp * psIn.Uvs.y);
 	dir = normalize(dir);
-	//float3 dir = normalize(CamForward + psIn.Uvs.x * CamRight + psIn.Uvs.y * CamUp);
-	float4 finalUv = mul(ViewProj, float4(dir, 0));
-	finalUv /= finalUv.w;
-	finalUv = finalUv * .5 + .5;
-	col.rgb = InputTexture.Sample(SamplerLinear, float2(finalUv.x, 1 - finalUv.y));
-	//col *= .0000001;
-	//col.rg += finalUv.xy;
-	//col.a = 1.0;
+
+	const float NUM_SAMPLES = 32;
+	float sampleCount = 0;
+	for (float i = 0; i < NUM_SAMPLES; ++i) {
+		float3 offset = hemisphereSample_uniform(hammersley2d(i, NUM_SAMPLES));
+		offset = normalize(offset);
+		if (dot(offset, dir) < 0) {
+			offset = -offset;
+		}
+		float3 sampDir = lerp(dir, offset, saturate(Roughness * 0.3));
+		sampDir = normalize(sampDir);
+		float4 uv = mul(ViewProj, float4(sampDir, 0));
+		uv.xy /= uv.w;
+		uv.xy = uv.xy * .5 + .5;
+		if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1 || uv.z < 0 || uv.z > 1) {
+			continue;
+		}
+		//return float4(uv.xy, 0, 1);
+		col += InputTexture.Sample(SamplerLinear, float2(uv.x, 1 - uv.y));
+		++sampleCount;
+	}
+	col /= sampleCount;
+
 	return col;
 }
