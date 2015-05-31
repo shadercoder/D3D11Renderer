@@ -11,7 +11,7 @@ int main(int, char* []) {
 	return SampleFramework::Framework::run(
 		new DeferredSample{},
 		"Clair DeferredSample",
-		960, 640,
+		1280, 720,
 		"../../common/data/"
 	);
 }
