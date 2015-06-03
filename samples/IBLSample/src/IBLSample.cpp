@@ -269,7 +269,6 @@ void IBLSample::render() {
 	RT0->clear({1.0f});
 	glm::mat4 viewMat = Camera::getViewMatrix();
 	Clair::Renderer::setViewMatrix(value_ptr(viewMat));
-	Clair::Renderer::setCameraPosition(value_ptr(Camera::getPosition()));
 	Clair::Renderer::render(mScene);
 
 	// Composite and render to buffer to save for next frame
