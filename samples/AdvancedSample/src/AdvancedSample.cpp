@@ -3,8 +3,6 @@
 // http://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj
 // "Cerberus" - Andrew Maximov
 // http://artisaverb.info/Cerberus.html
-// "Pbr Textured Steampunkisch Blade" - dutchallians
-// https://sketchfab.com/models/783be5c1643c4f439eb5ae8112f083d7#
 // Some HDR probes from the following sites:
 // http://www.hdrlabs.com/sibl/archive.html
 // http://gl.ict.usc.edu/Data/HighResProbes/
